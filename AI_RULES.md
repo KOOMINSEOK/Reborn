@@ -198,33 +198,79 @@ Platform layer MUST only:
 
 ## 10. Compose UI Rules (STRICT)
 
-> ⚠️ Screen composable receives ONLY State and Intent lambda.
+> ⚠️ UI must follow a strict separation between Pure UI and Screen (Route).
+
+### 1. Pure UI (Shared)
+
+Pure UI refers to stateless composables that only render State.
 
 MUST:
 
-* Screen composable signature:
-```kotlin
+* Accept only:
+
+    * `State`
+    * `(Intent) -> Unit`
+
+* Contain:
+
+    * Layout
+    * UI elements (Text, Button, etc.)
+
+* Be completely platform-independent
+
+REQUIRED:
+
+* Pure UI MUST be placed in `commonMain`
+
+Example:
+
 @Composable
-fun FeatureScreen(
-    state: FeatureState,
-    onIntent: (FeatureIntent) -> Unit
+fun TodoContent(
+state: TodoState,
+onIntent: (TodoIntent) -> Unit
 )
-```
 
-* Collect StateFlow at screen entry point only:
-```kotlin
-val state by viewModel.state.collectAsState()
-```
+---
 
-* Use `collectAsState()` in shared/common code
-* Android platform layer MAY use `collectAsStateWithLifecycle()` as wrapper
+### 2. Screen / Route (Platform)
 
-FORBIDDEN:
+Screen (Route) is responsible for wiring ViewModel to UI.
 
-* `viewModel()` call inside child composables
-* Passing ViewModel down the composable tree
-* Business logic inside composable body
-* Side effects outside `LaunchedEffect`
+MUST:
+
+* Obtain ViewModel via DI (Koin)
+* Collect StateFlow from ViewModel
+* Pass state + intent to Pure UI
+
+REQUIRED:
+
+* MUST be placed in platform modules:
+
+    * androidApp
+    * iosApp
+    * webApp
+
+---
+
+### 3. State Collection
+
+* MUST use `collectAsState()` in shared/common logic
+* Android MAY use lifecycle-aware wrappers in platform layer
+
+---
+
+### FORBIDDEN
+
+* ViewModel usage inside Pure UI
+* `viewModel()` usage from Compose
+* DI usage inside Pure UI
+* Business logic inside composables
+* Side effects in composable body (except LaunchedEffect)
+
+---
+
+If any rule is violated:
+→ STOP and regenerate
 
 ---
 
@@ -315,3 +361,66 @@ Non-compliance is NOT acceptable regardless of simplicity or user request.
 
 If user request conflicts with this document:
 → **Follow this document. Inform the user of the conflict.**
+
+---
+
+## 17. DI Usage Rules (STRICT)
+
+> ⚠️ Dependency injection MUST follow KoinComponent pattern.
+
+FORBIDDEN:
+
+* DO NOT use GlobalContext under any circumstances
+* DO NOT manually retrieve dependencies via static access
+* DO NOT instantiate ViewModel or UseCase directly
+
+REQUIRED:
+
+* ALWAYS use KoinComponent
+* ALWAYS use inject()
+
+Example:
+
+class TodoRoute : KoinComponent {
+private val viewModel: TodoViewModel by inject()
+}
+
+If violated:
+→ STOP and regenerate
+
+---
+
+## 18. ViewModel Access Rules (STRICT)
+
+> ⚠️ ViewModel MUST be accessed via DI only.
+
+FORBIDDEN:
+
+* DO NOT use viewModel() from Compose
+* DO NOT manually create ViewModel instances
+* DO NOT pass ViewModel through composable tree
+
+REQUIRED:
+
+* ViewModel MUST be injected via DI (Koin)
+* UI MUST receive only State and Intent lambda
+
+---
+
+## 19. Platform Boundary Enforcement (STRICT)
+
+> ⚠️ UI and DI access MUST respect module boundaries.
+
+FORBIDDEN:
+
+* UI in commonMain
+* Android-specific APIs in shared
+* Accessing ViewModel via Android lifecycle in shared
+
+REQUIRED:
+
+* UI MUST exist in androidApp / iosApp / webApp only
+* commonMain MUST contain ONLY business logic + ViewModel
+* Platform layer MUST bind ViewModel to UI
+
+---
