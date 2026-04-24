@@ -1,27 +1,24 @@
 package com.gentlelady.reborn
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import com.gentlelady.reborn.presentation.todo.TodoState
-import com.gentlelady.reborn.ui.todo.TodoScreen
+import com.gentlelady.reborn.home.ui.HomeScreen
+import com.gentlelady.reborn.home.presentation.home.HomeState
+import com.gentlelady.reborn.home.presentation.home.HomeIntent
 
 @Composable
-@Preview
-fun App() {
+fun App(
+    // 나중에는 여기에 내비게이션 객체가 들어오겠지만,
+    // 지금은 홈 화면의 데이터와 인텐트를 직접 전달받도록 설계합니다.
+    state: HomeState,
+    onIntent: (HomeIntent) -> Unit
+) {
     MaterialTheme {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            TodoScreen(
-                state = TodoState(),
-                onIntent = {},
-            )
-        }
+        // App은 이제 전역적인 테마, 스캐폴드(Scaffold),
+        // 그리고 내비게이션 호스트 역할을 수행하게 됩니다.
+        HomeScreen(
+            state = state,
+            onIntent = onIntent
+        )
     }
 }

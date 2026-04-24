@@ -30,10 +30,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
     implementation(projects.shared)
+    implementation(projects.composeApp)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -43,6 +47,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.ui)
     implementation(libs.koin.core)
+    implementation(libs.koin.androidx.compose)
+
 
     debugImplementation(libs.compose.uiTooling)
 }

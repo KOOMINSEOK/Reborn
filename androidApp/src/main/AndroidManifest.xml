@@ -6,7 +6,7 @@
         android:label="Reborn"
         android:supportsRtl="true">
         <activity
-            android:name=".MainActivity"
+            android:name="com.gentlelady.reborn.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
