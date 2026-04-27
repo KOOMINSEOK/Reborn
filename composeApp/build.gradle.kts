@@ -46,6 +46,8 @@ kotlin {
                 implementation(libs.compose.ui)
 
                 implementation(compose.materialIconsExtended)
+                implementation(compose.components.uiToolingPreview)
+                implementation(compose.components.resources)
             }
         }
 
@@ -96,4 +98,7 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+}
+compose.resources {
+    packageOfResClass = "com.gentlelady.reborn"
 }
