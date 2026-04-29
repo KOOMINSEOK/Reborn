@@ -1,6 +1,5 @@
-package com.gentlelady.reborn.home.ui
+package com.gentlelady.reborn.feature.home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -17,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -52,86 +50,57 @@ fun HomeScreen(
                     Text("Home", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                 },
                 actions = {
-                    // 1. 메모리얼 버튼 (36dp x 36dp)
+                    // 메모리얼 버튼
                     IconButton(
                         onClick = { /* Screen 2로 이동 로직 */ },
                         modifier = Modifier
-                            .size(36.dp) // 피그마 수치 36px 반영
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(CobaltBlue.copy(alpha = 0.1f))
-                            .border(
-                                width = 1.dp,
-                                color = BorderLightBlue,
-                                shape = CircleShape
-                            )
+                            .border(width = 1.dp, color = BorderLightBlue, shape = CircleShape)
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_home_memorial),
                             contentDescription = "Memorial Page",
                             tint = CobaltBlue,
-                            modifier = Modifier.size(20.dp) // 원 안의 아이콘은 보통 20~24dp가 적당합니다.
+                            modifier = Modifier.size(20.dp)
                         )
                     }
 
-                    // 2. 버튼 사이의 Gap (8px 반영)
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // 3. 알림 버튼 (36dp x 36dp)
+                    // 알림 버튼
                     Box(
-                        modifier = Modifier.size(36.dp), // 알림 버튼도 동일하게 36px
+                        modifier = Modifier.size(36.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier.fillMaxSize()
-                        ) {
+                        IconButton(onClick = { }) {
                             Icon(
                                 painter = painterResource(Res.drawable.ic_home_notifications),
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-
-                        // 알림 빨간 점 (위치 미세 조정)
                         Surface(
                             modifier = Modifier
-                                .size(6.dp) // 점 크기는 디자인에 맞게 조절
+                                .size(6.dp)
                                 .align(Alignment.TopEnd)
-                                .offset(x = (-2).dp, y = 2.dp), // 버튼 안쪽으로 살짝 이동
+                                .offset(x = (-2).dp, y = 2.dp),
                             color = Color.Red,
                             shape = CircleShape
                         ) {}
                     }
 
-                    // 화면 가장 오른쪽 끝과의 여백 (필요시 추가)
-                    Spacer(modifier = Modifier.width(20.dp))
+                    Spacer(modifier = Modifier.width(16.dp)) // 우측 여백 살짝 조정
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
-        },
-        bottomBar = {
-            // 디자인 하단 네비게이션 구현
-            NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
-                NavigationBarItem(selected = true, onClick = {}, icon = { Icon(Icons.Default.Home, null) }, label = { Text("Home") })
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Search, null) }, label = { Text("Search") })
-                // 중앙 커스텀 플러스 버튼
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.weight(1f)) {
-                    FloatingActionButton(
-                        onClick = {},
-                        shape = CircleShape,
-                        containerColor = CobaltBlue,
-                        contentColor = Color.White,
-                        elevation = FloatingActionButtonDefaults.elevation(0.dp),
-                        modifier = Modifier.size(48.dp)
-                    ) { Icon(Icons.Default.Add, null) }
-                }
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Outlined.Email, null) }, label = { Text("Message") })
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Outlined.Person, null) }, label = { Text("Profile") })
-            }
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding) // Scaffold가 제공하는 패키지 상하 여백 적용
         ) {
             items(state.posts) { post ->
                 PostItem(post)

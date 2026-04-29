@@ -48,6 +48,7 @@ kotlin {
                 implementation(compose.materialIconsExtended)
                 implementation(compose.components.uiToolingPreview)
                 implementation(compose.components.resources)
+                implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha02")
             }
         }
 
