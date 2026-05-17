@@ -16,9 +16,8 @@ import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.* import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-// 선택 시 사용할 Cobalt Blue 색상 정의
-val SelectedBlue = Color(0xFF0047AB)
-val UnselectedGray = Color(0xFF9E9E9E)
+import com.gentlelady.reborn.core.theme.RebornDeepBlue
+import com.gentlelady.reborn.core.theme.RebornUnselectedGray
 
 @Composable
 fun BottomNavigationBar(
@@ -30,18 +29,16 @@ fun BottomNavigationBar(
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 0.dp,
-        // 점(Dot) 공간이 추가되므로 기존보다 높이를 살짝 키워 84dp로 지정합니다.
         modifier = Modifier.height(84.dp)
     ) {
         val navItemColors = NavigationBarItemDefaults.colors(
-            selectedIconColor = SelectedBlue,
-            selectedTextColor = SelectedBlue,
-            unselectedIconColor = UnselectedGray,
-            unselectedTextColor = UnselectedGray,
+            selectedIconColor = RebornDeepBlue,       // 변경
+            selectedTextColor = RebornDeepBlue,       // 변경
+            unselectedIconColor = RebornUnselectedGray, // 변경
+            unselectedTextColor = RebornUnselectedGray, // 변경
             indicatorColor = Color.Transparent
         )
 
-        // 공통 네비게이션 아이템을 그려주는 헬퍼 람다 컴포넌트
         @Composable
         fun RowScope.RebornNavItem(
             route: String,
@@ -64,12 +61,11 @@ fun BottomNavigationBar(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(label)
                         Spacer(modifier = Modifier.height(4.dp))
-                        // 선택되었을 때만 점 색상을 노출 (비선택 시 투명하게 공간을 유지하여 UI 덜컹거림 방지)
                         Box(
                             modifier = Modifier
                                 .size(4.dp)
                                 .background(
-                                    color = if (isSelected) SelectedBlue else Color.Transparent,
+                                    color = if (isSelected) RebornDeepBlue else Color.Transparent, // 변경
                                     shape = CircleShape
                                 )
                         )
@@ -79,48 +75,28 @@ fun BottomNavigationBar(
             )
         }
 
-        // 1. Home
         RebornNavItem("home", Res.drawable.ic_nav_home_default, "Home")
-
-        // 2. Search
         RebornNavItem("search", Res.drawable.ic_nav_search_default, "Search")
 
-        // 3. 중앙 플러스 버튼 (상단 경계선 일치 구조)
         Box(
             contentAlignment = Alignment.TopCenter,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
+            modifier = Modifier.weight(1f).fillMaxHeight()
         ) {
             FloatingActionButton(
-                onClick = { /* 게시글 작성 화면 등으로 이동 */ },
+                onClick = { },
                 shape = CircleShape,
-                containerColor = SelectedBlue,
+                containerColor = RebornDeepBlue, // 변경
                 contentColor = Color.White,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 4.dp,
-                    pressedElevation = 8.dp
-                ),
+                elevation = FloatingActionButtonDefaults.elevation(4.dp, 8.dp),
                 modifier = Modifier
                     .size(54.dp)
-                    .border(
-                        width = 4.dp,
-                        color = Color.White,
-                        shape = CircleShape
-                    )
+                    .border(width = 4.dp, color = Color.White, shape = CircleShape)
             ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Add",
-                    modifier = Modifier.size(24.dp)
-                )
+                Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
             }
         }
 
-        // 4. Message
         RebornNavItem("message", Res.drawable.ic_nav_message_default, "Message")
-
-        // 5. Profile
         RebornNavItem("profile", Res.drawable.ic_nav_profile_default, "Profile")
     }
 }

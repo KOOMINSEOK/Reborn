@@ -28,13 +28,22 @@ import com.gentlelady.reborn.home.presentation.home.HomeState
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.resources.painterResource
 import com.gentlelady.reborn.Res
+
 import com.gentlelady.reborn.ic_home_memorial
 import com.gentlelady.reborn.ic_home_notifications
+import com.gentlelady.reborn.ic_lock
+import com.gentlelady.reborn.ic_like
+import com.gentlelady.reborn.ic_share
+import com.gentlelady.reborn.ic_comment
 
-// 디자인에서 사용되는 Cobalt Blue 색상 정의
-val CobaltBlue = Color(0xFFEFF4FF)
-val BackgroundGray = Color(0xFFF8F9FA)
-val BorderLightBlue = Color(0xFFB9D1FF)
+// 중앙 관리 테마 컬러 임포트
+import com.gentlelady.reborn.core.theme.RebornCobaltBlue
+import com.gentlelady.reborn.core.theme.RebornLightBlueBg
+import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
+import com.gentlelady.reborn.core.theme.RebornDarkBlue
+import com.gentlelady.reborn.core.theme.RebornDividerGray
+import com.gentlelady.reborn.core.theme.RebornSoftBlue
+import com.gentlelady.reborn.core.theme.RebornSlateGray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,13 +65,13 @@ fun HomeScreen(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(CobaltBlue.copy(alpha = 0.1f))
-                            .border(width = 1.dp, color = BorderLightBlue, shape = CircleShape)
+                            .background(RebornLightBlueBg) // 중앙 컬러 적용
+                            .border(width = 1.dp, color = RebornBorderLightBlue, shape = CircleShape) // 중앙 컬러 적용
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_home_memorial),
                             contentDescription = "Memorial Page",
-                            tint = CobaltBlue,
+                            tint = RebornCobaltBlue, // 중앙 컬러 적용
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -91,7 +100,7 @@ fun HomeScreen(
                         ) {}
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp)) // 우측 여백 살짝 조정
+                    Spacer(modifier = Modifier.width(16.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
@@ -100,11 +109,11 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding) // Scaffold가 제공하는 패키지 상하 여백 적용
+                .padding(padding)
         ) {
             items(state.posts) { post ->
                 PostItem(post)
-                Divider(color = Color(0xFFEEEEEE), thickness = 1.dp)
+                Divider(color = RebornDividerGray, thickness = 1.dp) // 하드코딩 값 대체
             }
         }
     }
@@ -119,15 +128,26 @@ fun PostItem(post: HomePost) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(modifier = Modifier.size(36.dp), shape = CircleShape, color = Color.LightGray) {
-                // 여기에 프로필 이미지
                 Icon(Icons.Default.Person, null, tint = Color.White)
             }
             Spacer(modifier = Modifier.width(10.dp))
             Text(post.authorName, fontWeight = FontWeight.Bold, fontSize = 15.sp)
 
             if (post.isPosthumous) {
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(Icons.Default.LockOpen, contentDescription = null, tint = CobaltBlue, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp)) // 이름과의 간격을 살짝 조정
+                Box(
+                    modifier = Modifier
+                        .size(24.dp) // 원형 배경의 전체 크기
+                        .background(color = RebornSoftBlue, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_lock),
+                        contentDescription = "Memorial Lock",
+                        tint = RebornCobaltBlue,
+                        modifier = Modifier.size(14.dp) // 원 안의 자물쇠 아이콘 크기
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -140,18 +160,32 @@ fun PostItem(post: HomePost) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
+                    .border(width = 1.dp, color = RebornBorderLightBlue, shape = RoundedCornerShape(12.dp))
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFEEF4FF)) // 아주 연한 파랑
+                    .background(RebornLightBlueBg)
                     .padding(12.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Info, null, tint = CobaltBlue, modifier = Modifier.size(18.dp))
+                // ✅ verticalAlignment를 Top으로 변경하여 상단 정렬
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null,
+                        tint = RebornDarkBlue,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .padding(top = 1.dp)
+                    )
+
                     Spacer(modifier = Modifier.width(8.dp))
+
                     Text(
                         text = "사후 게시글 — 작성자가 미리 예약해 두고 사망 후 공개되는 게시글",
-                        color = CobaltBlue,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
+                        color = RebornDarkBlue,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 18.sp
                     )
                 }
             }
@@ -163,9 +197,8 @@ fun PostItem(post: HomePost) {
                 .fillMaxWidth()
                 .height(250.dp)
                 .padding(top = 4.dp)
-                .background(Color(0xFFEEEEEE))
+                .background(RebornDividerGray) // 하드코딩 값 대체
         ) {
-            // 실제 이미지가 없을 때를 위한 Placeholder
             Text("Image Area", modifier = Modifier.align(Alignment.Center), color = Color.Gray)
         }
 
@@ -174,13 +207,30 @@ fun PostItem(post: HomePost) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Outlined.FavoriteBorder, null, modifier = Modifier.size(24.dp))
+            Icon(
+                painter = painterResource(Res.drawable.ic_like),
+                contentDescription = "Like",
+                tint = RebornSlateGray,
+                modifier = Modifier.size(24.dp)
+            )
             Text(" 128", fontSize = 14.sp, color = Color.Gray)
+
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Outlined.ChatBubbleOutline, null, modifier = Modifier.size(24.dp))
+            Icon(
+                painter = painterResource(Res.drawable.ic_comment),
+                contentDescription = "Comment",
+                tint = RebornSlateGray,
+                modifier = Modifier.size(24.dp)
+            )
             Text(" 34", fontSize = 14.sp, color = Color.Gray)
+
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Outlined.Share, null, modifier = Modifier.size(24.dp))
+            Icon(
+                painter = painterResource(Res.drawable.ic_share),
+                contentDescription = "Share",
+                tint = RebornSlateGray,
+                modifier = Modifier.size(24.dp)
+            )
         }
 
         // 5. 캡션 (유저네임 볼드 처리)
@@ -208,7 +258,6 @@ fun HomeScreenPreview() {
         )
     )
     MaterialTheme {
-        // ✅ Surface를 추가하여 기본적인 콘텐츠 컬러와 배경 환경을 제공합니다.
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background

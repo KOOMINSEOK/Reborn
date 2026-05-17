@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp"
+    android:height="12dp"
+    android:viewportWidth="12"
+    android:viewportHeight="12">
+    <!-- 자물쇠 몸통 -->
+    <path
+        android:pathData="M2.5 5.5H9.5C10.0519 5.5 10.5 5.94808 10.5 6.5V10C10.5 10.5519 10.0519 11 9.5 11H2.5C1.94808 11 1.5 10.5519 1.5 10V6.5C1.5 5.94808 1.94808 5.5 2.5 5.5V5.5"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 열려 있는 고리 -->
+    <path
+        android:pathData="M3.5 5.49997V3.49997C3.49871 2.21559 4.47087 1.13919 5.74875 1.01011C7.02663 0.881036 8.19442 1.74127 8.45 2.99997"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
