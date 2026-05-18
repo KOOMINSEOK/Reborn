@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.memorial
+package com.gentlelady.reborn.feature.memorial_swipe
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 // 하위 컴포넌트들 정상 Import
-import com.gentlelady.reborn.feature.memorial.components.*
+import com.gentlelady.reborn.feature.memorial_swipe.components.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -1,7 +1,6 @@
-package com.gentlelady.reborn.feature.memorial
+package com.gentlelady.reborn.feature.memorial_swipe
 
 import androidx.compose.runtime.Immutable
-import com.gentlelady.reborn.home.domain.model.HomePost // 예시: 공유 도메인 모델 사용
 
 // 1. 단일 데이터 구조 (UiState) 준수 및 재사용성 고려[cite: 25, 26, 35].
 @Immutable

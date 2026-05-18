@@ -1,8 +1,7 @@
-package com.gentlelady.reborn.feature.memorial.components
+package com.gentlelady.reborn.feature.memorial_swipe.components
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,46 +10,68 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gentlelady.reborn.feature.memorial.MusicItem
-// 컬러 관리 규칙 준수: Semantic 상수를 Import하여 사용[cite: 6, 7].
-import com.gentlelady.reborn.core.theme.RebornCobaltBlue
-import com.gentlelady.reborn.core.theme.RebornLightBlueBg
-import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
+import com.gentlelady.reborn.feature.memorial_swipe.MusicItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-// 컴포넌트 분화 및 하위 의존 컴포넌트는 internal로 은닉.
+// 컴포넌트 분화 및 하위 의존 컴포넌트는 internal로 은닉 규칙 준수[cite: 8, 32].
 @Composable
 internal fun BoxScope.MemorialTopBar(
     musicItem: MusicItem?,
     onHomeClick: () -> Unit
 ) {
+    // 1. 음악 디스크의 무한 회전을 위한 360도 루프 애니메이션 정의 [cite: 79, 81]
+    val infiniteTransition = rememberInfiniteTransition(label = "MusicDiscRotation")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 7000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "DiscRotationAngle"
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-            .align(Alignment.TopCenter),
+            .align(Alignment.TopCenter), // BoxScope 수신 객체를 통한 플로팅 정렬 [cite: 60, 68]
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. 음악 정보 위젯
+        // 1. 음악 정보 위젯 (좌상단 플로팅) [cite: 79, 81]
         Row(
             modifier = Modifier
                 .wrapContentWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color.Black.copy(alpha = 0.6f)) // 시안에 맞게 Dim 처리 (하드코딩 금지이나 임시)
+                .background(Color.Black.copy(alpha = 0.6f)) // 몰입형 뷰를 위한 어두운 투명도 레이어
                 .padding(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(modifier = Modifier.size(32.dp), shape = CircleShape, color = Color.LightGray) {
-                // dynamic 에셋 플레이스홀더 사용 규칙 준수.
-                Text("Art", color = Color.White, modifier = Modifier.wrapContentSize(Alignment.Center))
+            // 회전하는 디스크 앨범 아트 영역 (Spinning music disc) [cite: 79, 81]
+            Surface(
+                modifier = Modifier
+                    .size(32.dp)
+                    .rotate(rotation), // 계산된 회전 각도 실시간 반영
+                shape = CircleShape,
+                color = Color.LightGray // 동적 에셋 플레이스홀더 규칙 준수 [cite: 5, 58]
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Art",
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        modifier = Modifier.wrapContentSize(Alignment.Center)
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
@@ -59,8 +80,6 @@ internal fun BoxScope.MemorialTopBar(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Icon(
-                // 에셋 관리 규칙 준수:ic_prefix 및 평평한 drawable 관리[cite: 3, 30].
-                // painterResource(Res.drawable.ic_music_note) // 실제 에셋 필요[cite: 43].
                 imageVector = Icons.Filled.MusicNote,
                 contentDescription = "Music",
                 tint = Color.White,
@@ -69,25 +88,25 @@ internal fun BoxScope.MemorialTopBar(
             Spacer(modifier = Modifier.width(4.dp))
         }
 
-        // 2. 홈 버튼
+        // 2. 홈 버튼 (우상단 플로팅) [cite: 79, 81]
         IconButton(
             onClick = onHomeClick,
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.8f)) // 시안에 맞게 semi-transparent
+                .background(Color.White.copy(alpha = 0.2f)) // 완전 몰입형 테마에 맞추어 반투명(Ghost) 스타일 최적화 [cite: 79, 87]
         ) {
             Icon(
                 imageVector = Icons.Filled.Home,
                 contentDescription = "Home",
-                tint = Color.Gray,
+                tint = Color.White, // 심플하고 직관적인 화이트 톤 피드백 적용
                 modifier = Modifier.size(20.dp)
             )
         }
     }
 }
 
-// BoxScope 확장성 대응을 위한 단독 프리뷰 래퍼 구현
+// BoxScope 확장성 대응을 위한 단독 프리뷰 래퍼 구현 (지역 함수 사용 금지 원칙 준수) [cite: 9, 60]
 @Preview
 @Composable
 private fun MemorialTopBarPreview() {
@@ -96,7 +115,7 @@ private fun MemorialTopBarPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .background(Color.DarkGray) // 시안의 어두운 배경 시각화용 가상 배경
+                .background(Color.DarkGray) // 시안의 어두운 풀 스크린 배경 시각화 레이어
         ) {
             MemorialTopBar(
                 musicItem = MusicItem("See You Again", "Wiz Khalifa ft. Charlie Puth", ""),

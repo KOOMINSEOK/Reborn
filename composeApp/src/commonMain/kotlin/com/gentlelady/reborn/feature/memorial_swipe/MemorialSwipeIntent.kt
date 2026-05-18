@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.memorial
+package com.gentlelady.reborn.feature.memorial_swipe
 
 // 1. MVI 패턴의 Intent 정의 준수[cite: 35].
 sealed class MemorialSwipeIntent {
