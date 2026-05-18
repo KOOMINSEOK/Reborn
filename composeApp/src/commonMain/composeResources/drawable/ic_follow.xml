@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+    <!-- 사용자 몸통 -->
+    <path
+        android:pathData="M10.6666 14V12.6667C10.6666 11.1949 9.47169 10 7.99992 10H3.99992C2.52815 10 1.33325 11.1949 1.33325 12.6667V14"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 사용자 머리 -->
+    <path
+        android:pathData="M3.33325 4.66667C3.33325 6.13844 4.52815 7.33333 5.99992 7.33333C7.47169 7.33333 8.66659 6.13844 8.66659 4.66667C8.66659 3.19489 7.47169 2 5.99992 2C4.52815 2 3.33325 3.19489 3.33325 4.66667H3.33325"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 플러스(+) 세로선 -->
+    <path
+        android:pathData="M12.6667 5.33325V9.33325"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 플러스(+) 가로선 -->
+    <path
+        android:pathData="M14.6667 7.33325H10.6667"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
