@@ -25,19 +25,14 @@ import com.gentlelady.reborn.Res
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-// 프로젝트 테마 세맨틱 컬러 상수 준수
 import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
-import com.gentlelady.reborn.core.theme.RebornDividerGray
-
-// 패키지 경로 및 리소스 임포트
 import com.gentlelady.reborn.feature.memorial_swipe.MemorialItem
 import com.gentlelady.reborn.ic_memorial_ribbon
 import com.gentlelady.reborn.img_memorial_profile_dummy
 
 @Composable
 internal fun ColumnScope.MemorialProfileContent(item: MemorialItem) {
-    // 1. 리본 배지 뒤에서 은은하게 번지는 Glow 무한 애니메이션 정의
     val infiniteTransition = rememberInfiniteTransition(label = "RibbonGlowTransition")
     val glowScale by infiniteTransition.animateFloat(
         initialValue = 1.0f,
@@ -63,7 +58,6 @@ internal fun ColumnScope.MemorialProfileContent(item: MemorialItem) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 1. 빛나는 효과가 결합된 코발트 블루 리본 배지 (RebornDeepBlue 배경 적용)
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(64.dp)
@@ -98,7 +92,6 @@ internal fun ColumnScope.MemorialProfileContent(item: MemorialItem) {
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 2. 은은한 외곽 테두리 선이 추가된 날짜 태그 구문
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = Color.Black.copy(alpha = 0.5f),
@@ -117,30 +110,37 @@ internal fun ColumnScope.MemorialProfileContent(item: MemorialItem) {
         }
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 3. 원형 프로필 이미지 레이아웃 (img_memorial_profile_dummy 에셋 바인딩)
         Box(
             modifier = Modifier
                 .size(130.dp)
                 .clip(CircleShape)
                 .border(width = 4.dp, color = Color.White, shape = CircleShape)
         ) {
-            Image(
-                painter = painterResource(Res.drawable.img_memorial_profile_dummy),
-                contentDescription = "Memorial Profile Picture",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            if (item.profileImageUrl.isEmpty()) {
+                Image(
+                    painter = painterResource(Res.drawable.img_memorial_profile_dummy),
+                    contentDescription = "Memorial Profile Dummy Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                // 추후 연동용 분기 개설 완료
+                Image(
+                    painter = painterResource(Res.drawable.img_memorial_profile_dummy),
+                    contentDescription = "Memorial Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 4. 이름 및 세부 직업/지역 정보 텍스트
         Text(text = item.name, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = "${item.jobTitle} , ${item.location}", color = Color.White.copy(alpha = 0.8f), fontSize = 16.sp)
     }
 }
 
-// 패키지 스코프 분화 규칙에 따른 단독 프리뷰 선언
 @Preview
 @Composable
 private fun MemorialProfileContentPreview() {

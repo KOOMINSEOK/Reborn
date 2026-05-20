@@ -18,7 +18,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 internal fun ColumnScope.MemorialSwipeIndicator() {
-    // 펄스 애니메이션 세팅 (Swipe ↑↓ hint pulses)
     val infiniteTransition = rememberInfiniteTransition(label = "SwipeIndicatorPulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.2f,
@@ -34,7 +33,7 @@ internal fun ColumnScope.MemorialSwipeIndicator() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
-            .alpha(pulseAlpha), // 그룹 전체에 펄스 효과 매핑
+            .alpha(pulseAlpha),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

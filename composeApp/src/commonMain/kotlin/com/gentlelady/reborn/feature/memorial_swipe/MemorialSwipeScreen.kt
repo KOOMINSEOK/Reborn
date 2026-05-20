@@ -1,7 +1,7 @@
-package com.gentlelady.reborn.feature.memorial
+package com.gentlelady.reborn.feature.memorial_swipe
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image // 이미지 컴포넌트 임포트
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.VerticalPager
@@ -11,19 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale // 화면 크롭 정렬을 위한 임포트
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.gentlelady.reborn.Res // KMP 리소스 루트 객체
-import com.gentlelady.reborn.img_memorial_bg_dummy // 추가한 배경 이미지 자동 생성 파일 임포트
+import com.gentlelady.reborn.Res
+import com.gentlelady.reborn.img_memorial_bg_dummy
 import com.gentlelady.reborn.feature.memorial_swipe.components.*
-import com.gentlelady.reborn.feature.memorial_swipe.MemorialItem
-import com.gentlelady.reborn.feature.memorial_swipe.MemorialSwipeIntent
-import com.gentlelady.reborn.feature.memorial_swipe.MemorialSwipeState
-import com.gentlelady.reborn.feature.memorial_swipe.MusicItem
-import com.gentlelady.reborn.feature.memorial_swipe.components.MemorialBottomButtons
-import com.gentlelady.reborn.feature.memorial_swipe.components.MemorialSwipeIndicator
-import com.gentlelady.reborn.feature.memorial_swipe.components.MemorialTopBar
-import org.jetbrains.compose.resources.painterResource // KMP 리소스 로더 [cite: 77]
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -35,7 +28,7 @@ fun MemorialSwipeScreen(
     val pagerState = rememberPagerState(pageCount = { state.memorialItems.size })
 
     Scaffold(
-        containerColor = Color.Black // 바텀바가 없는 순수 몰입형 컨테이너 [cite: 85]
+        containerColor = Color.Black
     ) { padding ->
         VerticalPager(
             state = pagerState,
@@ -44,48 +37,51 @@ fun MemorialSwipeScreen(
             val currentItem = state.memorialItems[page]
 
             Box(modifier = Modifier.fillMaxSize()) {
+                // 외부 데이터 주입형 배경 렌더링 설계 (Stateless 분기)
+                if (currentItem.backgroundImageUrl.isEmpty()) {
+                    Image(
+                        painter = painterResource(Res.drawable.img_memorial_bg_dummy),
+                        contentDescription = "Memorial Immersive Default Background",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    // 추후 확장: Coil AsyncImage 등을 활용한 서버 사이드 동적 바인딩 구역
+                    Image(
+                        painter = painterResource(Res.drawable.img_memorial_bg_dummy),
+                        contentDescription = "Memorial Immersive Dynamic Background",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
-                // A. [수정] 임시 텍스트 플레이스홀더를 제거하고, 실제 드로어블 이미지를 배경으로 바인딩 [cite: 5, 69]
-                // ContentScale.Crop을 사용하여 어떤 디바이스 화면 비율에서도 꽉 차게 렌더링합니다.
-                Image(
-                    painter = painterResource(Res.drawable.img_memorial_bg_dummy), // KMP 에셋 리소스 참조 [cite: 13]
-                    contentDescription = "Memorial Immersive Background",
-                    contentScale = ContentScale.Crop, // 비율을 유지하며 화면을 가득 채움
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                // B. 배경 이미지 위에 깔리는 어두운 딤(Dim) 레이어 [cite: 69, 86]
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.4f)) // 시안 고유의 은은한 어둠 연출
+                        .background(Color.Black.copy(alpha = 0.4f))
                 )
 
-                // C. 상단 레이아웃 플로팅 컴포넌트 (BoxScope 수신 객체 구조 유지) [cite: 68]
                 MemorialTopBar(
                     musicItem = currentItem.currentMusic,
                     onHomeClick = { onIntent(MemorialSwipeIntent.NavigateHome) }
                 )
 
-                // D. 콘텐츠 영역 적층 레이아웃
                 Column(modifier = Modifier.fillMaxSize()) {
                     Spacer(modifier = Modifier.height(76.dp))
 
                     Column(
                         modifier = Modifier
-                            .weight(1f) // 하단 버튼을 최하단으로 밀어내고 본인은 중앙 영역 확보
+                            .weight(1f)
                             .fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center, // 내부 아이템들을 수직 정중앙 정렬
+                        verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         MemorialProfileContent(currentItem)
 
-                        // 이제 프로필 정보 바로 밑에 쫀쫀하게 밀착하여 펄스 애니메이션이 표현됩니다.
-                        Spacer(modifier = Modifier.height(16.dp)) // 시안 스페이싱 가이드 확보
+                        Spacer(modifier = Modifier.height(16.dp))
                         MemorialSwipeIndicator()
                     }
 
-                    // 하단 팔로우, 공유하기 및 고스트 테두리 스타일의 페이지 이동 버튼 [cite: 87, 103]
                     MemorialBottomButtons(
                         memorialId = currentItem.id,
                         onFollowClick = { onIntent(MemorialSwipeIntent.FollowClick(it)) },
