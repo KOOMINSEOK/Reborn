@@ -1,12 +1,13 @@
 package com.gentlelady.reborn.feature.memorial_swipe.components
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,18 +17,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.feature.memorial_swipe.MusicItem
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-// 컴포넌트 분화 및 하위 의존 컴포넌트는 internal로 은닉 규칙 준수[cite: 8, 32].
+import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
+import com.gentlelady.reborn.ic_music
+import com.gentlelady.reborn.ic_nav_home_default
+
 @Composable
 internal fun BoxScope.MemorialTopBar(
     musicItem: MusicItem?,
     onHomeClick: () -> Unit
 ) {
-    // 1. 음악 디스크의 무한 회전을 위한 360도 루프 애니메이션 정의 [cite: 79, 81]
     val infiniteTransition = rememberInfiniteTransition(label = "MusicDiscRotation")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -43,70 +50,108 @@ internal fun BoxScope.MemorialTopBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-            .align(Alignment.TopCenter), // BoxScope 수신 객체를 통한 플로팅 정렬 [cite: 60, 68]
+            .align(Alignment.TopCenter),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. 음악 정보 위젯 (좌상단 플로팅) [cite: 79, 81]
+        // Floating player widget 컨테이너
         Row(
             modifier = Modifier
                 .wrapContentWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.Black.copy(alpha = 0.6f)) // 몰입형 뷰를 위한 어두운 투명도 레이어
-                .padding(4.dp),
+                .height(56.dp) // 간격 확장에 맞춰 높이를 52dp -> 56dp로 미세 조정하여 밸런스 유지
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color.Black.copy(alpha = 0.6f))
+                .border(
+                    border = BorderStroke(1.dp, RebornBorderLightBlue.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(28.dp)
+                )
+                // 시안의 컴포넌트 간 간격을 확보하기 위해 전체 좌우 패딩을 16dp로 확장
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 회전하는 디스크 앨범 아트 영역 (Spinning music disc) [cite: 79, 81]
+            // 1. 회전하는 디스크 앨범 아트
             Surface(
                 modifier = Modifier
-                    .size(32.dp)
-                    .rotate(rotation), // 계산된 회전 각도 실시간 반영
+                    .size(36.dp)
+                    .rotate(rotation),
                 shape = CircleShape,
-                color = Color.LightGray // 동적 에셋 플레이스홀더 규칙 준수 [cite: 5, 58]
+                color = Color.DarkGray
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = "Art",
-                        color = Color.White,
-                        fontSize = 10.sp,
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 9.sp,
                         modifier = Modifier.wrapContentSize(Alignment.Center)
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(musicItem?.title ?: "No Title", color = Color.White, fontSize = 14.sp)
-                Text(musicItem?.artist ?: "Unknown Artist", color = Color.LightGray, fontSize = 11.sp)
+
+            // 디스크와 텍스트 사이 간격을 넓게 조정
+            Spacer(modifier = Modifier.width(14.dp))
+
+            // 2. 순수 텍스트 영역 (제목과 가수 사이 간격 축소)
+            Column(
+                modifier = Modifier.weight(1f, fill = false), // 음표 아이콘과의 간격 확보를 위한 가변 너비 설정
+                verticalArrangement = Arrangement.spacedBy(0.dp) // 간격을 완전히 좁혀 쫀쫀하게 결합
+            ) {
+                // 곡 제목 (14sp, 두꺼운 폰트 스타일 유지)
+                Text(
+                    text = musicItem?.title ?: "No Title",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // 아티스트 명 (11sp, 연한 회색 톤 유지)
+                Text(
+                    text = musicItem?.artist ?: "Unknown Artist",
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
-            Spacer(modifier = Modifier.width(12.dp))
+
+            // 텍스트 영역과 우측 음표 아이콘 사이 간격을 넓게 조정
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // 3. 음표 아이콘 (세로축 중앙 정렬 고정 및 시안 픽셀 매칭)
             Icon(
-                imageVector = Icons.Filled.MusicNote,
+                painter = painterResource(Res.drawable.ic_music),
                 contentDescription = "Music",
                 tint = Color.White,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier
+                    .size(16.dp) // 시안 가이드라인의 선명도에 맞춰 크기 최적화 (14dp -> 16dp)
+                    .align(Alignment.CenterVertically)
             )
-            Spacer(modifier = Modifier.width(4.dp))
         }
 
-        // 2. 홈 버튼 (우상단 플로팅) [cite: 79, 81]
+        // 2. 홈 버튼
         IconButton(
             onClick = onHomeClick,
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.2f)) // 완전 몰입형 테마에 맞추어 반투명(Ghost) 스타일 최적화 [cite: 79, 87]
+                .background(Color.White.copy(alpha = 0.2f))
+                .border(
+                    width = 1.dp,
+                    color = RebornBorderLightBlue.copy(alpha = 0.4f),
+                    shape = CircleShape
+                )
         ) {
             Icon(
-                imageVector = Icons.Filled.Home,
+                painter = painterResource(Res.drawable.ic_nav_home_default),
                 contentDescription = "Home",
-                tint = Color.White, // 심플하고 직관적인 화이트 톤 피드백 적용
+                tint = Color.White,
                 modifier = Modifier.size(20.dp)
             )
         }
     }
 }
 
-// BoxScope 확장성 대응을 위한 단독 프리뷰 래퍼 구현 (지역 함수 사용 금지 원칙 준수) [cite: 9, 60]
 @Preview
 @Composable
 private fun MemorialTopBarPreview() {
@@ -114,8 +159,8 @@ private fun MemorialTopBarPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
-                .background(Color.DarkGray) // 시안의 어두운 풀 스크린 배경 시각화 레이어
+                .height(120.dp)
+                .background(Color.DarkGray)
         ) {
             MemorialTopBar(
                 musicItem = MusicItem("See You Again", "Wiz Khalifa ft. Charlie Puth", ""),
