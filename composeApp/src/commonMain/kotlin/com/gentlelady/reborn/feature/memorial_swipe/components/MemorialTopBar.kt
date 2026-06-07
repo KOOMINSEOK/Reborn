@@ -22,7 +22,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
-import com.gentlelady.reborn.feature.memorial_swipe.MusicItem
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -30,6 +29,7 @@ import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
 import com.gentlelady.reborn.ic_music
 import com.gentlelady.reborn.ic_nav_home_default
 import com.gentlelady.reborn.img_memorial_album_dummy
+import com.gentlelady.reborn.memorial_swipe.domain.model.MusicItem
 
 @Composable
 internal fun BoxScope.MemorialTopBar(

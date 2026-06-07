@@ -18,6 +18,7 @@ import com.gentlelady.reborn.feature.home.components.PostItem
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
+import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 
 @Composable
 fun HomeScreen(
@@ -48,19 +49,10 @@ fun HomeScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
-    val mockState = HomeState(
-        posts = listOf(
-            HomePost(id = "1", authorName = "홍길동", authorProfileUrl = "", contentImageUrl = "", caption = "설날을 맞아 북한산으로 등산을 다녀왔습니다.", postedAt = "", isPosthumous = false),
-            HomePost(id = "2", authorName = "김첨지", authorProfileUrl = "", contentImageUrl = "", caption = "나의 마지막 기록이 여러분에게 닿기를...", postedAt = "", isPosthumous = true)
-        )
-    )
+fun HomeScreenPreview(
+    @PreviewParameter(HomeStateProvider::class) state: HomeState
+) {
     MaterialTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            HomeScreen(state = mockState)
-        }
+        HomeScreen(state = state)
     }
 }

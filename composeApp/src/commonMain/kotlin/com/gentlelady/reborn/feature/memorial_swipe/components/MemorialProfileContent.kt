@@ -27,9 +27,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
-import com.gentlelady.reborn.feature.memorial_swipe.MemorialItem
 import com.gentlelady.reborn.ic_memorial_ribbon
 import com.gentlelady.reborn.img_memorial_profile_dummy
+import com.gentlelady.reborn.memorial_swipe.domain.model.MemorialItem
 
 @Composable
 internal fun ColumnScope.MemorialProfileContent(item: MemorialItem) {
