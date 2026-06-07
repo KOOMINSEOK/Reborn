@@ -10,14 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gentlelady.reborn.home.domain.model.HomePost
-import com.gentlelady.reborn.home.presentation.home.HomeIntent
-import com.gentlelady.reborn.home.presentation.home.HomeState
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // 하위 컴포넌트 패키지 임포트
 import com.gentlelady.reborn.feature.home.components.HomeTopAppBar
 import com.gentlelady.reborn.feature.home.components.PostItem
 import com.gentlelady.reborn.core.theme.RebornDividerGray
+import com.gentlelady.reborn.home.presentation.home.HomeIntent
+import com.gentlelady.reborn.home.presentation.home.HomeState
 
 @Composable
 fun HomeScreen(
@@ -26,7 +26,12 @@ fun HomeScreen(
 ) {
     Scaffold(
         containerColor = Color.White,
-        topBar = { HomeTopAppBar() }
+        topBar = {
+            // 새로 개설한 콜백 파라미터에 HomeIntent를 매핑하여 단방향 데이터 흐름을 완성합니다.
+            HomeTopAppBar(
+                onMemorialClick = { onIntent(HomeIntent.ClickMemorialIcon) }
+            )
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier

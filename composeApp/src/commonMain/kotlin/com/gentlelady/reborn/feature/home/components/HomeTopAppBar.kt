@@ -24,12 +24,16 @@ import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopAppBar() {
+fun HomeTopAppBar(
+    // 💡 [수정] 외부에서 이동 이벤트를 처리할 수 있도록 람다 콜백 함수를 파라미터로 개설합니다.
+    onMemorialClick: () -> Unit = {}
+) {
     TopAppBar(
         title = { Text("Home", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold) },
         actions = {
             IconButton(
-                onClick = { },
+                // 💡 [수정] 기념 버튼 클릭 시 주입받은 람다 이벤트를 트리거합니다.
+                onClick = onMemorialClick,
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
@@ -74,7 +78,8 @@ fun HomeTopAppBar() {
 fun HomeTopAppBarPreview() {
     MaterialTheme {
         Surface {
-            HomeTopAppBar()
+            // 프리뷰 독립성 유지를 위한 기본 빈 람다 매핑 확인
+            HomeTopAppBar(onMemorialClick = {})
         }
     }
 }
