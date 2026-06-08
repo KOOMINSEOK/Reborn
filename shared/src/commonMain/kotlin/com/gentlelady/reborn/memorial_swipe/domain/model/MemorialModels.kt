@@ -1,5 +1,7 @@
 package com.gentlelady.reborn.memorial_swipe.domain.model
 
+import org.jetbrains.compose.resources.DrawableResource
+
 data class MemorialItem(
     val id: String,
     val name: String,
@@ -7,9 +9,9 @@ data class MemorialItem(
     val location: String,
     val birthDate: String,
     val deathDate: String,
-    val profileImageUrl: String,
-    val backgroundImageUrl: String,
-    val currentMusic: MusicItem?
+    val profileImageUrl: DrawableResource,
+    val backgroundImageUrl: DrawableResource,
+    val currentMusic: MusicItem
 )
 
 data class MusicItem(

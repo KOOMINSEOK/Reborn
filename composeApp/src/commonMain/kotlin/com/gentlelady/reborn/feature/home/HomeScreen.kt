@@ -47,12 +47,39 @@ fun HomeScreen(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Home Screen Preview")
 @Composable
-fun HomeScreenPreview(
-    @PreviewParameter(HomeStateProvider::class) state: HomeState
-) {
+fun HomeScreenPreview() {
+    // 💡 Provider 없이 프리뷰 내부에서 안전한 하드코딩 데이터를 직접 생성
+    val mockPosts = listOf(
+        HomePost(
+            id = "1",
+            authorName = "홍길동",
+            authorProfileUrl = "",
+            contentImageUrl = "",
+            caption = "설날을 맞아 북한산으로 등산을 다녀왔습니다.",
+            postedAt = "",
+            isPosthumous = false
+        ),
+        HomePost(
+            id = "2",
+            authorName = "김첨지",
+            authorProfileUrl = "",
+            contentImageUrl = "",
+            caption = "나의 마지막 기록이 여러분에게 닿기를...",
+            postedAt = "",
+            isPosthumous = true
+        )
+    )
+
+    val mockState = HomeState(
+        isLoading = false,
+        posts = mockPosts,
+        error = null
+    )
+
     MaterialTheme {
-        HomeScreen(state = state)
+        // 💡 2. 직접 만든 상태를 주입합니다.
+        HomeScreen(state = mockState)
     }
 }

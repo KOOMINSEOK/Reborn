@@ -3,6 +3,9 @@ package com.gentlelady.reborn.data
 import com.gentlelady.reborn.home.domain.model.HomePost
 import com.gentlelady.reborn.memorial_swipe.domain.model.MemorialItem
 import com.gentlelady.reborn.memorial_swipe.domain.model.MusicItem
+import reborn.shared.generated.resources.Res
+import reborn.shared.generated.resources.img_memorial_bg_dummy
+import reborn.shared.generated.resources.img_memorial_profile_dummy
 
 object MockDataSource {
     val homePosts = listOf(
@@ -40,8 +43,8 @@ object MockDataSource {
             location = "서울특별시",
             birthDate = "1987.03.02",
             deathDate = "2024.01.03",
-            profileImageUrl = "",
-            backgroundImageUrl = "",
+            profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+            backgroundImageUrl = Res.drawable.img_memorial_bg_dummy,
             currentMusic = MusicItem("See You Again", "Wiz Khalifa ft. Charlie Puth", "")
         ),
         MemorialItem(
@@ -51,8 +54,8 @@ object MockDataSource {
             location = "부산광역시",
             birthDate = "1992.05.15",
             deathDate = "2023.11.20",
-            profileImageUrl = "",
-            backgroundImageUrl = "",
+            profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+            backgroundImageUrl = Res.drawable.img_memorial_bg_dummy,
             currentMusic = MusicItem("천 개의 바람이 되어", "임형주", "")
         )
     )

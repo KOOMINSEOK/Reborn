@@ -27,8 +27,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
+import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.ic_memorial_ribbon
 import com.gentlelady.reborn.img_memorial_profile_dummy
+import com.gentlelady.reborn.img_memorial_bg_dummy
 import com.gentlelady.reborn.memorial_swipe.domain.model.MemorialItem
 
 @Composable
@@ -116,22 +118,13 @@ internal fun ColumnScope.MemorialProfileContent(item: MemorialItem) {
                 .clip(CircleShape)
                 .border(width = 4.dp, color = Color.White, shape = CircleShape)
         ) {
-            if (item.profileImageUrl.isEmpty()) {
-                Image(
-                    painter = painterResource(Res.drawable.img_memorial_profile_dummy),
-                    contentDescription = "Memorial Profile Dummy Picture",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                // 추후 연동용 분기 개설 완료
-                Image(
-                    painter = painterResource(Res.drawable.img_memorial_profile_dummy),
-                    contentDescription = "Memorial Profile Picture",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            // 💡 분기 제거: State에서 넘어온 프로필 이미지 리소스를 직접 바인딩
+            Image(
+                painter = painterResource(item.profileImageUrl),
+                contentDescription = "Memorial Profile Picture",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
         }
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -144,23 +137,15 @@ internal fun ColumnScope.MemorialProfileContent(item: MemorialItem) {
 @Preview
 @Composable
 private fun MemorialProfileContentPreview() {
-    val mockItem = MemorialItem(
-        id = "1",
-        name = "김첨지",
-        jobTitle = "소방관",
-        location = "서울특별시",
-        birthDate = "1987.03.02",
-        deathDate = "2024.01.03",
-        profileImageUrl = "",
-        backgroundImageUrl = "",
-        currentMusic = null
-    )
+    // 💡 하드코딩된 데이터를 지우고, MockDataSource의 첫 번째 데이터를 가져옵니다.
+    val mockItem = MockDataSource.memorialItems.first()
+
     MaterialTheme {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(450.dp)
-                .background(Color.DarkGray)
+                .background(Color.DarkGray) // 시안 확인을 위한 임시 어두운 배경
         ) {
             MemorialProfileContent(item = mockItem)
         }
