@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.home.components
+package com.gentlelady.reborn.core.designsystem.PostCard
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth

@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.home.components
+package com.gentlelady.reborn.core.designsystem.PostCard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +30,7 @@ import com.gentlelady.reborn.ic_comment
 import com.gentlelady.reborn.ic_share
 import com.gentlelady.reborn.home.domain.model.HomePost
 import com.gentlelady.reborn.core.theme.*
+import org.jetbrains.compose.resources.DrawableResource
 
 @Composable
 internal fun PostHeader(post: HomePost) {
@@ -129,7 +130,7 @@ internal fun PostActionRow(post: HomePost) {
 
 @Composable
 private fun ActionItem(
-    iconRes: org.jetbrains.compose.resources.DrawableResource,
+    iconRes: DrawableResource,
     count: String,
     contentDescription: String
 ) {

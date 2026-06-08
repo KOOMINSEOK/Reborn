@@ -14,11 +14,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // 하위 컴포넌트 패키지 임포트
 import com.gentlelady.reborn.feature.home.components.HomeTopAppBar
-import com.gentlelady.reborn.feature.home.components.PostItem
+import com.gentlelady.reborn.core.designsystem.PostCard.PostItem
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
-import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 
 @Composable
 fun HomeScreen(
