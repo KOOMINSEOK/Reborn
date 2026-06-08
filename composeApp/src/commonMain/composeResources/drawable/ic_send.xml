@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+    <!-- 종이비행기 외곽선 -->
+    <path
+        android:pathData="M9.6907 14.4572C9.74257 14.5865 9.86935 14.6699 10.0086 14.6663C10.1478 14.6627 10.2702 14.4412L14.6487 1.77455C14.6923 1.65396 14.6622 1.51906 14.5715 1.4284C14.4809 1.33774 14.346 1.30766 14.2254 1.35122L1.5587 5.68455C1.42694 5.72973 1.33717 5.85208 1.33361 5.99132C1.33004 6.13057 1.41343 6.25735 1.5427 6.30922L6.82937 8.42922C7.16708 8.56443 7.43488 8.83175 7.5707 9.16922L9.6907 14.4572"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 중앙 내부선 -->
+    <path
+        android:pathData="M14.5692 1.4314L7.27588 8.72406"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

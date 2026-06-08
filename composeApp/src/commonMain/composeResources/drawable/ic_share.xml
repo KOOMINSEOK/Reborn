@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+    <!-- 상단 우측 원 -->
+    <path
+        android:pathData="M12.5 4.16663C12.5 5.54641 13.6202 6.66663 15 6.66663C16.3798 6.66663 17.5 5.54641 17.5 4.16663C17.5 2.78684 16.3798 1.66663 15 1.66663C13.6202 1.66663 12.5 2.78684 12.5 4.16663V4.16663"
+        android:strokeColor="#64748B"
+        android:strokeWidth="1.66667"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 좌측 원 -->
+    <path
+        android:pathData="M2.5 10C2.5 11.3798 3.62021 12.5 5 12.5C6.37979 12.5 7.5 11.3798 7.5 10C7.5 8.62021 6.37979 7.5 5 7.5C3.62021 7.5 2.5 8.62021 2.5 10H2.5"
+        android:strokeColor="#64748B"
+        android:strokeWidth="1.66667"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 하단 우측 원 -->
+    <path
+        android:pathData="M12.5 15.8334C12.5 17.2132 13.6202 18.3334 15 18.3334C16.3798 18.3334 17.5 17.2132 17.5 15.8334C17.5 14.4536 16.3798 13.3334 15 13.3334C13.6202 13.3334 12.5 14.4536 12.5 15.8334V15.8334"
+        android:strokeColor="#64748B"
+        android:strokeWidth="1.66667"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 하단 연결선 -->
+    <path
+        android:pathData="M7.15845 11.2583L12.8501 14.575"
+        android:strokeColor="#64748B"
+        android:strokeWidth="1.66667"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 상단 연결선 -->
+    <path
+        android:pathData="M12.8418 5.42505L7.15845 8.74172"
+        android:strokeColor="#64748B"
+        android:strokeWidth="1.66667"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
