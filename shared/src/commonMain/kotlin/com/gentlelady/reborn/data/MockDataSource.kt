@@ -10,6 +10,11 @@ import reborn.shared.generated.resources.img_memorial_bg_dummy
 import reborn.shared.generated.resources.img_memorial_profile_dummy
 import reborn.shared.generated.resources.img_post_dummy1
 import reborn.shared.generated.resources.img_post_dummy2
+import reborn.shared.generated.resources.img_profile_dummy_1
+import reborn.shared.generated.resources.img_profile_dummy_2
+import reborn.shared.generated.resources.img_profile_dummy_3
+import reborn.shared.generated.resources.img_profile_dummy_4
+import reborn.shared.generated.resources.img_profile_dummy_5
 
 object MockDataSource {
 
@@ -32,7 +37,7 @@ object MockDataSource {
             authorName = "김첨지",
             caption = "나의 마지막 기록이 여러분에게 닿기를...",
             isPosthumous = true,
-            authorProfileUrl = Res.drawable.img_memorial_profile_dummy,
+            authorProfileUrl = Res.drawable.img_profile_dummy_2,
             contentImageUrl = Res.drawable.img_post_dummy2,
             isLocked = true,
             likes = 150,
@@ -52,7 +57,7 @@ object MockDataSource {
             birthDate = "1987.03.02",
             deathDate = "2024.01.03",
             profileImageUrl = Res.drawable.img_memorial_profile_dummy,
-            backgroundImageUrl = Res.drawable.img_memorial_bg_dummy,
+            backgroundImageUrl = Res.drawable.img_memorial_album_dummy,
             currentMusic = MusicItem("See You Again", "Wiz Khalifa ft. Charlie Puth", "")
         ),
         MemorialItem(
@@ -64,8 +69,8 @@ object MockDataSource {
             flowerCount = "18.5k",
             birthDate = "1992.05.15",
             deathDate = "2023.11.20",
-            profileImageUrl = Res.drawable.img_memorial_profile_dummy, // 필요시 별도 에셋 추가 지정
-            backgroundImageUrl = Res.drawable.img_memorial_bg_dummy,
+            profileImageUrl = Res.drawable.img_profile_dummy_2, // 필요시 별도 에셋 추가 지정
+            backgroundImageUrl = Res.drawable.img_memorial_album_dummy,
             currentMusic = MusicItem("천 개의 바람이 되어", "임형주", "")
         ),
         // 검색(Search) 및 리스트 뷰 다채로움을 위한 일반 랭킹 데이터 추가
@@ -93,7 +98,7 @@ object MockDataSource {
             deathDate = "2023",
             location = "서울",
             flowerCount = "24.8k",
-            profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+            profileImageUrl = Res.drawable.img_profile_dummy_1,
             isVerified = false
         ),
         MemorialSearchItem(
@@ -104,7 +109,7 @@ object MockDataSource {
             deathDate = "2022",
             location = "부산",
             flowerCount = "18.3k",
-            profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+            profileImageUrl = Res.drawable.img_profile_dummy_2,
             isVerified = true // 블루 체크 마크 활성화
         ),
         MemorialSearchItem(
@@ -115,7 +120,7 @@ object MockDataSource {
             deathDate = "2024",
             location = "인천",
             flowerCount = "12.5k",
-            profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+            profileImageUrl = Res.drawable.img_profile_dummy_3,
             isVerified = false
         ),
         MemorialSearchItem(
@@ -126,7 +131,7 @@ object MockDataSource {
             deathDate = "2021",
             location = "대구",
             flowerCount = "9.7k",
-            profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+            profileImageUrl = Res.drawable.img_profile_dummy_4,
             isVerified = false
         ),
         MemorialSearchItem(
@@ -137,7 +142,7 @@ object MockDataSource {
             deathDate = "2023",
             location = "광주",
             flowerCount = "7.1k",
-            profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+            profileImageUrl = Res.drawable.img_profile_dummy_5,
             isVerified = false
         )
     )
