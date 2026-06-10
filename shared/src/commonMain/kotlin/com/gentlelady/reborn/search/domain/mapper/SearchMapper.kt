@@ -1,36 +1,45 @@
-package com.gentlelady.reborn.search.domain.mapper
-
-import com.gentlelady.reborn.search.presentation.SearchItem
-import com.gentlelady.reborn.home.domain.model.HomePost
-import com.gentlelady.reborn.memorial_swipe.domain.model.MemorialItem
-import com.gentlelady.reborn.memorial_swipe.domain.model.MusicItem
-import reborn.shared.generated.resources.Res
-import reborn.shared.generated.resources.img_memorial_bg_dummy
-import reborn.shared.generated.resources.img_memorial_profile_dummy
-
-// SearchItem을 HomePost로 변환하는 확장 함수 정의
-fun SearchItem.toHomePost(): HomePost {
-    return HomePost(
-        id = this.id,
-        authorName = this.title, // 시안에 맞춰 title을 authorName으로 매핑
-        authorProfileUrl = "",    // 필요시 매핑 로직 추가
-        contentImageUrl = "",     // 필요시 매핑 로직 추가
-        caption = this.subtitle,  // subtitle을 caption으로 매핑
-        postedAt = "",
-        isPosthumous = false      // 타입에 따라 분기 처리 가능
-    )
-}
-
-fun SearchItem.toMemorialItem(): MemorialItem {
-    return MemorialItem(
-        id = this.id,
-        name = this.title,
-        jobTitle = "고인", // SearchItem의 필드에서 적절히 매핑
-        location = "서울", // SearchItem의 필드에서 적절히 매핑
-        birthDate = "1990.01.01", // 필요 시 매핑 로직 추가
-        deathDate = "2024.01.01",
-        profileImageUrl = Res.drawable.img_memorial_profile_dummy, // 더미 이미지 매핑
-        backgroundImageUrl = Res.drawable.img_memorial_bg_dummy,
-        currentMusic = MusicItem("제목", "아티스트", "")
-    )
-}
+//package com.gentlelady.reborn.search.domain.mapper
+//
+//import com.gentlelady.reborn.search.presentation.SearchItem
+//import com.gentlelady.reborn.home.domain.model.HomePost
+//import com.gentlelady.reborn.memorial_swipe.domain.model.MemorialItem
+//import com.gentlelady.reborn.memorial_swipe.domain.model.MusicItem
+//
+///**
+// * SearchItem -> HomePost 변환 확장 함수
+// * SearchScreen의 ItemType.POST 렌더링에 매핑됨
+// */
+//fun SearchItem.toHomePost(): HomePost {
+//    return HomePost(
+//        id = this.id,
+//        authorName = this.title,               // SearchScreen 스펙: title -> authorName
+//        authorProfileUrl = this.profileImage,  // 동적 이미지 리소스 (설정되지 않은 경우 null)
+//        contentImageUrl = this.contentImage,   // 동적 이미지 리소스 (설정되지 않은 경우 null)
+//        caption = this.subtitle,               // SearchScreen 스펙: subtitle -> caption
+//        isPosthumous = this.isPosthumous,      // 사후 게시글 여부 플래그 매핑
+//        isLocked = false,
+//        likes = 0,                             // 필요 시 SearchItem에 기본 데이터 필드 추가 가능
+//        comments = 0,
+//        postedAt = this.postedAt.ifEmpty { "2026.01.01" }
+//    )
+//}
+//
+///**
+// * SearchItem -> MemorialItem 변환 확장 함수
+// * SearchScreen의 ItemType.MEMORIAL 렌더링에 매핑됨
+// */
+//fun SearchItem.toMemorialItem(): MemorialItem {
+//    return MemorialItem(
+//        id = this.id,
+//        rank = this.rank,                      // MemorialProfileItem 내부 순위 배지 대응용 (기본값 0 또는 데이터 연동)
+//        name = this.title,                     // SearchScreen 스펙: title -> name
+//        jobTitle = this.subtitle,              // SearchScreen 스펙: subtitle -> jobTitle (예: 소방관)
+//        location = this.location.ifEmpty { "서울" }, // 지역 정보 연동
+//        flowerCount = this.flowerCount.ifEmpty { "0" }, // 꽃 개수 카운트 문자열 매핑
+//        birthDate = this.birthDate.ifEmpty { "1990" },
+//        deathDate = this.deathDate.ifEmpty { "2024" },
+//        profileImageUrl = this.profileImage,   // 동적 이미지 리소스 매핑
+//        backgroundImageUrl = this.contentImage, // 동적 이미지 리소스 매핑
+//        currentMusic = null
+//    )
+//}
