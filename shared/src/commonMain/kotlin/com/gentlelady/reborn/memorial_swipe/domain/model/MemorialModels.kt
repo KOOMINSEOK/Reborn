@@ -11,7 +11,9 @@ data class MemorialItem(
     val deathDate: String,
     val profileImageUrl: DrawableResource,
     val backgroundImageUrl: DrawableResource,
-    val currentMusic: MusicItem
+    val currentMusic: MusicItem?,
+    val rank: Int = 0,
+    val flowerCount: String = "0"
 )
 
 data class MusicItem(
