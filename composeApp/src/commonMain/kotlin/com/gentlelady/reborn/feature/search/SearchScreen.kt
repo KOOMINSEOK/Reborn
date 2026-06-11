@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gentlelady.reborn.core.designsystem.PostCard.PostItem
-import com.gentlelady.reborn.core.designsystem.Memorialcard.MemorialProfileItem
+import com.gentlelady.reborn.core.designsystem.MemorialCard.MemorialProfileItem
 import com.gentlelady.reborn.core.theme.RebornBackground
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.feature.search.components.SearchTopAppBar
