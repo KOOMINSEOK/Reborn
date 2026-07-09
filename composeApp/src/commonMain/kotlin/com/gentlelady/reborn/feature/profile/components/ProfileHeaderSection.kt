@@ -133,7 +133,12 @@ internal fun ProfileHeaderSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(
+                    start = 24.dp,
+                    end = 24.dp,
+                    top = 16.dp,
+                    bottom = 0.dp
+                ),
             verticalAlignment = Alignment.Bottom // 아바타 하단선과 지표 텍스트 하단 정렬 싱크 맞춤
         ) {
             // 프로필 이미지 및 아바타 겹침 구조 Box
@@ -176,13 +181,13 @@ internal fun ProfileHeaderSection(
                 }
             }
 
-            Spacer(modifier = Modifier.width(24.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             // 3가지 지표 영역 (FEED, FOLLOWERS, FOLLOWING) -> Row 내부로 격리 안착
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -209,7 +214,8 @@ internal fun ProfileHeaderSection(
             text = "@${state.username}",
             modifier = Modifier
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp),
+                .padding(bottom = 24.dp)
+                .padding(top = 4.dp),
             color = RebornUnselectedGray,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal

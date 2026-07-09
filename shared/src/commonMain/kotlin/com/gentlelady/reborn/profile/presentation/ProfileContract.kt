@@ -1,8 +1,8 @@
 package com.gentlelady.reborn.profile.presentation
 
 import org.jetbrains.compose.resources.DrawableResource
+import com.gentlelady.reborn.profile.domain.model.ProfileFeedItem // 💡 새로 분리한 도메인 모델 임포트
 
-// 1. 단일 진실 공급원 (SSOT) 상태 정의
 data class ProfileState(
     val username: String = "",
     val profileImageUrl: DrawableResource? = null,
@@ -10,27 +10,16 @@ data class ProfileState(
     val posthumousFeedCount: Int = 0,
     val followersCount: Int = 0,
     val followingCount: Int = 0,
-    val feeds: List<ProfileFeedItem> = emptyList(),
     val scheduledFeedCount: Int = 0,
-    val isLoading: Boolean = false
+    val feeds: List<ProfileFeedItem> = emptyList(), // 💡 독립 모델 매칭 완료
+    val isLoading: Boolean = true
 )
 
-data class ProfileFeedItem(
-    val id: String,
-    val title: String,
-    val subtitle: String,
-    val thumbnail: DrawableResource,
-    val likes: Int,
-    val comments: Int
-)
-
-// 2. 유저 액션 인터페이스 (Intent)
 sealed interface ProfileIntent {
     object LoadProfile : ProfileIntent
     object ClickEditBackground : ProfileIntent
     object ClickEditProfile : ProfileIntent
+    object ClickToggleMemorialMode : ProfileIntent
     object ClickViewAllFeeds : ProfileIntent
     data class ClickManagementMenu(val menuId: String) : ProfileIntent
-
-    object ClickToggleMemorialMode : ProfileIntent
 }

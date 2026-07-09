@@ -25,9 +25,10 @@ import com.gentlelady.reborn.ic_like
 import com.gentlelady.reborn.ic_comment
 import com.gentlelady.reborn.img_memorial_bg_dummy
 import com.gentlelady.reborn.img_memorial_profile_dummy
-import com.gentlelady.reborn.profile.presentation.ProfileFeedItem
+import com.gentlelady.reborn.profile.domain.model.ProfileFeedItem
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.text.get
 
 @Composable
 internal fun ProfileFeedCarousel(
@@ -84,13 +85,13 @@ internal fun ProfileFeedCarousel(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
-                // 패딩을 통해 좌우 여백 균형 조율 (우측 카드가 스와이프를 자연스럽게 유도하도록 설정)
-                contentPadding = PaddingValues(start = 24.dp, end = 56.dp),
-                pageSpacing = 14.dp
+                contentPadding = PaddingValues(start = 24.dp, end = 120.dp),
+                pageSpacing = 12.dp
             ) { page ->
                 CarouselCardItem(
                     item = feeds[page],
-                    modifier = Modifier.fillMaxWidth() // 부모 가로폭 비율을 온전히 수용
+                    // 💡 부모 가로폭의 60%만 채우도록 Fraction 비율 명시
+                    modifier = Modifier.fillMaxWidth(1f)
                 )
             }
 
@@ -119,6 +120,11 @@ internal fun ProfileFeedCarousel(
     }
 }
 
+
+
+// ---
+
+// 2. 하위 자식 컴포저블 수정부
 @Composable
 private fun CarouselCardItem(
     item: ProfileFeedItem,
@@ -126,13 +132,13 @@ private fun CarouselCardItem(
 ) {
     Card(
         modifier = modifier
-            .aspectRatio(1f), // 💡 가로 길이에 맞춰 세로 높이가 항상 1:1(정사각형)이 되도록 유연하게 강제
+            .aspectRatio(1f), // 💡 유입된 가로폭(60%)에 맞춰 세로 높이도 똑같이 1:1 비율로 동적 스케일 다운
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // 상단 이미지 영역 (1:1 비율 내부에서 절반을 차지하도록 비율 분할)
+            // 상단 이미지 영역
             Image(
                 painter = painterResource(item.thumbnail),
                 contentDescription = "Feed Thumbnail",
@@ -147,7 +153,7 @@ private fun CarouselCardItem(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f) // 이미지와 1:1 대칭 구조로 텍스트 공간 확보
+                    .weight(1f)
                     .padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -166,13 +172,13 @@ private fun CarouselCardItem(
                         color = RebornSlateGray,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
-                        maxLines = 2, // 2줄로 타이트하게 제한하여 정사각형 내부 공간 수호
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         lineHeight = 15.sp
                     )
                 }
 
-                // 좋아요 및 댓글 지표 메트릭
+                // 좋아요 및 댓글 지표 메트릭 (1:1 비율 축소에 맞춰 내부 아이콘 크기 12dp로 정밀 튜닝)
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -180,29 +186,29 @@ private fun CarouselCardItem(
                         painter = painterResource(Res.drawable.ic_like),
                         contentDescription = "Like Icon",
                         tint = RebornUnselectedGray,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(12.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = item.likes.toString(),
                         color = RebornUnselectedGray,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
                     )
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
                     Icon(
                         painter = painterResource(Res.drawable.ic_comment),
                         contentDescription = "Comment Icon",
                         tint = RebornUnselectedGray,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(12.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = item.comments.toString(),
                         color = RebornUnselectedGray,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
