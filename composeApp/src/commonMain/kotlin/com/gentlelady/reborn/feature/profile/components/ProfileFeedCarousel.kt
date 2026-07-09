@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.*
+import com.gentlelady.reborn.ic_like
+import com.gentlelady.reborn.ic_comment
 import com.gentlelady.reborn.img_memorial_bg_dummy
 import com.gentlelady.reborn.img_memorial_profile_dummy
 import com.gentlelady.reborn.profile.presentation.ProfileFeedItem
@@ -55,7 +57,7 @@ internal fun ProfileFeedCarousel(
             )
             Text(
                 text = "View All",
-                color = RebornCobaltBlue, // 포인트 컬러 매칭 규칙 준수
+                color = RebornCobaltBlue,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable { onViewAllClick() }
@@ -64,13 +66,12 @@ internal fun ProfileFeedCarousel(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 2. 피드 캐로셀 영역 (HorizontalPager 활용 및 Peek 효과 설정)
+        // 2. 피드 캐로셀 영역 (HorizontalPager)
         if (feeds.isEmpty()) {
-            // 빈 상태 방어용 가상 컨테이너
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
+                    .height(228.dp)
                     .padding(horizontal = 24.dp)
                     .background(RebornBackgroundGray, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
@@ -83,16 +84,19 @@ internal fun ProfileFeedCarousel(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
-                // contentPadding을 주어 다음 카드가 우측에 살짝 삐져나오도록 Peek 유도 (시안 저격)
-                contentPadding = PaddingValues(start = 24.dp, end = 48.dp),
-                pageSpacing = 16.dp
+                // 패딩을 통해 좌우 여백 균형 조율 (우측 카드가 스와이프를 자연스럽게 유도하도록 설정)
+                contentPadding = PaddingValues(start = 24.dp, end = 56.dp),
+                pageSpacing = 14.dp
             ) { page ->
-                CarouselCardItem(item = feeds[page])
+                CarouselCardItem(
+                    item = feeds[page],
+                    modifier = Modifier.fillMaxWidth() // 부모 가로폭 비율을 온전히 수용
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 3. 인디케이터 도트 영역 (시안 하단 블루 포인트 도트 묘사)
+            // 3. 인디케이터 도트 영역 (캡슐 형태)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -103,7 +107,7 @@ internal fun ProfileFeedCarousel(
                     Box(
                         modifier = Modifier
                             .padding(horizontal = 3.dp)
-                            .size(if (isSelected) 12.dp else 6.dp, 6.dp) // 활성화 시 약간 길어지는 캡슐 형태
+                            .size(if (isSelected) 12.dp else 6.dp, 6.dp)
                             .background(
                                 color = if (isSelected) RebornDeepBlue else RebornDividerGray,
                                 shape = CircleShape
@@ -122,20 +126,19 @@ private fun CarouselCardItem(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .height(230.dp),
+            .aspectRatio(1f), // 💡 가로 길이에 맞춰 세로 높이가 항상 1:1(정사각형)이 되도록 유연하게 강제
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // 상단 이미지 영역
+            // 상단 이미지 영역 (1:1 비율 내부에서 절반을 차지하도록 비율 분할)
             Image(
                 painter = painterResource(item.thumbnail),
                 contentDescription = "Feed Thumbnail",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1.2f)
+                    .weight(1f)
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                 contentScale = ContentScale.Crop
             )
@@ -144,15 +147,15 @@ private fun CarouselCardItem(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(14.dp),
+                    .weight(1f) // 이미지와 1:1 대칭 구조로 텍스트 공간 확보
+                    .padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
                     Text(
                         text = item.title,
                         color = Color.Black,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -160,28 +163,44 @@ private fun CarouselCardItem(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = item.subtitle,
-                        color = RebornSlateGray, // 슬레이트 그레이 세맨틱 폰트 컬러 매칭
+                        color = RebornSlateGray,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
-                        maxLines = 2,
+                        maxLines = 2, // 2줄로 타이트하게 제한하여 정사각형 내부 공간 수호
                         overflow = TextOverflow.Ellipsis,
-                        lineHeight = 16.sp
+                        lineHeight = 15.sp
                     )
                 }
 
-                // 좋아요 및 댓글 지표 메트릭 (하단 아이콘 행)
+                // 좋아요 및 댓글 지표 메트릭
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_like),
+                        contentDescription = "Like Icon",
+                        tint = RebornUnselectedGray,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "♡  ${item.likes}",
+                        text = item.likes.toString(),
                         color = RebornUnselectedGray,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
-                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_comment),
+                        contentDescription = "Comment Icon",
+                        tint = RebornUnselectedGray,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "💬  ${item.comments}",
+                        text = item.comments.toString(),
                         color = RebornUnselectedGray,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -191,7 +210,6 @@ private fun CarouselCardItem(
         }
     }
 }
-
 // --- 프리뷰 규칙 준수: PreviewParameterProvider 차단 및 Direct Injection 데이터 적용 ---
 @Preview
 @Composable

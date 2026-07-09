@@ -23,6 +23,8 @@ import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_lock
 import com.gentlelady.reborn.ic_camera
 import com.gentlelady.reborn.ic_home_memorial
+import com.gentlelady.reborn.img_memorial_bg_dummy
+import com.gentlelady.reborn.img_memorial_profile_dummy
 import com.gentlelady.reborn.profile.presentation.ProfileState
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -270,8 +272,8 @@ private fun ProfileHeaderSectionPreview() {
         posthumousFeedCount = 5,
         followersCount = 248,
         followingCount = 91,
-        profileImageUrl = null,
-        backgroundImageUrl = null
+        profileImageUrl = Res.drawable.img_memorial_profile_dummy,
+        backgroundImageUrl = Res.drawable.img_memorial_bg_dummy
     )
     MaterialTheme {
         ProfileHeaderSection(
