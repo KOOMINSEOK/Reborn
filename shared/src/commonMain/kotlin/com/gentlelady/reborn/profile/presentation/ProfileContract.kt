@@ -31,4 +31,6 @@ sealed interface ProfileIntent {
     object ClickEditProfile : ProfileIntent
     object ClickViewAllFeeds : ProfileIntent
     data class ClickManagementMenu(val menuId: String) : ProfileIntent
+
+    object ClickToggleMemorialMode : ProfileIntent
 }

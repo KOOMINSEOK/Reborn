@@ -29,7 +29,9 @@ fun ProfileScreen(
             item {
                 ProfileHeaderSection(
                     state = state,
-                    onEditBackgroundClick = { onIntent(ProfileIntent.ClickEditBackground) }
+                    onEditBackgroundClick = { onIntent(ProfileIntent.ClickEditBackground) },
+                    onToggleMemorialModeClick = {}
+
                 )
             }
 

@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.profile.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,15 +21,17 @@ import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_lock
+import com.gentlelady.reborn.ic_camera
+import com.gentlelady.reborn.ic_home_memorial
 import com.gentlelady.reborn.profile.presentation.ProfileState
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
 
 @Composable
 internal fun ProfileHeaderSection(
     state: ProfileState,
     onEditBackgroundClick: () -> Unit,
+    onToggleMemorialModeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -67,34 +70,71 @@ internal fun ProfileHeaderSection(
                     )
             )
 
-            // 배경 편집 버튼 (우하단 배치)
+            // ✅ [수정] 우측 상단 원형 메모리얼 토글 버튼 (배경 30%, 흰색 테두리 25% 적용)
+            Button(
+                onClick = onToggleMemorialModeClick,
+                modifier = Modifier
+                    .padding(top = 16.dp, end = 16.dp)
+                    .align(Alignment.TopEnd)
+                    .size(36.dp), // Modifier.border를 완전히 제거
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black.copy(alpha = 0.3f)
+                ),
+                shape = CircleShape,
+                // ⭐ 컴포즈 내장 border 파라미터를 사용하여 배경에 칼같이 밀착
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_home_memorial),
+                    contentDescription = "Toggle Memorial Mode",
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            // ✅ [수정] 우측 하단 배경 편집 버튼 (배경 40%, 흰색 테두리 25% 적용)
             Button(
                 onClick = onEditBackgroundClick,
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(bottom = 16.dp, end = 16.dp)
                     .align(Alignment.BottomEnd)
-                    .height(36.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black.copy(alpha = 0.6f)),
+                    .height(36.dp), // Modifier.border를 완전히 제거
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black.copy(alpha = 0.4f)
+                ),
                 shape = RoundedCornerShape(18.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp)
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                contentPadding = PaddingValues(horizontal = 14.dp)
             ) {
-                Text(
-                    text = "배경 편집",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_camera),
+                        contentDescription = "Edit Background Icon",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "배경 편집",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
 
-        // 2. 프로필 아바타 및 사용자 지표 영역
+        // 2. 프로필 아바타 및 사용자 지표 영역 (정렬 위계 완벽 복구)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.Bottom
+            verticalAlignment = Alignment.Bottom // 아바타 하단선과 지표 텍스트 하단 정렬 싱크 맞춤
         ) {
-            // 프로필 이미지 및 아바타 겹침 구조
+            // 프로필 이미지 및 아바타 겹침 구조 Box
             Box(
                 modifier = Modifier.size(88.dp)
             ) {
@@ -116,7 +156,7 @@ internal fun ProfileHeaderSection(
                         .align(Alignment.TopStart)
                 )
 
-                // 아바타 우하단 카메라 아이콘/포인트 배지 (시안 반영)
+                // 아바타 우하단 카메라 포인트 배지
                 Box(
                     modifier = Modifier
                         .size(28.dp)
@@ -125,14 +165,18 @@ internal fun ProfileHeaderSection(
                         .align(Alignment.BottomEnd),
                     contentAlignment = Alignment.Center
                 ) {
-                    // 예시 카메라 또는 사진 아이콘 대체 가능
-                    Box(modifier = Modifier.size(10.dp).background(Color.White, CircleShape))
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_camera),
+                        contentDescription = "Change Profile Photo Icon",
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.width(24.dp))
 
-            // 3가지 지표 영역 (FEED, FOLLOWERS, FOLLOWING)
+            // 3가지 지표 영역 (FEED, FOLLOWERS, FOLLOWING) -> Row 내부로 격리 안착
             Row(
                 modifier = Modifier
                     .weight(1f)
@@ -156,19 +200,19 @@ internal fun ProfileHeaderSection(
                     showLock = false
                 )
             }
-        }
+        } // ◀ Row의 명확한 폐쇄 앵커
 
-        // 유저네임 텍스트 영역
+        // 3. 유저네임 텍스트 영역 (부모 Column의 직계 자식으로 올바르게 배치)
         Text(
             text = "@${state.username}",
             modifier = Modifier
-                .padding(horizontal = 24.dp) // 1단계: 좌우 가로 패딩 먼저 적용
-                .padding(bottom = 24.dp),    // 2단계: 하단 패딩 연속 체이닝으로 결합
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
             color = RebornUnselectedGray,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         )
-    }
+    } // ◀ 부모 Column의 명확한 폐쇄 앵커
 }
 
 @Composable
@@ -184,7 +228,6 @@ private fun RowScope.ProfileMetricItem(
         verticalArrangement = Arrangement.Center
     ) {
         if (showLock) {
-            // 사후 피드를 상징하는 코발트 블루 자물쇠 배지 배치 규칙 준수
             Box(
                 modifier = Modifier
                     .size(20.dp)
@@ -200,7 +243,6 @@ private fun RowScope.ProfileMetricItem(
             }
             Spacer(modifier = Modifier.height(2.dp))
         } else {
-            // 레이아웃 높이 밸런스를 맞추기 위한 투명 플레이스홀더
             Spacer(modifier = Modifier.height(22.dp))
         }
 
@@ -220,7 +262,6 @@ private fun RowScope.ProfileMetricItem(
     }
 }
 
-// --- 프리뷰 규칙 준수: PreviewParameterProvider 차단 및 Direct Injection 데이터 적용 ---
 @Preview
 @Composable
 private fun ProfileHeaderSectionPreview() {
@@ -229,13 +270,14 @@ private fun ProfileHeaderSectionPreview() {
         posthumousFeedCount = 5,
         followersCount = 248,
         followingCount = 91,
-        profileImageUrl = null,  // KMP 렌더러 안전성 확보를 위해 null 처리 후 플레이스홀더 검증
+        profileImageUrl = null,
         backgroundImageUrl = null
     )
     MaterialTheme {
         ProfileHeaderSection(
             state = previewState,
-            onEditBackgroundClick = {}
+            onEditBackgroundClick = {},
+            onToggleMemorialModeClick = {}
         )
     }
 }
