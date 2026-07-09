@@ -12,12 +12,16 @@ import androidx.navigation.compose.rememberNavController
 import com.gentlelady.reborn.feature.home.HomeScreen
 import com.gentlelady.reborn.feature.search.searchNavGraph
 import com.gentlelady.reborn.feature.message.MessageScreen // 메시지 메인 스크린 임포트
+import com.gentlelady.reborn.feature.profile.ProfileScreen
+import com.gentlelady.reborn.feature.profile.profileNavGraph
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.search.presentation.SearchState
 import com.gentlelady.reborn.search.presentation.SearchIntent
 import com.gentlelady.reborn.message.presentation.MessageState
 import com.gentlelady.reborn.message.presentation.MessageIntent
+import com.gentlelady.reborn.profile.presentation.ProfileIntent
+import com.gentlelady.reborn.profile.presentation.ProfileState
 
 @Composable
 fun MainScreen(
@@ -26,7 +30,9 @@ fun MainScreen(
     searchState: SearchState,
     onSearchIntent: (SearchIntent) -> Unit,
     messageState: MessageState,             // 메시지 상태 추가 주입
-    onMessageIntent: (MessageIntent) -> Unit // 메시지 인텐트 핸들러 추가 주입
+    onMessageIntent: (MessageIntent) -> Unit, // 메시지 인텐트 핸들러 추가 주입
+    profileState: ProfileState,             // 🆕 프로필 상태 추가 주입
+    onProfileIntent: (ProfileIntent) -> Unit // 🆕 프로필 인텐트 핸들러 추가 주입
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -79,7 +85,10 @@ fun MainScreen(
             }
 
             // 4. 프로필 화면 슬롯 (추후 연동 준비)
-            composable("profile") { /* ProfileScreen() */ }
+            profileNavGraph(
+                state = profileState,
+                onIntent = onProfileIntent
+            )
         }
     }
 }

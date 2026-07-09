@@ -12,11 +12,14 @@ import reborn.shared.generated.resources.img_memorial_bg_dummy
 import reborn.shared.generated.resources.img_memorial_profile_dummy
 import reborn.shared.generated.resources.img_post_dummy1
 import reborn.shared.generated.resources.img_post_dummy2
+import reborn.shared.generated.resources.img_post_dummy3
 import reborn.shared.generated.resources.img_profile_dummy_1
 import reborn.shared.generated.resources.img_profile_dummy_2
 import reborn.shared.generated.resources.img_profile_dummy_3
 import reborn.shared.generated.resources.img_profile_dummy_4
 import reborn.shared.generated.resources.img_profile_dummy_5
+
+import com.gentlelady.reborn.profile.domain.model.ProfileFeedItem
 
 object MockDataSource {
 
@@ -230,6 +233,41 @@ object MockDataSource {
             recentContent = "당신의 이야기는 항상 우리 마음속에 남아있을 거예요.",
             relativeTime = "2주 전",
             avatarUrl = ""
+        )
+    )
+
+    val profileUsername = "hong_gild"
+    val profileImage = Res.drawable.img_profile_dummy_1
+    val profileBgImage = Res.drawable.img_memorial_bg_dummy
+    val posthumousFeedCount = 5
+    val followersCount = 248
+    val followingCount = 91
+    val scheduledFeedCount = 3
+
+    val profileFeeds = listOf(
+        ProfileFeedItem(
+            id = "1",
+            title = "가을 산책을 하며",
+            subtitle = "예전에도 요즘에도 산책하는걸 좋아하는데요 오늘은 북한산으로 산책을 갔답니..",
+            thumbnail = Res.drawable.img_post_dummy3,
+            likes = 24,
+            comments = 6
+        ),
+        ProfileFeedItem(
+            id = "2",
+            title = "요즘 내가 좋아하는 것들",
+            subtitle = "여러분들은 어떤 취미를 가지고 계신가요? 저는 최근에 독서와 음악 감상에..",
+            thumbnail = Res.drawable.img_post_dummy1,
+            likes = 42,
+            comments = 11
+        ),
+        ProfileFeedItem(
+            id = "3",
+            title = "세 번째 기록",
+            subtitle = "소중한 기억들을 여기에 차곡차곡 남겨둡니다. 나중에 꺼내볼 수 있도록..",
+            thumbnail = Res.drawable.img_post_dummy2,
+            likes = 15,
+            comments = 2
         )
     )
 }
