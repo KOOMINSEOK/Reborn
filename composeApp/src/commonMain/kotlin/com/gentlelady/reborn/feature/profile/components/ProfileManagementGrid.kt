@@ -17,7 +17,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.*
+import com.gentlelady.reborn.ic_archive
+import com.gentlelady.reborn.ic_heart_link
+import com.gentlelady.reborn.ic_profile_edit
+import com.gentlelady.reborn.ic_schedule
+import com.gentlelady.reborn.ic_settings_tune
+import com.gentlelady.reborn.ic_shield_check
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -47,14 +56,14 @@ internal fun ProfileManagementGrid(
         ) {
             ManagementCardItem(
                 title = "예약된\n피드 관리",
-                icon = Icons.Default.DateRange,
+                icon = Res.drawable.ic_schedule,
                 badgeCount = scheduledCount,
                 isHighlighted = true, // 코발트 블루 강조 카드 지정
                 onClick = { onMenuClick("scheduled_feed") }
             )
             ManagementCardItem(
                 title = "프로필\n편집",
-                icon = Icons.Default.Edit,
+                icon = Res.drawable.ic_profile_edit,
                 badgeCount = 0,
                 isHighlighted = false,
                 onClick = { onMenuClick("edit_profile") }
@@ -69,14 +78,14 @@ internal fun ProfileManagementGrid(
         ) {
             ManagementCardItem(
                 title = "보관",
-                icon = Icons.Default.Build, // 임시 매칭 에셋 대체 가능
+                icon = Res.drawable.ic_archive, // 임시 매칭 에셋 대체 가능
                 badgeCount = 0,
                 isHighlighted = false,
                 onClick = { onMenuClick("archive") }
             )
             ManagementCardItem(
                 title = "사후 관리인\n지정",
-                icon = Icons.Default.Favorite, // 도메인 특화 하트 아이콘 계열 매칭
+                icon = Res.drawable.ic_heart_link, // 도메인 특화 하트 아이콘 계열 매칭
                 badgeCount = 0,
                 isHighlighted = false,
                 onClick = { onMenuClick("posthumous_manager") }
@@ -91,14 +100,14 @@ internal fun ProfileManagementGrid(
         ) {
             ManagementCardItem(
                 title = "공개 범위 및\n보안",
-                icon = Icons.Default.Lock,
+                icon = Res.drawable.ic_shield_check,
                 badgeCount = 0,
                 isHighlighted = false,
                 onClick = { onMenuClick("security") }
             )
             ManagementCardItem(
                 title = "앱 설정 및\n고객센터",
-                icon = Icons.Default.Settings,
+                icon = Res.drawable.ic_settings_tune,
                 badgeCount = 0,
                 isHighlighted = false,
                 onClick = { onMenuClick("settings") }
@@ -110,27 +119,24 @@ internal fun ProfileManagementGrid(
 @Composable
 private fun RowScope.ManagementCardItem(
     title: String,
-    icon: ImageVector,
+    icon: DrawableResource,
     badgeCount: Int,
     isHighlighted: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // 하이라이트 여부에 따른 외곽선 및 배경색 세맨틱 할당 규칙 준수
-    val borderStroke = if (isHighlighted) {
-        Modifier.border(1.5.dp, RebornCobaltBlue, RoundedCornerShape(16.dp))
-    } else {
-        Modifier.border(1.dp, RebornDividerGray, RoundedCornerShape(16.dp))
-    }
-
-    val containerColor = if (isHighlighted) RebornLightBlueBg else RebornBackgroundGray
+    val cardBackground = if (isHighlighted) RebornGridCardBgHighlight else RebornGridCardBgNormal
+    val cardBorderColor = if (isHighlighted) RebornGridCardBorderHighlight else RebornGridCardBorderNormal
+    val iconBoxBackground = if (isHighlighted) RebornGridCardIconBgHighlight else RebornGridCardIconBgNormal
+    val iconTintColor = if (isHighlighted) RebornGridCardIconTintHighlight else RebornSlateGray // 기본 아이콘 색은 슬레이트그레이 유지
 
     Box(
         modifier = modifier
             .weight(1f)
             .fillMaxHeight()
-            .then(borderStroke)
-            .background(containerColor, RoundedCornerShape(16.dp))
+            .border(width = 1.dp, color = cardBorderColor, shape = RoundedCornerShape(16.dp))
+            .background(color = cardBackground, shape = RoundedCornerShape(16.dp))
             .clickable { onClick() }
             .padding(16.dp)
     ) {
@@ -143,21 +149,24 @@ private fun RowScope.ManagementCardItem(
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .background(Color.White, CircleShape),
+                    .background(
+                        color = iconBoxBackground,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(icon),
                     contentDescription = title,
-                    tint = if (isHighlighted) RebornCobaltBlue else RebornSlateGray,
+                    tint = iconTintColor,
                     modifier = Modifier.size(20.dp)
                 )
             }
 
-            // 하단 메뉴 텍스트 (시안 특유의 행간 및 볼드 묘사)
+            // 하단 메뉴 텍스트
             Text(
                 text = title,
-                color = if (isHighlighted) RebornDeepBlue else Color.Black,
+                color = if (isHighlighted) RebornPrimary else Color.Black,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 lineHeight = 18.sp

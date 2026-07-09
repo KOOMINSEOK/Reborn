@@ -20,18 +20,20 @@ val RebornUnselectedGray = Color(0xFF9E9E9E) // 네비게이션 바 비활성 �
 val RebornDividerGray = Color(0xFFEEEEEE)    // 구분선 색상
 val RebornSlateGray = Color(0xFF64748B)      // 액션 아이콘 및 회색 텍스트용 슬레이트 그레이
 
-// 시스템 기본 축 (공통 상수로 확보)
+// 🆕 신규 요청 그레이 색상 추가
+val RebornGridIconGray = Color(0xFFF1F5F9)   // 일반 카드 아이콘 박스 배경
+val RebornGridBorderGray = Color(0xFFE2E8F0) // 일반 카드 테두리 선
+
+// 시스템 기본 축
 val RebornWhite = Color(0xFFFFFFFF)
 val RebornBlack = Color(0xFF111111)
 
 // ========================================================================
-// 2. Semantic Mapping (컴포넌트 단에서 참조할 의미론적 상수)
+// 2. Semantic Mapping (프로필 관리 그리드 전용 변수 등록)
 // ========================================================================
-
-// 시스템 배경 및 서피스
 val RebornBackground = RebornBackgroundGray
 val RebornSurface = RebornWhite
-val RebornSurfaceVariant = Color(0xFFE0E0E0) // 기본 LightGray 대체 스냅샷 서피스
+val RebornSurfaceVariant = Color(0xFFE0E0E0)
 
 // 타이포그래피 (글자색)
 val RebornTextPrimary = RebornBlack
@@ -41,3 +43,15 @@ val RebornTextLink = RebornCobaltBlue
 // 브랜드 및 메인 액센트
 val RebornPrimary = RebornDeepBlue
 val RebornSecondary = RebornCobaltBlue
+
+// 🆕 [신규] 관리 메뉴 카드 전용 세맨틱 컬러 매핑 규칙
+// 1) 하이라이트 안 된 경우 (Normal)
+val RebornGridCardBgNormal = RebornWhite
+val RebornGridCardBorderNormal = RebornGridBorderGray
+val RebornGridCardIconBgNormal = RebornGridIconGray
+
+// 2) 하이라이트 된 경우 (Highlighted)
+val RebornGridCardBgHighlight = RebornLightBlueBg
+val RebornGridCardBorderHighlight = RebornBorderLightBlue
+val RebornGridCardIconBgHighlight = RebornSoftBlue
+val RebornGridCardIconTintHighlight = RebornDeepBlue
