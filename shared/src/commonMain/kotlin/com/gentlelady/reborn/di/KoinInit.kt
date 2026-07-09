@@ -16,7 +16,8 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
         modules(
             todoModule,
             homeModule,
-            searchModule // 2. 여기에 검색 모듈을 결합해 줍니다.
+            searchModule,
+            messageModule// 2. 여기에 검색 모듈을 결합해 줍니다.
         )
     }
     isKoinStarted = true

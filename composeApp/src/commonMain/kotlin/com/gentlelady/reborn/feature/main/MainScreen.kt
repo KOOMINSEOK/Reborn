@@ -10,18 +10,23 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gentlelady.reborn.feature.home.HomeScreen
-import com.gentlelady.reborn.feature.search.searchNavGraph // 1. 검색 네비게이션 확장 함수 임포트
+import com.gentlelady.reborn.feature.search.searchNavGraph
+import com.gentlelady.reborn.feature.message.MessageScreen // 메시지 메인 스크린 임포트
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.search.presentation.SearchState
 import com.gentlelady.reborn.search.presentation.SearchIntent
+import com.gentlelady.reborn.message.presentation.MessageState
+import com.gentlelady.reborn.message.presentation.MessageIntent
 
 @Composable
 fun MainScreen(
     homeState: HomeState,
     onHomeIntent: (HomeIntent) -> Unit,
-    searchState: SearchState,             // 2. 검색 상태 추가 주입
-    onSearchIntent: (SearchIntent) -> Unit // 3. 검색 인텐트 핸들러 추가 주입
+    searchState: SearchState,
+    onSearchIntent: (SearchIntent) -> Unit,
+    messageState: MessageState,             // 메시지 상태 추가 주입
+    onMessageIntent: (MessageIntent) -> Unit // 메시지 인텐트 핸들러 추가 주입
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -51,6 +56,7 @@ fun MainScreen(
             startDestination = "home",
             modifier = Modifier.padding(innerPadding)
         ) {
+            // 1. 홈 화면 슬롯
             composable("home") {
                 HomeScreen(
                     state = homeState,
@@ -58,13 +64,21 @@ fun MainScreen(
                 )
             }
 
-            // 4. 확장 함수(Table of Contents) 구조로 SearchScreen 깨끗하게 연결
+            // 2. 검색 화면 그래프 조립 (Table of Contents 확장 함수 구조)
             searchNavGraph(
                 state = searchState,
                 onIntent = onSearchIntent
             )
 
-            composable("message") { /* MessageScreen() */ }
+            // 3. 메시지 화면 슬롯 연결 완료 (MockData 수집 상태 연동 완료)
+            composable("message") {
+                MessageScreen(
+                    state = messageState,
+                    onIntent = onMessageIntent
+                )
+            }
+
+            // 4. 프로필 화면 슬롯 (추후 연동 준비)
             composable("profile") { /* ProfileScreen() */ }
         }
     }

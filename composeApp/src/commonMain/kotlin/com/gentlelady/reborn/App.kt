@@ -8,15 +8,19 @@ import com.gentlelady.reborn.feature.main.mainNavGraph
 import com.gentlelady.reborn.feature.memorial_swipe.memorialNavGraph
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
-import com.gentlelady.reborn.search.presentation.SearchState  // 1. 검색 상태 임포트
-import com.gentlelady.reborn.search.presentation.SearchIntent // 2. 검색 인텐트 임포트
+import com.gentlelady.reborn.search.presentation.SearchState
+import com.gentlelady.reborn.search.presentation.SearchIntent
+import com.gentlelady.reborn.message.presentation.MessageState   // 1. 메시지 상태 임포트 추가
+import com.gentlelady.reborn.message.presentation.MessageIntent  // 2. 메시지 인텐트 임포트 추가
 
 @Composable
 fun App(
-    homeState: HomeState,                  // 3. 파라미터명 명확화 (state -> homeState)
-    onHomeIntent: (HomeIntent) -> Unit,    // 4. 파라미터명 명확화 (onIntent -> onHomeIntent)
-    searchState: SearchState,              // 5. 검색 상태 추가 주입
-    onSearchIntent: (SearchIntent) -> Unit  // 6. 검색 인텐트 추가 주입
+    homeState: HomeState,
+    onHomeIntent: (HomeIntent) -> Unit,
+    searchState: SearchState,
+    onSearchIntent: (SearchIntent) -> Unit,
+    messageState: MessageState,               // 3. 메시지 상태 추가 주입
+    onMessageIntent: (MessageIntent) -> Unit  // 4. 메시지 인텐트 핸들러 추가 주입
 ) {
     MaterialTheme {
         // 앱 전체 화면을 덮고 전환하는 최상위 라우터
@@ -26,13 +30,15 @@ fun App(
             navController = rootNavController,
             startDestination = "main_flow" // 앱을 켜면 탭바가 있는 메인 플로우부터 시작
         ) {
-            // 1. 메인 기능 그래프 조립 (하단 탭바 내부에서 Home과 Search 목차 분산 처리)
+            // 1. 메인 기능 그래프 조립 (하단 탭바 내부에서 Home, Search, Message 목차 분산 처리)
             mainNavGraph(
                 navController = rootNavController,
                 homeState = homeState,
                 onHomeIntent = onHomeIntent,
-                searchState = searchState,       // 7. 교정된 검색 상태 전달
-                onSearchIntent = onSearchIntent  // 8. 교정된 검색 인텐트 핸들러 전달
+                searchState = searchState,
+                onSearchIntent = onSearchIntent,
+                messageState = messageState,       // 5. 메시지 상태를 메인 그래프로 전달
+                onMessageIntent = onMessageIntent  // 6. 메시지 인텐트 파이프라인 전달
             )
 
             // 2. 메모리얼 기능 그래프 조립 (탭바가 없는 완전 몰입형 화면)
