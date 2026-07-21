@@ -23,10 +23,16 @@ fun NavGraphBuilder.memorialNavGraph(
             onIntent = { intent ->
                 when (intent) {
                     is MemorialIntent.ClickBack -> {
-                        navController.popBackStack() // 뒤로가기 클릭 시 프로필로 복귀
+                        if (state.isEditingProfile) {
+                            // 💡 편집 중일 때 뒤로가기를 누르면 'My Memorial' 프로필 화면으로만 복귀
+                            viewModel.onIntent(intent)
+                        } else {
+                            // 💡 편집 모드가 아닐 때 뒤로가기를 누르면 MyProfile 화면으로 복귀
+                            navController.popBackStack()
+                        }
                     }
                     else -> {
-                        viewModel.onIntent(intent) // 💡 viewModel에 Intent 전달
+                        viewModel.onIntent(intent)
                     }
                 }
             }

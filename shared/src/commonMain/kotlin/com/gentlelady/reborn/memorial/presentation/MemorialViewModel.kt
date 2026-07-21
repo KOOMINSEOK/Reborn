@@ -21,6 +21,18 @@ class MemorialViewModel : ViewModel() {
 
     fun onIntent(intent: MemorialIntent) {
         when (intent) {
+            // 💡 [추가] 뒤로가기 버튼 클릭 처리
+            is MemorialIntent.ClickBack -> {
+                _state.update { current ->
+                    if (current.isEditingProfile) {
+                        // 편집 중일 때 뒤로가기를 누르면 편집 모드만 끄고 내 메모리얼 화면 유지
+                        current.copy(isEditingProfile = false)
+                    } else {
+                        current
+                    }
+                }
+            }
+
             // 1. 탭 전환 (히스토리 ↔ 방명록)
             is MemorialIntent.SelectTab -> {
                 _state.update { it.copy(selectedTab = intent.tab) }
@@ -87,7 +99,7 @@ class MemorialViewModel : ViewModel() {
                 _state.update { current ->
                     if (current.guestBookInputText.isBlank()) return@update current
 
-                    val currentTimeMs = Clock.System.now().toEpochMilliseconds() // 💡 멀티플랫폼 타임스탬프
+                    val currentTimeMs = Clock.System.now().toEpochMilliseconds()
 
                     val newItem = MemorialGuestBookItem(
                         id = "gb_$currentTimeMs",
@@ -103,7 +115,7 @@ class MemorialViewModel : ViewModel() {
                 }
             }
 
-            else -> { /* 뒤로가기, 이미지 클릭 등 네비게이션 처리 */ }
+            else -> { /* 이미지 클릭 등 기타 네비게이션 처리 */ }
         }
     }
 }

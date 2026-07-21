@@ -1,3 +1,4 @@
+// com/gentlelady/reborn/feature/main/MainScreen.kt
 package com.gentlelady.reborn.feature.main
 
 import androidx.compose.foundation.layout.padding
@@ -10,18 +11,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gentlelady.reborn.feature.home.HomeScreen
-import com.gentlelady.reborn.feature.search.searchNavGraph
-import com.gentlelady.reborn.feature.message.MessageScreen // 메시지 메인 스크린 임포트
-import com.gentlelady.reborn.feature.profile.ProfileScreen
+import com.gentlelady.reborn.feature.memorial.memorialNavGraph // 👈 memorialNavGraph 임포트
+import com.gentlelady.reborn.feature.message.MessageScreen
 import com.gentlelady.reborn.feature.profile.profileNavGraph
-import com.gentlelady.reborn.home.presentation.home.HomeState
+import com.gentlelady.reborn.feature.search.searchNavGraph
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
-import com.gentlelady.reborn.search.presentation.SearchState
-import com.gentlelady.reborn.search.presentation.SearchIntent
-import com.gentlelady.reborn.message.presentation.MessageState
+import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
+import com.gentlelady.reborn.message.presentation.MessageState
 import com.gentlelady.reborn.profile.presentation.ProfileIntent
 import com.gentlelady.reborn.profile.presentation.ProfileState
+import com.gentlelady.reborn.search.presentation.SearchIntent
+import com.gentlelady.reborn.search.presentation.SearchState
 
 @Composable
 fun MainScreen(
@@ -29,10 +30,10 @@ fun MainScreen(
     onHomeIntent: (HomeIntent) -> Unit,
     searchState: SearchState,
     onSearchIntent: (SearchIntent) -> Unit,
-    messageState: MessageState,             // 메시지 상태 추가 주입
-    onMessageIntent: (MessageIntent) -> Unit, // 메시지 인텐트 핸들러 추가 주입
-    profileState: ProfileState,             // 🆕 프로필 상태 추가 주입
-    onProfileIntent: (ProfileIntent) -> Unit // 🆕 프로필 인텐트 핸들러 추가 주입
+    messageState: MessageState,
+    onMessageIntent: (MessageIntent) -> Unit,
+    profileState: ProfileState,
+    onProfileIntent: (ProfileIntent) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -40,7 +41,8 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            val mainRoutes = listOf("home", "search", "message", "profile")
+            // 💡 바텀바를 항상 노출할 라우트 목록 ("memorial/me" 추가)
+            val mainRoutes = listOf("home", "search", "message", "profile", "memorial/me")
             if (currentRoute in mainRoutes) {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
@@ -70,13 +72,13 @@ fun MainScreen(
                 )
             }
 
-            // 2. 검색 화면 그래프 조립 (Table of Contents 확장 함수 구조)
+            // 2. 검색 화면 그래프
             searchNavGraph(
                 state = searchState,
                 onIntent = onSearchIntent
             )
 
-            // 3. 메시지 화면 슬롯 연결 완료 (MockData 수집 상태 연동 완료)
+            // 3. 메시지 화면 슬롯
             composable("message") {
                 MessageScreen(
                     state = messageState,
@@ -84,10 +86,23 @@ fun MainScreen(
                 )
             }
 
-            // 4. 프로필 화면 슬롯 (추후 연동 준비)
+            // 4. 프로필 화면 서브 그래프
             profileNavGraph(
                 state = profileState,
-                onIntent = onProfileIntent // 상위 App.kt로 인텐트 전달
+                onIntent = { intent ->
+                    when (intent) {
+                        // 💡 토글 클릭 시 서브 navController를 통해 "memorial/me"로 전환 (바텀바 유지가능)
+                        is ProfileIntent.ClickToggleMemorialMode -> {
+                            navController.navigate("memorial/me")
+                        }
+                        else -> onProfileIntent(intent)
+                    }
+                }
+            )
+
+            // 5. 🆕 내 서브 NavHost 내부에 memorialNavGraph 추가 (바텀바 내부에서 렌더링됨)
+            memorialNavGraph(
+                navController = navController
             )
         }
     }

@@ -30,11 +30,12 @@ fun App(
     MaterialTheme {
         val rootNavController = rememberNavController()
 
+        // App.kt
         NavHost(
             navController = rootNavController,
             startDestination = "main_flow"
         ) {
-            // 1. 메인 기능 그래프 조립 (프로필 파이프라인 결합 완료)
+            // 1. 메인 기능 그래프 (MainScreen 내부 서브 NavHost에서 memorial/me 로 이동 처리)
             mainNavGraph(
                 navController = rootNavController,
                 homeState = homeState,
@@ -47,13 +48,8 @@ fun App(
                 onProfileIntent = onProfileIntent
             )
 
-            // 2. 메모리얼 스와이프 전용 기능 그래프 (기존 기능)
+            // 2. 탭바를 숨겨야 하는 몰입형 스와이프 화면만 최상위로 유지
             memorialSwipeNavGraph(
-                navController = rootNavController
-            )
-
-            // 3. 🆕 추모/기념 상세 페이지 그래프 (내 공간 / 타인 공간 상세)
-            memorialNavGraph(
                 navController = rootNavController
             )
         }
