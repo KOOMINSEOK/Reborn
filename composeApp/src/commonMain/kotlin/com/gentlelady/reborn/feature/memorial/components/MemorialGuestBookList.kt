@@ -1,12 +1,15 @@
 // composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/components/MemorialGuestBookList.kt
 package com.gentlelady.reborn.feature.memorial.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -14,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -157,56 +161,76 @@ private fun GuestBookInputBottomBar(
         color = Color.White,
         shadowElevation = 8.dp
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
-            // 입력창
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { if (it.length <= 100) onInputTextChange(it) },
-                placeholder = {
-                    Text(
-                        text = "방명록을 남겨보세요! (글자수 100자 제한)",
-                        fontSize = 13.sp,
-                        color = RebornSlateGray
-                    )
-                },
-                shape = RoundedCornerShape(24.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = RebornBackgroundGray,
-                    unfocusedContainerColor = RebornBackgroundGray,
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { onSubmitClick() }),
+            // 캡슐 형태 컨테이너
+            Surface(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-            )
-
-            // 전송 파란색 원형 버튼 (ic_arrow_up 적용)
-            IconButton(
-                onClick = onSubmitClick,
-                enabled = inputText.isNotBlank(),
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = if (inputText.isNotBlank()) RebornCobaltBlue else RebornUnselectedGray,
-                        shape = CircleShape
-                    )
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(22.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, RebornDividerGray)
             ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_arrow_up),
-                    contentDescription = "전송",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp, end = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 입력창 & 힌트
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (inputText.isEmpty()) {
+                            Text(
+                                text = "방명록을 남겨보세요! (글자수 100자 제한)",
+                                fontSize = 12.sp,
+                                color = RebornSlateGray
+                            )
+                        }
+                        BasicTextField(
+                            value = inputText,
+                            onValueChange = { if (it.length <= 100) onInputTextChange(it) },
+                            textStyle = TextStyle(
+                                fontSize = 12.sp,
+                                color = Color.Black
+                            ),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(onSend = { onSubmitClick() }),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // 전송 원형 버튼
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(
+                                color = if (inputText.isNotBlank()) RebornDeepBlue else RebornUnselectedGray,
+                                shape = CircleShape
+                            )
+                            .clickable(
+                                enabled = inputText.isNotBlank(),
+                                onClick = onSubmitClick
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_arrow_up),
+                            contentDescription = "전송",
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
             }
         }
     }
