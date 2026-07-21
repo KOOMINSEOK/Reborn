@@ -17,8 +17,10 @@ import reborn.shared.generated.resources.img_post_grid_6
 import reborn.shared.generated.resources.img_post_grid_7
 import reborn.shared.generated.resources.img_post_grid_8
 import reborn.shared.generated.resources.img_post_grid_9
+import reborn.shared.generated.resources.img_profile_dummy_1
 
 object MemorialMockData {
+    val dummyProfileRes = Res.drawable.img_profile_dummy_1
     // 1. img_post_grid_1 ~ 9 까지의 히스토리 에셋 리스트 (1:1 정사각형 그리드용)
     val historyImages: List<DrawableResource> = listOf(
         Res.drawable.img_post_grid_1,

@@ -1,12 +1,16 @@
+// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/components/MemorialHeaderSection.kt
 package com.gentlelady.reborn.feature.memorial.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,11 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.*
+import com.gentlelady.reborn.ic_clover
 import com.gentlelady.reborn.memorial.presentation.MemorialOwnerType
 import com.gentlelady.reborn.memorial.presentation.MemorialProfileData
-import com.gentlelady.reborn.ic_clover
 import org.jetbrains.compose.resources.painterResource
-
+import androidx.compose.runtime.getValue
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -33,10 +37,10 @@ internal fun MemorialHeaderSection(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.White)
-            .padding(top = 16.dp, bottom = 8.dp),
+            .padding(top = 16.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. 프로필 아바타 (Placeholder)
+        // 1. 프로필 아바타
         Surface(
             modifier = Modifier.size(80.dp),
             shape = CircleShape,
@@ -54,7 +58,7 @@ internal fun MemorialHeaderSection(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2. 이름 및 팔로워 수 배지
+        // 2. 이름 및 클로버 수 배지
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -101,9 +105,9 @@ internal fun MemorialHeaderSection(
             color = RebornSlateGray
         )
 
-        // 4. 한줄 소개 (bio) 또는 본인 페이지용 '프로필 편집' 버튼
+        // 4. 한줄 소개 (bio)
         if (profile.bio.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "\"${profile.bio}\"",
                 fontSize = 13.sp,
@@ -111,28 +115,37 @@ internal fun MemorialHeaderSection(
             )
         }
 
-        // 5. 본인 페이지일 때만 나타나는 [프로필 편집] 버튼
+        // 5. 본인 관점 페이지(MY_MEMORIAL)용 [프로필 편집] 파란색 아웃라인 버튼 (시안 2 매칭)
         if (ownerType == MemorialOwnerType.MY_MEMORIAL) {
             Spacer(modifier = Modifier.height(12.dp))
+
+            // 1. 터치 상태 감지용 InteractionSource
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+
+            // 2. 터치 여부에 따른 동적 색상 매핑
+            val buttonBorderColor = if (isPressed) RebornCobaltBlue else RebornDividerGray
+            val buttonTextColor = if (isPressed) RebornCobaltBlue else Color.Black
+
             OutlinedButton(
                 onClick = onEditProfileClick,
+                interactionSource = interactionSource, // interactionSource 연결
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, RebornDividerGray),
+                border = BorderStroke(1.dp, buttonBorderColor), // 눌렸을 때 파란 테두리
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 6.dp),
                 modifier = Modifier.height(36.dp)
             ) {
                 Text(
                     text = "프로필 편집",
                     fontSize = 13.sp,
-                    color = Color.Black,
+                    color = buttonTextColor, // 눌렸을 때 파란 글자
                     fontWeight = FontWeight.Medium
                 )
             }
         }
     }
 }
-
-// Direct Injection 프리뷰 규칙 준수
+// Direct Injection 프리뷰
 @Preview
 @Composable
 private fun MemorialHeaderSectionOtherPreview() {
@@ -159,8 +172,9 @@ private fun MemorialHeaderSectionMyPreview() {
         Surface {
             MemorialHeaderSection(
                 profile = MemorialProfileData(
-                    name = "홍길동",
+                    name = "이윤주",
                     handle = "uexjurjece",
+                    bio = "Forever in our hearts, guiding us with love and light.",
                     followerCount = 12
                 ),
                 ownerType = MemorialOwnerType.MY_MEMORIAL,
