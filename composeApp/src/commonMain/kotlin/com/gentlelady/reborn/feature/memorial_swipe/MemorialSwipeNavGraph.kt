@@ -1,4 +1,4 @@
-// 📄 composeApp/.../feature/memorial_swipe/MemorialNavGraph.kt
+// 📄 composeApp/.../feature/memorial_swipe/MemorialSwipeNavGraph.kt
 package com.gentlelady.reborn.feature.memorial_swipe
 
 import androidx.navigation.NavController
