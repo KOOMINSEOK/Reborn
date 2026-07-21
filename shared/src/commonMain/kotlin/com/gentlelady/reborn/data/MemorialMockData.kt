@@ -8,6 +8,7 @@ import com.gentlelady.reborn.memorial.presentation.MemorialProfileData
 import com.gentlelady.reborn.memorial.presentation.MemorialState
 import com.gentlelady.reborn.memorial.presentation.MemorialTab
 import org.jetbrains.compose.resources.DrawableResource
+import reborn.shared.generated.resources.img_memorial_profile_dummy
 import reborn.shared.generated.resources.img_post_grid_1
 import reborn.shared.generated.resources.img_post_grid_2
 import reborn.shared.generated.resources.img_post_grid_3
@@ -63,7 +64,9 @@ object MemorialMockData {
             id = "my_1",
             name = "이윤주",
             handle = "uexjurjece",
-            followerCount = 12
+            bio = "Forever in our hearts, guiding us with love and light.",
+            followerCount = 12,
+            profileImageRes = dummyProfileRes
         ),
         selectedTab = MemorialTab.HISTORY,
         historyImages = historyImages,

@@ -87,7 +87,7 @@ fun MainScreen(
             // 4. 프로필 화면 슬롯 (추후 연동 준비)
             profileNavGraph(
                 state = profileState,
-                onIntent = onProfileIntent
+                onIntent = onProfileIntent // 상위 App.kt로 인텐트 전달
             )
         }
     }

@@ -2,18 +2,18 @@
 package com.gentlelady.reborn.feature.memorial.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,7 +23,6 @@ import com.gentlelady.reborn.ic_clover
 import com.gentlelady.reborn.memorial.presentation.MemorialOwnerType
 import com.gentlelady.reborn.memorial.presentation.MemorialProfileData
 import org.jetbrains.compose.resources.painterResource
-import androidx.compose.runtime.getValue
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -40,19 +39,31 @@ internal fun MemorialHeaderSection(
             .padding(top = 16.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. 프로필 아바타
+        // 1. 프로필 아바타 (MockData 프로필 이미지 렌더링 + Fallback 처리)
         Surface(
             modifier = Modifier.size(80.dp),
             shape = CircleShape,
             color = RebornDividerGray
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = profile.name.take(1),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = RebornSlateGray
-                )
+                profile.profileImageRes?.let { imageRes ->
+                    Image(
+                        painter = painterResource(imageRes),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } ?: run {
+                    // 이미지 리소스가 없을 경우 이름 첫 글자 표시
+                    Text(
+                        text = profile.name.take(1),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = RebornSlateGray
+                    )
+                }
             }
         }
 
@@ -115,31 +126,21 @@ internal fun MemorialHeaderSection(
             )
         }
 
-        // 5. 본인 관점 페이지(MY_MEMORIAL)용 [프로필 편집] 파란색 아웃라인 버튼 (시안 2 매칭)
+        // 5. 본인 관점 페이지(MY_MEMORIAL)용 [프로필 편집] 파란색 아웃라인 버튼
         if (ownerType == MemorialOwnerType.MY_MEMORIAL) {
             Spacer(modifier = Modifier.height(12.dp))
-
-            // 1. 터치 상태 감지용 InteractionSource
-            val interactionSource = remember { MutableInteractionSource() }
-            val isPressed by interactionSource.collectIsPressedAsState()
-
-            // 2. 터치 여부에 따른 동적 색상 매핑
-            val buttonBorderColor = if (isPressed) RebornCobaltBlue else RebornDividerGray
-            val buttonTextColor = if (isPressed) RebornCobaltBlue else Color.Black
-
             OutlinedButton(
                 onClick = onEditProfileClick,
-                interactionSource = interactionSource, // interactionSource 연결
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, buttonBorderColor), // 눌렸을 때 파란 테두리
+                border = BorderStroke(1.5.dp, RebornCobaltBlue),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 6.dp),
                 modifier = Modifier.height(36.dp)
             ) {
                 Text(
                     text = "프로필 편집",
                     fontSize = 13.sp,
-                    color = buttonTextColor, // 눌렸을 때 파란 글자
-                    fontWeight = FontWeight.Medium
+                    color = RebornCobaltBlue,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
