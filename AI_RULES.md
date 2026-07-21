@@ -18,6 +18,7 @@
 | 8 | NO ViewModel passed down composable tree | 🟠 STRICT |
 | 9 | NO side effects in composable body (except LaunchedEffect) | 🟠 STRICT |
 | 10 | UseCase calls in ViewModel ARE allowed (not an API call) | ✅ ALLOWED |
+| 11 | Compose UI lives in composeApp/commonMain unless platform-specific | 🔴 CRITICAL |
 
 ---
 
@@ -62,20 +63,40 @@ Intent → ViewModel → UseCase → Result → Reducer → State → UI
 Contains:
 
 * `domain/` — UseCases
-* `data/` — Repository interfaces
+* `data/` — Repository implementations and prototype MockDataSource
 * `model/` — Data models
 * `presentation/` — Shared ViewModel
+* `di/` — Koin modules
 
 Rules:
 
 * MUST be platform-independent
 * MUST NOT contain Android SDK, iOS, or platform-specific APIs
 * MUST contain shared ViewModel
+* MAY contain prototype mock data while the backend is not ready
+* MUST NOT contain navigation controller logic
 
-### androidApp / iosApp / webApp
+### composeApp (commonMain)
 
-* UI layer ONLY
-* Bind ViewModel to platform UI
+Contains:
+
+* Shared Compose Multiplatform UI screens
+* Feature NavGraphBuilder extension functions
+* Reusable design system components
+* Common theme definitions
+
+Rules:
+
+* MUST render State and send Intent only
+* MUST NOT contain ViewModel classes
+* MUST NOT access Repository or MockDataSource from production UI
+* MUST handle navigation in NavGraph/App/MainScreen layers
+
+### androidApp / iosApp / platform entry points
+
+* Platform bootstrap ONLY
+* Initialize Koin and platform context
+* Bind shared ViewModel state to composeApp entry points
 * MUST NOT duplicate business logic
 
 ---
@@ -167,7 +188,9 @@ Rules:
 
 | Layer | Location | Responsibility |
 |-------|----------|----------------|
-| UI | androidApp / iosApp | Render State, send Intent |
+| UI | composeApp/commonMain | Render State, send Intent |
+| Route / Bootstrap | androidApp / iosApp / platform source sets | Inject ViewModel, collect StateFlow, call App |
+| Navigation | composeApp/commonMain | NavHost, feature NavGraphBuilder, route decisions |
 | Domain | shared/commonMain | UseCase, business logic |
 | Data | shared/commonMain | Repository interface + impl |
 
@@ -198,11 +221,11 @@ Platform layer MUST only:
 
 ## 10. Compose UI Rules (STRICT)
 
-> ⚠️ UI must follow a strict separation between Pure UI and Screen (Route).
+> ⚠️ UI must follow a strict separation between Stateless Screen and Route/DI binding.
 
-### 1. Pure UI (Shared)
+### 1. Stateless Screen (composeApp/commonMain)
 
-Pure UI refers to stateless composables that only render State.
+Stateless Screen refers to composables that only render State.
 
 MUST:
 
@@ -220,52 +243,65 @@ MUST:
 
 REQUIRED:
 
-* Pure UI MUST be placed in `commonMain`
+* Shared UI MUST be placed in `composeApp/src/commonMain`
+* Feature UI MUST live under `composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/{feature}`
+* Reusable UI MUST live under `composeApp/src/commonMain/kotlin/com/gentlelady/reborn/core/designsystem`
 
 Example:
 
 @Composable
-fun TodoContent(
+fun FeatureScreen(
 state: TodoState,
 onIntent: (TodoIntent) -> Unit
 )
 
 ---
 
-### 2. Screen / Route (Platform)
+### 2. Route / DI Binding (Platform)
 
-Screen (Route) is responsible for wiring ViewModel to UI.
+Route is responsible for wiring ViewModel to shared UI entry points.
 
 MUST:
 
 * Obtain ViewModel via DI (Koin)
 * Collect StateFlow from ViewModel
-* Pass state + intent to Pure UI
+* Pass state + intent to composeApp UI
+* Keep platform APIs out of composeApp/commonMain
 
 REQUIRED:
 
-* MUST be placed in platform modules:
+* Platform bootstrap routes MAY be placed in platform modules:
 
     * androidApp
     * iosApp
-    * webApp
+    * platform-specific source sets
 
 ---
 
 ### 3. State Collection
 
-* MUST use `collectAsState()` in shared/common logic
+* Platform route code MAY use `collectAsState()`
 * Android MAY use lifecycle-aware wrappers in platform layer
 
 ---
 
 ### FORBIDDEN
 
-* ViewModel usage inside Pure UI
+* ViewModel usage inside Stateless Screen
 * `viewModel()` usage from Compose
-* DI usage inside Pure UI
+* DI usage inside Stateless Screen
 * Business logic inside composables
 * Side effects in composable body (except LaunchedEffect)
+
+---
+
+### 4. Preview Rules
+
+* Preview MUST NOT use `PreviewParameterProvider`
+* Preview MUST NOT read `MockDataSource`
+* Preview MUST use direct lightweight dummy data inside the preview function
+* Preview MAY use drawable resources only when needed to verify layout
+* Runtime prototype data MUST come from shared `MockDataSource`
 
 ---
 
@@ -281,8 +317,10 @@ If any rule is violated:
 Rules:
 
 * DO NOT instantiate objects directly (`val x = MyClass()` ❌)
-* Define DI modules in `commonMain`
+* Define DI modules in `shared/commonMain`
 * Platform entry point initializes Koin
+* Android Compose routes MAY use `koinViewModel()` for `androidx.lifecycle.ViewModel`
+* Non-lifecycle shared dependencies MAY use `koinInject()` until normalized
 
 ```
 shared/commonMain/di/AppModule.kt   ← define modules
@@ -302,10 +340,34 @@ DO NOT GENERATE under any circumstance:
 * Android/iOS-specific code inside `commonMain`
 * God ViewModel (all logic crammed into one ViewModel)
 * ViewModel instantiated in platform modules
+* Production composeApp UI reading `MockDataSource` directly
+* Navigation controller logic in shared module
 
 ---
 
-## 13. Naming Convention
+## 13. Resource and Asset Rules
+
+### Production / Prototype Runtime Assets
+
+* Shared mock data may reference resources from `shared/src/commonMain/composeResources/drawable`
+* Backend-less prototype runtime data should be provided by `shared` through `MockDataSource`
+* Runtime UI in `composeApp` should consume resource IDs from State/model values
+
+### Compose UI Assets
+
+* UI-only icons may live in `composeApp/src/commonMain/composeResources/drawable`
+* Do not duplicate large image assets across `shared` and `composeApp` unless temporarily needed for preview compatibility
+* If duplication is temporary, keep filenames identical and remove duplicates when backend/resource ownership is finalized
+
+### Naming
+
+* Resource folders must remain flat
+* File names must use lowercase letters, numbers, and underscores only
+* Use prefixes such as `ic_`, `ic_nav_`, and `img_`
+
+---
+
+## 14. Naming Convention
 
 | Type | Convention | Example |
 |------|------------|---------|
@@ -319,7 +381,7 @@ DO NOT GENERATE under any circumstance:
 
 ---
 
-## 14. Code Generation Rules
+## 15. Code Generation Rules
 
 When generating code, ALWAYS:
 
@@ -331,21 +393,22 @@ When generating code, ALWAYS:
 
 ---
 
-## 15. Feature Checklist
+## 16. Feature Checklist
 
 Every feature MUST include all of the following:
 
 - [ ] `FeatureState.kt` — immutable data class
 - [ ] `FeatureIntent.kt` — sealed class
-- [ ] `FeatureResult.kt` — sealed class
-- [ ] `FeatureReducer.kt` — pure function
-- [ ] `FeatureViewModel.kt` — in commonMain
-- [ ] `FeatureScreen.kt` — Compose UI (androidApp)
+- [ ] `FeatureResult.kt` — sealed class, when usecase/reducer flow exists
+- [ ] `FeatureReducer.kt` — pure function, when usecase/reducer flow exists
+- [ ] `FeatureViewModel.kt` — in shared/commonMain
+- [ ] `FeatureScreen.kt` — Compose UI in composeApp/commonMain
+- [ ] `FeatureNavGraph.kt` — route registration in composeApp/commonMain, when navigable
 - [ ] DI module registration
 
 ---
 
-## 16. Instruction for AI (CRITICAL)
+## 17. Instruction for AI (CRITICAL)
 
 Before generating ANY code:
 
@@ -364,9 +427,9 @@ If user request conflicts with this document:
 
 ---
 
-## 17. DI Usage Rules (STRICT)
+## 18. DI Usage Rules (STRICT)
 
-> ⚠️ Dependency injection MUST follow KoinComponent pattern.
+> ⚠️ Dependency injection MUST use Koin and stay outside Stateless Screen UI.
 
 FORBIDDEN:
 
@@ -376,8 +439,9 @@ FORBIDDEN:
 
 REQUIRED:
 
-* ALWAYS use KoinComponent
-* ALWAYS use inject()
+* Use `koinViewModel()` or KoinComponent `inject()` in platform routes for lifecycle ViewModels
+* Use `koinInject()` only for non-lifecycle shared dependencies or temporary compatibility cases
+* UI MUST receive only State and Intent lambda
 
 Example:
 
@@ -390,7 +454,7 @@ If violated:
 
 ---
 
-## 18. ViewModel Access Rules (STRICT)
+## 19. ViewModel Access Rules (STRICT)
 
 > ⚠️ ViewModel MUST be accessed via DI only.
 
@@ -407,20 +471,32 @@ REQUIRED:
 
 ---
 
-## 19. Platform Boundary Enforcement (STRICT)
+## 20. Platform Boundary Enforcement (STRICT)
 
 > ⚠️ UI and DI access MUST respect module boundaries.
 
 FORBIDDEN:
 
-* UI in commonMain
+* Android/iOS-specific APIs in composeApp/commonMain or shared/commonMain
 * Android-specific APIs in shared
 * Accessing ViewModel via Android lifecycle in shared
+* Shared module triggering `navController.navigate`
 
 REQUIRED:
 
-* UI MUST exist in androidApp / iosApp / webApp only
-* commonMain MUST contain ONLY business logic + ViewModel
-* Platform layer MUST bind ViewModel to UI
+* Shared Compose UI MUST exist in composeApp/commonMain
+* Platform layer MUST initialize DI and bind ViewModel state to App
+* Navigation decisions MUST stay in composeApp NavGraph/App/MainScreen layers
+
+---
+
+## 21. Known Transitional Cleanup Items
+
+These items are known deviations in the current prototype and should be cleaned up after resource and rule alignment:
+
+* Normalize `ProfileViewModel` to the same lifecycle ViewModel pattern as other feature ViewModels
+* Remove or refactor prototype-only local state in `MessageNavGraph.kt`
+* Delete or revive the commented legacy `SearchMapper.kt`
+* Reduce duplicated image resources between `shared` and `composeApp` after preview/runtime ownership is finalized
 
 ---

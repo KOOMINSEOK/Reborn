@@ -1,12 +1,13 @@
 package com.gentlelady.reborn.profile.presentation
 
+import androidx.lifecycle.ViewModel
 import com.gentlelady.reborn.data.MockDataSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class ProfileViewModel {
+class ProfileViewModel : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state.asStateFlow()

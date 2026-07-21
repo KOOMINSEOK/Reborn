@@ -12,7 +12,6 @@ import com.gentlelady.reborn.message.presentation.MessageViewModel
 import com.gentlelady.reborn.profile.presentation.ProfileIntent  // 🆕 프로필 인텐트 임포트 추가
 import com.gentlelady.reborn.profile.presentation.ProfileViewModel // 🆕 프로필 ViewModel 임포트 추가
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 fun HomeRoute() {
@@ -20,7 +19,7 @@ fun HomeRoute() {
     val homeViewModel: HomeViewModel = koinViewModel()
     val searchViewModel: SearchViewModel = koinViewModel()
     val messageViewModel: MessageViewModel = koinViewModel()
-    val profileViewModel: ProfileViewModel = koinInject() // 🆕 프로필 뇌 추가 주입
+    val profileViewModel: ProfileViewModel = koinViewModel() // 🆕 프로필 뇌 추가 주입
 
     // 2. 각 영역의 독립적인 MVI State 관찰(수집) 및 단일 진실 공급원(SSOT) 수립
     val homeState by homeViewModel.state.collectAsState()
