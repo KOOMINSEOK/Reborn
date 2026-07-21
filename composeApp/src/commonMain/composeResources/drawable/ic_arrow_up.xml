@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+    <!-- 화살표 촉 (∧) -->
+    <path
+        android:pathData="M3.33325 7.99998L7.99992 3.33331L12.6666 7.99998"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 화살표 기둥 (|) -->
+    <path
+        android:pathData="M8 12.6666V3.33331"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.33333"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
