@@ -14,6 +14,7 @@ val RebornNavUnselected = Color(0xFF7B7F8A) // 네비게이션 바 아이템 비
 
 // Light Blue Variations
 val RebornLightBlueBg = Color(0xFFEFF4FF)   // 사후 게시글 정보 박스 등 연한 파랑 배경
+val RebornPosthumousBannerBg = Color(0xFFD9E6FF) // 사후 게시글 배너 배경
 val RebornBorderLightBlue = Color(0xFFB9D1FF) // 메모리얼 버튼 테두리
 val RebornSoftBlue = Color(0xFFDCE8FF)
 val RebornDarkBlue = Color(0xFF003D94)
@@ -22,7 +23,8 @@ val RebornDarkBlue = Color(0xFF003D94)
 val RebornBackgroundGray = Color(0xFFF8F9FA) // 앱 공통 배경색
 val RebornUnselectedGray = Color(0xFF9E9E9E) // 네비게이션 바 비활성 탭 색상
 val RebornDividerGray = Color(0xFFEEEEEE)    // 구분선 색상
-val RebornSlateGray = Color(0xFF64748B)      // 액션 아이콘 및 회색 텍스트용 슬레이트 그레이
+val RebornSlateGray = Color(0xFF64748B)      // 회색 텍스트(카운트, 날짜 등)용 슬레이트 그레이
+val RebornActionIconDark = Color(0xFF3F4451) // 좋아요/댓글/공유/북마크 아이콘 전용 진한 색상
 
 // 🆕 신규 요청 그레이 색상 추가
 val RebornGridIconGray = Color(0xFFF1F5F9)   // 일반 카드 아이콘 박스 배경
