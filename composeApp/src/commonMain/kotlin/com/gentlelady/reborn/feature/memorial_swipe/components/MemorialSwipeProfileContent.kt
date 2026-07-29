@@ -29,8 +29,6 @@ import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
 import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.ic_memorial_ribbon
-import com.gentlelady.reborn.img_memorial_profile_dummy
-import com.gentlelady.reborn.img_memorial_bg_dummy
 import com.gentlelady.reborn.memorial_swipe.domain.model.MemorialItem
 
 @Composable

@@ -1,4 +1,4 @@
-// 📄 composeApp/.../feature/memorial_swipe/MemorialNavGraph.kt
+// 📄 composeApp/.../feature/memorial_swipe/MemorialSwipeNavGraph.kt
 package com.gentlelady.reborn.feature.memorial_swipe
 
 import androidx.navigation.NavController
@@ -8,7 +8,7 @@ import com.gentlelady.reborn.data.MockDataSource // 💡 MockDataSource 가져�
 import com.gentlelady.reborn.memorial_swipe.presentation.MemorialSwipeState
 import com.gentlelady.reborn.memorial_swipe.presentation.MemorialSwipeIntent
 
-fun NavGraphBuilder.memorialNavGraph(
+fun NavGraphBuilder.memorialSwipeNavGraph(
     navController: NavController
 ) {
     composable("memorial_swipe") {
