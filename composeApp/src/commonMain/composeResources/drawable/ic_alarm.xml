@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 종 메인 프레임 및 하단 추 -->
+    <path
+        android:pathData="M10.268 21C10.6253 21.6188 11.2855 21.9999 12 21.9999C12.7145 21.9999 13.3747 21.6188 13.732 21M3.26202 15.326C2.99511 15.6185 2.92598 16.041 3.08573 16.4034C3.24548 16.7658 3.60401 16.9997 4.00002 17H20C20.396 17.0001 20.7547 16.7666 20.9149 16.4045C21.0751 16.0424 21.0065 15.6199 20.74 15.327C19.41 13.956 18 12.499 18 8C18 4.68851 15.3115 2 12 2C8.68853 2 6.00002 4.68851 6.00002 8C6.00002 12.499 4.58902 13.956 3.26202 15.326"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

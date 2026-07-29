@@ -13,7 +13,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gentlelady.reborn.core.designsystem.components.RebornCard
 import com.gentlelady.reborn.core.theme.RebornTextPrimary
 import com.gentlelady.reborn.core.theme.RebornTextSecondary
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -29,9 +28,7 @@ internal fun OnboardingPageContent(
         modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        RebornCard {
-            mockup()
-        }
+        mockup()
 
         Column(
             modifier = Modifier.fillMaxWidth().padding(top = 32.dp),

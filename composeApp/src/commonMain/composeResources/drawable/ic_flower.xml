@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- 중앙 원형 경로 -->
+    <path
+        android:pathData="M18 24C18 27.3115 20.6885 30 24 30C27.3115 30 30 27.3115 30 24C30 20.6885 27.3115 18 24 18C20.6885 18 18 20.6885 18 24V24"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 4잎 외곽 잎사귀 및 교차 디테일 선 -->
+    <path
+        android:pathData="M24 33C24 37.9672 19.9672 42 15 42C10.0328 42 6 37.9672 6 33C6 28.0328 10.0328 24 15 24C10.0328 24 6 19.9672 6 15C6 10.0328 10.0328 6 15 6C19.9672 6 24 10.0328 24 15C24 10.0328 28.0328 6 33 6C37.9672 6 42 10.0328 42 15C42 19.9672 37.9672 24 33 24C37.9672 24 42 28.0328 42 33C42 37.9672 37.9672 42 33 42C28.0328 42 24 37.9672 24 33M24 15V18M15 24H18M33 24H30M24 33V30M16 16L19.76 19.76M28.24 19.76L32 16M16 32L19.76 28.24M28.24 28.24L32 32"
+        android:strokeColor="#0047AB"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
