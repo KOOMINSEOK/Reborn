@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.main.components
+package com.gentlelady.reborn.core.designsystem.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,8 +13,8 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.ic_nav_home_default
-import com.gentlelady.reborn.core.theme.RebornDeepBlue
-import com.gentlelady.reborn.core.theme.RebornUnselectedGray
+import com.gentlelady.reborn.core.theme.RebornNavSelected
+import com.gentlelady.reborn.core.theme.RebornNavUnselected
 
 private val CommonIconSize = 28.dp
 
@@ -44,7 +44,7 @@ fun RowScope.RebornNavItem(
                     modifier = Modifier
                         .size(4.dp)
                         .background(
-                            color = if (isSelected) RebornDeepBlue else Color.Transparent,
+                            color = if (isSelected) RebornNavSelected else Color.Transparent,
                             shape = CircleShape
                         )
                 )
@@ -61,10 +61,10 @@ fun RebornNavItemPreview() {
         Surface {
             NavigationBar {
                 val navItemColors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = RebornDeepBlue,
-                    selectedTextColor = RebornDeepBlue,
-                    unselectedIconColor = RebornUnselectedGray,
-                    unselectedTextColor = RebornUnselectedGray,
+                    selectedIconColor = RebornNavSelected,
+                    selectedTextColor = RebornNavSelected,
+                    unselectedIconColor = RebornNavUnselected,
+                    unselectedTextColor = RebornNavUnselected,
                     indicatorColor = Color.Transparent
                 )
                 RebornNavItem(
