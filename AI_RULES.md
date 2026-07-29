@@ -63,7 +63,7 @@ Intent → ViewModel → UseCase → Result → Reducer → State → UI
 Contains:
 
 * `domain/` — UseCases
-* `data/` — Repository implementations and prototype MockDataSource
+* `data/` — Repository implementations and per-feature prototype MockData objects (see Section 22)
 * `model/` — Data models
 * `presentation/` — Shared ViewModel
 * `di/` — Koin modules
@@ -498,5 +498,22 @@ These items are known deviations in the current prototype and should be cleaned 
 * Remove or refactor prototype-only local state in `MessageNavGraph.kt`
 * Delete or revive the commented legacy `SearchMapper.kt`
 * Reduce duplicated image resources between `shared` and `composeApp` after preview/runtime ownership is finalized
+* `MockDataSource.kt` still holds home/search/message/profile mock data (see Section 22) — migrate incrementally into per-feature MockData files as those features are touched; do NOT add new entries to `MockDataSource`
+* iOS bootstrap (Route) layer is intentionally NOT implemented yet — project is currently Android-first. `composeApp/src/iosMain/kotlin/com/gentlelady/reborn/MainViewController.kt` still calls `App()` with no arguments, so the iOS target does not currently compile against the current `App.kt` signature. This is expected and NOT a bug to silently fix — do not add iOS wiring unless the user explicitly asks to start iOS work
+* `androidApp/.../todo/ui/TodoRoute.kt` was deleted while `TodoScreen.kt` remains — confirm intended state with the user before touching the `todo` feature
+
+---
+
+## 22. MockData Organization (STRICT)
+
+> ⚠️ Prototype dummy data MUST be organized per feature, NOT centralized.
+
+Rules:
+
+* Each feature's prototype/preview-adjacent runtime dummy data MUST live in its own `{Feature}MockData.kt` object under `shared/src/commonMain/kotlin/com/gentlelady/reborn/data/`, following the existing `MemorialMockData.kt` pattern
+* `MockDataSource.kt` is DEPRECATED as a catch-all — it MUST NOT receive new entries for new features
+* When adding a new feature's prototype data, create `{Feature}MockData.kt` (e.g. `HomeMockData.kt`, `SearchMockData.kt`, `MessageMockData.kt`, `ProfileMockData.kt`) instead of appending to `MockDataSource`
+* Existing entries inside `MockDataSource` (home, search/memorial_swipe, message, profile) MAY be migrated into their own `{Feature}MockData.kt` file opportunistically when that feature is being worked on, but this is NOT required to happen all at once
+* `{Feature}MockData.kt` objects are consumed the same way `MockDataSource` was: ViewModel initial `MutableStateFlow` values, never referenced from `@Preview` functions (see Section 10.4)
 
 ---
