@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,14 +28,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.designsystem.components.CircleIconBadge
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
-import com.gentlelady.reborn.core.theme.RebornDividerGray
+import com.gentlelady.reborn.core.theme.RebornInputBorderGray
 import com.gentlelady.reborn.core.theme.RebornLightBlueBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.core.theme.RebornUnselectedGray
+import com.gentlelady.reborn.ic_image_add
 import com.gentlelady.reborn.memorial.presentation.MemorialHistoryWriteFormState
 import com.gentlelady.reborn.memorial.presentation.MemorialIntent
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,20 +101,23 @@ fun MemorialHistoryWriteScreen(
             // 1. 화면 타이틀
             Text(
                 text = "히스토리 작성",
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 16.dp)
             )
 
             // 2. 사진/영상 추가 (점선 박스)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .weight(1f)
                     .clip(RoundedCornerShape(16.dp))
-                    .dashedBorder(color = RebornDividerGray, cornerRadius = 16.dp)
                     .background(Color.White)
+                    .dashedBorder(color = RebornInputBorderGray, cornerRadius = 16.dp, strokeWidth = 2.dp)
                     .clickable { onIntent(MemorialIntent.ClickChangeHistoryImage) }
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -125,7 +130,7 @@ fun MemorialHistoryWriteScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.AddPhotoAlternate,
+                        painter = painterResource(Res.drawable.ic_image_add),
                         contentDescription = "사진 또는 영상 추가",
                         tint = RebornCobaltBlue,
                         modifier = Modifier.size(24.dp)
@@ -160,8 +165,8 @@ fun MemorialHistoryWriteScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
-                    .border(width = 1.dp, color = RebornDividerGray, shape = RoundedCornerShape(12.dp))
+                    .weight(1.2f)
+                    .border(width = 1.dp, color = RebornInputBorderGray, shape = RoundedCornerShape(12.dp))
                     .padding(12.dp)
             ) {
                 if (formState.caption.isEmpty()) {
