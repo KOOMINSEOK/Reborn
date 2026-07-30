@@ -28,6 +28,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 internal fun MemorialTabBar(
     selectedTab: MemorialTab,
+    historyCount: Int,
+    onlineWreathCount: Int,
+    guestBookCount: Int,
     onTabSelect: (MemorialTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -36,12 +39,12 @@ internal fun MemorialTabBar(
             .fillMaxWidth()
             .background(Color.White)
     ) {
-        // 1. 탭 버튼 영역 (50% : 50% 균등 분할)
+        // 1. 탭 버튼 영역 (3등분 균등 분할)
         BoxWithConstraints(
             modifier = Modifier.fillMaxWidth()
         ) {
             val totalWidth = maxWidth
-            val tabWidth = totalWidth / 2
+            val tabWidth = totalWidth / 3
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -49,15 +52,23 @@ internal fun MemorialTabBar(
             ) {
                 // 히스토리 탭
                 MemorialTabItem(
-                    title = "히스토리",
+                    title = "히스토리 ${historyCount}+",
                     isSelected = selectedTab == MemorialTab.HISTORY,
                     onClick = { onTabSelect(MemorialTab.HISTORY) },
                     modifier = Modifier.weight(1f)
                 )
 
+                // 온라인 화환 탭
+                MemorialTabItem(
+                    title = "온라인 화환 ${onlineWreathCount}+",
+                    isSelected = selectedTab == MemorialTab.ONLINE_WREATH,
+                    onClick = { onTabSelect(MemorialTab.ONLINE_WREATH) },
+                    modifier = Modifier.weight(1f)
+                )
+
                 // 방명록 탭
                 MemorialTabItem(
-                    title = "방명록",
+                    title = "방명록 ${guestBookCount}+",
                     isSelected = selectedTab == MemorialTab.GUESTBOOK,
                     onClick = { onTabSelect(MemorialTab.GUESTBOOK) },
                     modifier = Modifier.weight(1f)
@@ -65,8 +76,13 @@ internal fun MemorialTabBar(
             }
 
             // 2. 하단 슬라이딩 파란색 인디케이터 라인
+            val indicatorIndex = when (selectedTab) {
+                MemorialTab.HISTORY -> 0
+                MemorialTab.ONLINE_WREATH -> 1
+                MemorialTab.GUESTBOOK -> 2
+            }
             val indicatorOffset by animateDpAsState(
-                targetValue = if (selectedTab == MemorialTab.HISTORY) 0.dp else tabWidth,
+                targetValue = tabWidth * indicatorIndex,
                 animationSpec = tween(durationMillis = 200),
                 label = "TabIndicatorAnimation"
             )
@@ -113,9 +129,12 @@ private fun MemorialTabItem(
     ) {
         Text(
             text = title,
-            fontSize = 15.sp,
+            fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) RebornCobaltBlue else RebornSlateGray
+            color = if (isSelected) RebornCobaltBlue else RebornSlateGray,
+            maxLines = 1,
+            softWrap = false,
+            modifier = Modifier.padding(horizontal = 4.dp)
         )
     }
 }
@@ -128,6 +147,25 @@ private fun MemorialTabBarHistoryPreview() {
         Surface {
             MemorialTabBar(
                 selectedTab = MemorialTab.HISTORY,
+                historyCount = 10,
+                onlineWreathCount = 30,
+                guestBookCount = 20,
+                onTabSelect = {}
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun MemorialTabBarOnlineWreathPreview() {
+    MaterialTheme {
+        Surface {
+            MemorialTabBar(
+                selectedTab = MemorialTab.ONLINE_WREATH,
+                historyCount = 10,
+                onlineWreathCount = 30,
+                guestBookCount = 20,
                 onTabSelect = {}
             )
         }
@@ -141,6 +179,9 @@ private fun MemorialTabBarGuestBookPreview() {
         Surface {
             MemorialTabBar(
                 selectedTab = MemorialTab.GUESTBOOK,
+                historyCount = 10,
+                onlineWreathCount = 30,
+                guestBookCount = 20,
                 onTabSelect = {}
             )
         }

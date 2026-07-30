@@ -1,10 +1,14 @@
-// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/components/MemorialHistoryGrid.kt
-package com.gentlelady.reborn.feature.memorial.components
+package com.gentlelady.reborn.core.designsystem.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -16,20 +20,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
-import com.gentlelady.reborn.data.MemorialMockData
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+/**
+ * 여러 화면(히스토리, 방명록 사진첩 등)에서 재사용하는 1:1 정사각형 3열 사진 그리드.
+ */
 @Composable
-internal fun MemorialHistoryGrid(
+fun ImageGridAlbum(
     images: List<DrawableResource>,
     onImageClick: (index: Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    columns: Int = 3,
+    spacing: Dp = 2.dp,
+    emptyMessage: String = "등록된 사진이 없습니다."
 ) {
     if (images.isEmpty()) {
         Box(
@@ -40,22 +50,22 @@ internal fun MemorialHistoryGrid(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "등록된 히스토리 사진이 없습니다.",
+                text = emptyMessage,
                 color = RebornSlateGray,
                 fontSize = 14.sp
             )
         }
     } else {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            columns = GridCells.Fixed(columns),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+            verticalArrangement = Arrangement.spacedBy(spacing),
             modifier = modifier
                 .fillMaxWidth()
                 .background(Color.White)
         ) {
             itemsIndexed(images) { index, imageRes ->
-                HistoryImageItem(
+                ImageGridCell(
                     imageRes = imageRes,
                     onClick = { onImageClick(index) }
                 )
@@ -64,25 +74,22 @@ internal fun MemorialHistoryGrid(
     }
 }
 
-/**
- * 개별 그리드 이미지 셀 (지역 함수 중첩 금지 규칙에 따라 파일 레벨 분리)
- */
 @Composable
-private fun HistoryImageItem(
+private fun ImageGridCell(
     imageRes: DrawableResource,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
-            .aspectRatio(1f) // 1:1 정사각형 자르기
+            .aspectRatio(1f)
             .background(RebornDividerGray)
             .clickable(onClick = onClick)
     ) {
         Image(
             painter = painterResource(imageRes),
-            contentDescription = "History Image",
-            contentScale = ContentScale.Crop, // 이미지 꽉 차게 크롭
+            contentDescription = "Grid Image",
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -91,23 +98,10 @@ private fun HistoryImageItem(
 // Direct Injection 프리뷰 규칙 준수 (Provider/MockDataSource 금지)
 @Preview
 @Composable
-private fun MemorialHistoryGridPreview() {
+private fun ImageGridAlbumEmptyPreview() {
     MaterialTheme {
         Surface {
-            MemorialHistoryGrid(
-                images = MemorialMockData.historyImages,
-                onImageClick = {}
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun MemorialHistoryGridEmptyPreview() {
-    MaterialTheme {
-        Surface {
-            MemorialHistoryGrid(
+            ImageGridAlbum(
                 images = emptyList(),
                 onImageClick = {}
             )

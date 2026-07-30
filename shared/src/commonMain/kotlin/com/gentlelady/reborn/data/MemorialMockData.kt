@@ -50,11 +50,15 @@ object MemorialMockData {
             name = "홍길동",
             handle = "uexjurjece",
             bio = "인생, 헤맨만큼 내 땅이다",
-            followerCount = 5
+            followerCount = 5,
+            profileImageRes = dummyProfileRes
         ),
         selectedTab = MemorialTab.HISTORY,
         historyImages = historyImages,
-        guestBookMessages = guestBookMessages
+        historyCount = 10,
+        onlineWreathCount = 30,
+        guestBookMessages = guestBookMessages,
+        guestBookCount = 20
     )
 
     // 4. 내 시점 MemorialState (이윤주 페이지)
@@ -70,6 +74,9 @@ object MemorialMockData {
         ),
         selectedTab = MemorialTab.HISTORY,
         historyImages = historyImages,
-        guestBookMessages = guestBookMessages
+        historyCount = 10,
+        onlineWreathCount = 30,
+        guestBookMessages = guestBookMessages,
+        guestBookCount = 20
     )
 }

@@ -4,22 +4,23 @@ package com.gentlelady.reborn.feature.memorial
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.Res
+import com.gentlelady.reborn.core.designsystem.components.CircleIconBadge
+import com.gentlelady.reborn.core.designsystem.components.ImageGridAlbum
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
-import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.data.MemorialMockData
 import com.gentlelady.reborn.feature.memorial.components.MemorialGuestBookList
 import com.gentlelady.reborn.feature.memorial.components.MemorialHeaderSection
-import com.gentlelady.reborn.feature.memorial.components.MemorialHistoryGrid
 import com.gentlelady.reborn.feature.memorial.components.MemorialTabBar
+import com.gentlelady.reborn.ic_flower_plant
+import com.gentlelady.reborn.ic_share
 import com.gentlelady.reborn.memorial.presentation.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -43,42 +44,52 @@ fun MemorialScreen(
             containerColor = Color.White,
             topBar = {
                 TopAppBar(
-                    title = {
-                        Text(
-                            text = if (state.ownerType == MemorialOwnerType.MY_MEMORIAL) "내 공간" else state.profile.name,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    },
+                    title = {},
                     navigationIcon = {
                         IconButton(onClick = { onIntent(MemorialIntent.ClickBack) }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            CircleIconBadge(
+                                icon = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "뒤로가기",
-                                tint = Color.Black
+                                size = 36.dp
                             )
                         }
                     },
                     actions = {
+                        IconButton(onClick = { onIntent(MemorialIntent.ClickShare) }) {
+                            CircleIconBadge(
+                                icon = Res.drawable.ic_share,
+                                contentDescription = "공유",
+                                size = 36.dp,
+                                iconSize = 18.dp
+                            )
+                        }
+                        IconButton(onClick = { onIntent(MemorialIntent.ClickTribute) }) {
+                            CircleIconBadge(
+                                icon = Icons.Filled.Add,
+                                contentDescription = "화환 보내기",
+                                size = 36.dp
+                            )
+                        }
                         IconButton(onClick = { onIntent(MemorialIntent.ClickMusic) }) {
-                            Icon(
-                                imageVector = Icons.Filled.MusicNote,
-                                contentDescription = "배경음악",
-                                tint = RebornCobaltBlue
+                            CircleIconBadge(
+                                icon = Res.drawable.ic_flower_plant,
+                                contentDescription = "메모리얼 마크",
+                                size = 36.dp,
+                                iconTint = RebornCobaltBlue
                             )
                         }
                         IconButton(onClick = { onIntent(MemorialIntent.ClickMore) }) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
+                            CircleIconBadge(
+                                icon = Icons.Filled.MoreHoriz,
                                 contentDescription = "더보기",
-                                tint = RebornSlateGray
+                                size = 36.dp
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.White
-                    )
+                    ),
+                    windowInsets = WindowInsets(0.dp)
                 )
             }
         ) { innerPadding ->
@@ -94,9 +105,12 @@ fun MemorialScreen(
                     onEditProfileClick = { onIntent(MemorialIntent.ClickEditProfile) }
                 )
 
-                // 2. 히스토리 / 방명록 탭바
+                // 2. 히스토리 / 온라인 화환 / 방명록 탭바
                 MemorialTabBar(
                     selectedTab = state.selectedTab,
+                    historyCount = state.historyCount,
+                    onlineWreathCount = state.onlineWreathCount,
+                    guestBookCount = state.guestBookCount,
                     onTabSelect = { tab -> onIntent(MemorialIntent.SelectTab(tab)) }
                 )
 
@@ -108,11 +122,20 @@ fun MemorialScreen(
                 ) {
                     when (state.selectedTab) {
                         MemorialTab.HISTORY -> {
-                            MemorialHistoryGrid(
+                            ImageGridAlbum(
                                 images = state.historyImages,
                                 onImageClick = { index ->
                                     onIntent(MemorialIntent.ClickHistoryImage(index))
                                 },
+                                emptyMessage = "등록된 히스토리 사진이 없습니다.",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        MemorialTab.ONLINE_WREATH -> {
+                            ImageGridAlbum(
+                                images = state.onlineWreathImages,
+                                onImageClick = {},
+                                emptyMessage = "아직 도착한 온라인 화환이 없습니다.",
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -142,12 +165,7 @@ fun MemorialScreen(
 private fun MemorialScreenMyEditProfilePreview() {
     val dummyState = MemorialState(
         ownerType = MemorialOwnerType.MY_MEMORIAL,
-        profile = MemorialProfileData(
-            name = "이윤주",
-            handle = "uexjurjece",
-            bio = "Forever in our hearts, guiding us with love and light.",
-            followerCount = 12
-        ),
+        profile = MemorialMockData.myMemorialState.profile,
         isEditingProfile = true, // 편집 상태 모드 프리뷰
         editFormState = EditProfileFormState(
             name = "이윤주",
@@ -173,12 +191,7 @@ private fun MemorialScreenMyEditProfilePreview() {
 private fun MemorialScreenOtherViewPreview() {
     val dummyState = MemorialState(
         ownerType = MemorialOwnerType.OTHER_MEMORIAL,
-        profile = MemorialProfileData(
-            name = "홍길동",
-            handle = "uexjurjece",
-            bio = "인생, 헤맨만큼 내 땅이다",
-            followerCount = 5
-        ),
+        profile = MemorialMockData.otherMemorialState.profile,
         selectedTab = MemorialTab.GUESTBOOK,
         guestBookMessages = MemorialMockData.guestBookMessages
     )
@@ -198,12 +211,7 @@ private fun MemorialScreenOtherViewPreview() {
 private fun MemorialScreenOtherGridViewPreview() {
     val dummyState = MemorialState(
         ownerType = MemorialOwnerType.OTHER_MEMORIAL,
-        profile = MemorialProfileData(
-            name = "홍길동",
-            handle = "uexjurjece",
-            bio = "인생, 헤맨만큼 내 땅이다",
-            followerCount = 5
-        ),
+        profile = MemorialMockData.otherMemorialState.profile,
         selectedTab = MemorialTab.HISTORY,
         historyImages = MemorialMockData.historyImages
     )
@@ -223,12 +231,7 @@ private fun MemorialScreenOtherGridViewPreview() {
 private fun MemorialScreenMyViewPreview() {
     val dummyState = MemorialState(
         ownerType = MemorialOwnerType.MY_MEMORIAL,
-        profile = MemorialProfileData(
-            name = "이윤주",
-            handle = "uexjurjece",
-            bio = "인생, 헤맨만큼 내 땅이다",
-            followerCount = 12
-        ),
+        profile = MemorialMockData.myMemorialState.profile,
         selectedTab = MemorialTab.GUESTBOOK,
         guestBookMessages = MemorialMockData.guestBookMessages
     )
@@ -248,11 +251,7 @@ private fun MemorialScreenMyViewPreview() {
 private fun MemorialScreenMyGridViewPreview() {
     val dummyState = MemorialState(
         ownerType = MemorialOwnerType.MY_MEMORIAL,
-        profile = MemorialProfileData(
-            name = "이윤주",
-            handle = "uexjurjece",
-            followerCount = 12
-        ),
+        profile = MemorialMockData.myMemorialState.profile,
         selectedTab = MemorialTab.HISTORY,
         historyImages = MemorialMockData.historyImages
     )

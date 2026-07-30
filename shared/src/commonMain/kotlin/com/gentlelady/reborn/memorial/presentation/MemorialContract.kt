@@ -10,6 +10,7 @@ enum class MemorialOwnerType {
 
 enum class MemorialTab {
     HISTORY,
+    ONLINE_WREATH,
     GUESTBOOK
 }
 
@@ -42,7 +43,11 @@ data class MemorialState(
     val profile: MemorialProfileData = MemorialProfileData(),
     val selectedTab: MemorialTab = MemorialTab.HISTORY,
     val historyImages: List<DrawableResource> = emptyList(),
+    val historyCount: Int = 0,
+    val onlineWreathImages: List<DrawableResource> = emptyList(),
+    val onlineWreathCount: Int = 0,
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
+    val guestBookCount: Int = 0,
     val guestBookInputText: String = "",
     val isEditingProfile: Boolean = false, // 프로필 편집 모드 화면 전환 플래그
     val editFormState: EditProfileFormState = EditProfileFormState(),
@@ -51,6 +56,7 @@ data class MemorialState(
 
 sealed interface MemorialIntent {
     object ClickBack : MemorialIntent
+    object ClickShare : MemorialIntent
     object ClickMusic : MemorialIntent
     object ClickMore : MemorialIntent
     data class SelectTab(val tab: MemorialTab) : MemorialIntent
