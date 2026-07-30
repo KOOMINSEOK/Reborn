@@ -38,6 +38,7 @@ internal fun MemorialTabBar(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.White)
+            .padding(horizontal = 12.dp)
     ) {
         // 1. 탭 버튼 영역 (3등분 균등 분할)
         BoxWithConstraints(

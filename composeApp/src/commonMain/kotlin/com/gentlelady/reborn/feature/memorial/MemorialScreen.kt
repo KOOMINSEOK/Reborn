@@ -130,11 +130,12 @@ fun MemorialScreen(
                     onTabSelect = { tab -> onIntent(MemorialIntent.SelectTab(tab)) }
                 )
 
-                // 3. 탭별 콘텐츠 영역
+                // 3. 탭별 콘텐츠 영역 (탭바와 동일한 좌우 여백)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
+                        .padding(horizontal = 12.dp)
                 ) {
                     when (state.selectedTab) {
                         MemorialTab.HISTORY -> {
