@@ -1,6 +1,8 @@
 // composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/MemorialNavGraph.kt
 package com.gentlelady.reborn.feature.memorial
 
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -11,12 +13,21 @@ import com.gentlelady.reborn.memorial.presentation.MemorialIntent
 import com.gentlelady.reborn.memorial.presentation.MemorialViewModel
 
 fun NavGraphBuilder.memorialNavGraph(
-    navController: NavHostController
+    navController: NavHostController,
+    onWritingHistoryChange: (Boolean) -> Unit = {}
 ) {
     // 1. 내 메모리얼 공간 라우트 ("memorial/me")
     composable("memorial/me") {
         val viewModel: MemorialViewModel = viewModel { MemorialViewModel() }
         val state by viewModel.state.collectAsState()
+
+        // 💡 히스토리 작성 화면이 떠 있는 동안은 바깥(MainScreen)의 바텀 네비게이션 바를 숨긴다.
+        LaunchedEffect(state.isWritingHistory) {
+            onWritingHistoryChange(state.isWritingHistory)
+        }
+        DisposableEffect(Unit) {
+            onDispose { onWritingHistoryChange(false) }
+        }
 
         MemorialScreen(
             state = state,

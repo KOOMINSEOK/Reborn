@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -59,6 +58,7 @@ fun MemorialScreen(
         Scaffold(
             modifier = modifier.fillMaxSize(),
             containerColor = Color.White,
+            contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
             topBar = {
                 TopAppBar(
                     title = {},
@@ -80,10 +80,10 @@ fun MemorialScreen(
                                 iconSize = 18.dp
                             )
                         }
-                        IconButton(onClick = { onIntent(MemorialIntent.ClickTribute) }) {
+                        IconButton(onClick = { onIntent(MemorialIntent.ClickAddHistory) }) {
                             CircleIconBadge(
                                 icon = Icons.Filled.Add,
-                                contentDescription = "화환 보내기",
+                                contentDescription = "히스토리 작성",
                                 size = 36.dp
                             )
                         }
@@ -146,16 +146,6 @@ fun MemorialScreen(
                                 emptyMessage = "등록된 히스토리 사진이 없습니다.",
                                 modifier = Modifier.fillMaxSize()
                             )
-                            FloatingActionButton(
-                                onClick = { onIntent(MemorialIntent.ClickAddHistory) },
-                                containerColor = RebornCobaltBlue,
-                                contentColor = Color.White,
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(16.dp)
-                            ) {
-                                Icon(Icons.Filled.Add, contentDescription = "히스토리 작성")
-                            }
                         }
                         MemorialTab.ONLINE_WREATH -> {
                             ImageGridAlbum(

@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,12 +41,13 @@ fun MainScreen(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    var isMemorialWritingHistory by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
-            // 💡 바텀바를 항상 노출할 라우트 목록 ("memorial/me" 추가)
+            // 💡 바텀바를 항상 노출할 라우트 목록 ("memorial/me" 추가). 단, 히스토리 작성 화면에서는 숨긴다.
             val mainRoutes = listOf("home", "search", "message", "profile", "memorial/me")
-            if (currentRoute in mainRoutes) {
+            if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
@@ -102,7 +106,8 @@ fun MainScreen(
 
             // 5. 🆕 내 서브 NavHost 내부에 memorialNavGraph 추가 (바텀바 내부에서 렌더링됨)
             memorialNavGraph(
-                navController = navController
+                navController = navController,
+                onWritingHistoryChange = { isMemorialWritingHistory = it }
             )
         }
     }

@@ -44,6 +44,7 @@ fun MemorialHistoryDetailScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.White,
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = {},
