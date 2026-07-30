@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,6 +47,7 @@ fun ContentCard(
     modifier: Modifier = Modifier,
     authorProfileRes: DrawableResource? = null,
     imageRes: DrawableResource? = null,
+    imageBitmap: ImageBitmap? = null,
     showMoreIcon: Boolean = true,
     headerBadge: (@Composable () -> Unit)? = null,
     bannerContent: (@Composable () -> Unit)? = null,
@@ -66,7 +68,10 @@ fun ContentCard(
 
         bannerContent?.invoke()
 
-        imageRes?.let { ContentCardImage(imageRes = it) }
+        when {
+            imageBitmap != null -> ContentCardImage(imageBitmap = imageBitmap)
+            imageRes != null -> ContentCardImage(imageRes = imageRes)
+        }
 
         footerContent()
     }
@@ -134,6 +139,26 @@ private fun ContentCardImage(
     ) {
         Image(
             painter = painterResource(imageRes),
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth().height(250.dp),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+@Composable
+private fun ContentCardImage(
+    imageBitmap: ImageBitmap,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .padding(top = 8.dp)
+    ) {
+        Image(
+            bitmap = imageBitmap,
             contentDescription = null,
             modifier = Modifier.fillMaxWidth().height(250.dp),
             contentScale = ContentScale.Crop

@@ -37,6 +37,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.koin.core)
             implementation(libs.compose.runtime)
+            implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
         }

@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -34,7 +33,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  */
 @Composable
 fun ImageGridAlbum(
-    images: List<DrawableResource>,
+    images: List<GridImageSource>,
     onImageClick: (index: Int) -> Unit,
     modifier: Modifier = Modifier,
     columns: Int = 3,
@@ -64,9 +63,9 @@ fun ImageGridAlbum(
                 .fillMaxWidth()
                 .background(Color.White)
         ) {
-            itemsIndexed(images) { index, imageRes ->
+            itemsIndexed(images) { index, image ->
                 ImageGridCell(
-                    imageRes = imageRes,
+                    image = image,
                     onClick = { onImageClick(index) }
                 )
             }
@@ -76,7 +75,7 @@ fun ImageGridAlbum(
 
 @Composable
 private fun ImageGridCell(
-    imageRes: DrawableResource,
+    image: GridImageSource,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -86,12 +85,24 @@ private fun ImageGridCell(
             .background(RebornDividerGray)
             .clickable(onClick = onClick)
     ) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = "Grid Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+        when (image) {
+            is GridImageSource.Resource -> {
+                Image(
+                    painter = painterResource(image.res),
+                    contentDescription = "Grid Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            is GridImageSource.Bitmap -> {
+                Image(
+                    bitmap = image.bitmap,
+                    contentDescription = "Grid Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
     }
 }
 

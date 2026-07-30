@@ -142,14 +142,28 @@ class MemorialViewModel : ViewModel() {
                 }
             }
 
+            // 8-1. 갤러리에서 사진 선택 완료
+            is MemorialIntent.UpdateHistoryWriteImage -> {
+                _state.update { current ->
+                    current.copy(historyWriteFormState = current.historyWriteFormState.copy(imageBitmap = intent.imageBitmap))
+                }
+            }
+
+            // 8-2. 선택한 사진 취소 (X 버튼) → 다시 사진 선택 박스로 복귀
+            is MemorialIntent.ClickRemoveHistoryImage -> {
+                _state.update { current ->
+                    current.copy(historyWriteFormState = current.historyWriteFormState.copy(imageBitmap = null))
+                }
+            }
+
             // 9. 히스토리 게시 (사진이 선택되어 있을 때만 목록 맨 앞에 추가)
             is MemorialIntent.ClickPostHistory -> {
                 _state.update { current ->
-                    val selectedImageRes = current.historyWriteFormState.imageRes ?: return@update current
+                    val selectedImageBitmap = current.historyWriteFormState.imageBitmap ?: return@update current
 
                     val newItem = MemorialHistoryItem(
                         id = "h_${Clock.System.now().toEpochMilliseconds()}",
-                        imageRes = selectedImageRes,
+                        imageBitmap = selectedImageBitmap,
                         authorName = "나",
                         date = "방금 전",
                         caption = current.historyWriteFormState.caption

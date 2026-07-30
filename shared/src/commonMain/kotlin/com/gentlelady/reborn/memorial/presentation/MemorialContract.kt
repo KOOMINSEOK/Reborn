@@ -1,6 +1,7 @@
 // shared/src/commonMain/kotlin/com/gentlelady/reborn/memorial/presentation/MemorialContract.kt
 package com.gentlelady.reborn.memorial.presentation
 
+import androidx.compose.ui.graphics.ImageBitmap
 import org.jetbrains.compose.resources.DrawableResource
 
 enum class MemorialTab {
@@ -19,10 +20,11 @@ data class MemorialGuestBookItem(
 
 data class MemorialHistoryItem(
     val id: String,
-    val imageRes: DrawableResource,
     val authorName: String,
     val date: String,
     val caption: String,
+    val imageRes: DrawableResource? = null, // 앱 번들 목업 이미지 (프리뷰/목데이터용)
+    val imageBitmap: ImageBitmap? = null, // 갤러리에서 직접 등록한 이미지 (imageRes보다 우선 적용)
     val authorProfileRes: DrawableResource? = null,
     val likes: Int = 0,
     val comments: Int = 0
@@ -45,7 +47,7 @@ data class EditProfileFormState(
 )
 
 data class MemorialHistoryWriteFormState(
-    val imageRes: DrawableResource? = null,
+    val imageBitmap: ImageBitmap? = null,
     val caption: String = ""
 )
 
@@ -89,7 +91,8 @@ sealed interface MemorialIntent {
 
     // 히스토리 작성 화면 전용 인텐트
     object ClickAddHistory : MemorialIntent
-    object ClickChangeHistoryImage : MemorialIntent
+    data class UpdateHistoryWriteImage(val imageBitmap: ImageBitmap) : MemorialIntent
+    object ClickRemoveHistoryImage : MemorialIntent
     data class UpdateHistoryWriteCaption(val caption: String) : MemorialIntent
     object ClickPostHistory : MemorialIntent
     object ClickCloseHistoryWrite : MemorialIntent

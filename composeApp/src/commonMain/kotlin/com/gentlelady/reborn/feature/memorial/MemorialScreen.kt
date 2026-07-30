@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.designsystem.components.CircleIconBadge
+import com.gentlelady.reborn.core.designsystem.components.GridImageSource
 import com.gentlelady.reborn.core.designsystem.components.ImageGridAlbum
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.data.MemorialMockData
@@ -140,7 +141,10 @@ fun MemorialScreen(
                     when (state.selectedTab) {
                         MemorialTab.HISTORY -> {
                             ImageGridAlbum(
-                                images = state.historyItems.map { it.imageRes },
+                                images = state.historyItems.map { item ->
+                                    item.imageBitmap?.let { GridImageSource.Bitmap(it) }
+                                        ?: GridImageSource.Resource(item.imageRes!!)
+                                },
                                 onImageClick = { index ->
                                     onIntent(MemorialIntent.ClickHistoryImage(index))
                                 },
@@ -150,7 +154,7 @@ fun MemorialScreen(
                         }
                         MemorialTab.ONLINE_WREATH -> {
                             ImageGridAlbum(
-                                images = state.onlineWreathImages,
+                                images = state.onlineWreathImages.map { GridImageSource.Resource(it) },
                                 onImageClick = {},
                                 emptyMessage = "아직 도착한 온라인 화환이 없습니다.",
                                 modifier = Modifier.fillMaxSize()
