@@ -16,7 +16,6 @@ import com.gentlelady.reborn.core.designsystem.components.CircleAvatarImage
 import com.gentlelady.reborn.core.designsystem.components.CircleIconBadge
 import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_flower_plant
-import com.gentlelady.reborn.memorial.presentation.MemorialOwnerType
 import com.gentlelady.reborn.memorial.presentation.MemorialProfileData
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -24,7 +23,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 internal fun MemorialHeaderSection(
     profile: MemorialProfileData,
-    ownerType: MemorialOwnerType,
     onEditProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -123,7 +121,6 @@ private fun MemorialHeaderSectionOtherPreview() {
                     bio = "인생, 헤맨만큼 내 땅이다",
                     followerCount = 5
                 ),
-                ownerType = MemorialOwnerType.OTHER_MEMORIAL,
                 onEditProfileClick = {}
             )
         }
@@ -142,7 +139,6 @@ private fun MemorialHeaderSectionMyPreview() {
                     bio = "Forever in our hearts, guiding us with love and light.",
                     followerCount = 12
                 ),
-                ownerType = MemorialOwnerType.MY_MEMORIAL,
                 onEditProfileClick = {}
             )
         }

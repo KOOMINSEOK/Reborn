@@ -3,11 +3,6 @@ package com.gentlelady.reborn.memorial.presentation
 
 import org.jetbrains.compose.resources.DrawableResource
 
-enum class MemorialOwnerType {
-    OTHER_MEMORIAL,
-    MY_MEMORIAL
-}
-
 enum class MemorialTab {
     HISTORY,
     ONLINE_WREATH,
@@ -20,6 +15,17 @@ data class MemorialGuestBookItem(
     val authorProfileUrl: String?,
     val message: String,
     val timestamp: String
+)
+
+data class MemorialHistoryItem(
+    val id: String,
+    val imageRes: DrawableResource,
+    val authorName: String,
+    val date: String,
+    val caption: String,
+    val authorProfileRes: DrawableResource? = null,
+    val likes: Int = 0,
+    val comments: Int = 0
 )
 
 data class MemorialProfileData(
@@ -38,12 +44,17 @@ data class EditProfileFormState(
     val profileImageRes: DrawableResource? = null
 )
 
+data class MemorialHistoryWriteFormState(
+    val imageRes: DrawableResource? = null,
+    val caption: String = ""
+)
+
 data class MemorialState(
-    val ownerType: MemorialOwnerType = MemorialOwnerType.OTHER_MEMORIAL,
     val profile: MemorialProfileData = MemorialProfileData(),
     val selectedTab: MemorialTab = MemorialTab.HISTORY,
-    val historyImages: List<DrawableResource> = emptyList(),
+    val historyItems: List<MemorialHistoryItem> = emptyList(),
     val historyCount: Int = 0,
+    val selectedHistoryIndex: Int? = null, // null이 아니면 히스토리 상세(추억 보기) 화면 표시
     val onlineWreathImages: List<DrawableResource> = emptyList(),
     val onlineWreathCount: Int = 0,
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
@@ -51,6 +62,8 @@ data class MemorialState(
     val guestBookInputText: String = "",
     val isEditingProfile: Boolean = false, // 프로필 편집 모드 화면 전환 플래그
     val editFormState: EditProfileFormState = EditProfileFormState(),
+    val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그
+    val historyWriteFormState: MemorialHistoryWriteFormState = MemorialHistoryWriteFormState(),
     val isLoading: Boolean = false
 )
 
@@ -73,4 +86,11 @@ sealed interface MemorialIntent {
     object ClickChangeProfileImage : MemorialIntent
     object ClickSaveProfile : MemorialIntent
     object ClickCloseEditProfile : MemorialIntent
+
+    // 히스토리 작성 화면 전용 인텐트
+    object ClickAddHistory : MemorialIntent
+    object ClickChangeHistoryImage : MemorialIntent
+    data class UpdateHistoryWriteCaption(val caption: String) : MemorialIntent
+    object ClickPostHistory : MemorialIntent
+    object ClickCloseHistoryWrite : MemorialIntent
 }

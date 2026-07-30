@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -16,9 +17,11 @@ import com.gentlelady.reborn.core.designsystem.components.CircleIconBadge
 import com.gentlelady.reborn.core.designsystem.components.ImageGridAlbum
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.data.MemorialMockData
-import com.gentlelady.reborn.feature.memorial.components.MemorialGuestBookList
 import com.gentlelady.reborn.feature.memorial.components.MemorialHeaderSection
 import com.gentlelady.reborn.feature.memorial.components.MemorialTabBar
+import com.gentlelady.reborn.feature.memorial.guestbook.MemorialGuestBookList
+import com.gentlelady.reborn.feature.memorial.history.MemorialHistoryDetailScreen
+import com.gentlelady.reborn.feature.memorial.history.MemorialHistoryWriteScreen
 import com.gentlelady.reborn.ic_flower_plant
 import com.gentlelady.reborn.ic_share
 import com.gentlelady.reborn.memorial.presentation.*
@@ -31,10 +34,24 @@ fun MemorialScreen(
     onIntent: (MemorialIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 💡 state.isEditingProfile 플래그에 따라 프로필 편집 화면으로 즉시 전환 연동
+    val selectedHistoryItem = state.selectedHistoryIndex?.let { state.historyItems.getOrNull(it) }
+
+    // 💡 state.isEditingProfile / selectedHistoryIndex 플래그에 따라 하위 화면으로 즉시 전환 연동
     if (state.isEditingProfile) {
         MemorialEditProfileScreen(
             formState = state.editFormState,
+            onIntent = onIntent,
+            modifier = modifier
+        )
+    } else if (selectedHistoryItem != null) {
+        MemorialHistoryDetailScreen(
+            item = selectedHistoryItem,
+            onIntent = onIntent,
+            modifier = modifier
+        )
+    } else if (state.isWritingHistory) {
+        MemorialHistoryWriteScreen(
+            formState = state.historyWriteFormState,
             onIntent = onIntent,
             modifier = modifier
         )
@@ -101,7 +118,6 @@ fun MemorialScreen(
                 // 1. 프로필 헤더 영역
                 MemorialHeaderSection(
                     profile = state.profile,
-                    ownerType = state.ownerType,
                     onEditProfileClick = { onIntent(MemorialIntent.ClickEditProfile) }
                 )
 
@@ -123,13 +139,23 @@ fun MemorialScreen(
                     when (state.selectedTab) {
                         MemorialTab.HISTORY -> {
                             ImageGridAlbum(
-                                images = state.historyImages,
+                                images = state.historyItems.map { it.imageRes },
                                 onImageClick = { index ->
                                     onIntent(MemorialIntent.ClickHistoryImage(index))
                                 },
                                 emptyMessage = "등록된 히스토리 사진이 없습니다.",
                                 modifier = Modifier.fillMaxSize()
                             )
+                            FloatingActionButton(
+                                onClick = { onIntent(MemorialIntent.ClickAddHistory) },
+                                containerColor = RebornCobaltBlue,
+                                contentColor = Color.White,
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(16.dp)
+                            ) {
+                                Icon(Icons.Filled.Add, contentDescription = "히스토리 작성")
+                            }
                         }
                         MemorialTab.ONLINE_WREATH -> {
                             ImageGridAlbum(
@@ -143,7 +169,6 @@ fun MemorialScreen(
                             MemorialGuestBookList(
                                 guestBookMessages = state.guestBookMessages,
                                 inputText = state.guestBookInputText,
-                                ownerType = state.ownerType,
                                 onInputTextChange = { text ->
                                     onIntent(MemorialIntent.UpdateGuestBookInput(text))
                                 },
@@ -164,7 +189,6 @@ fun MemorialScreen(
 @Composable
 private fun MemorialScreenMyEditProfilePreview() {
     val dummyState = MemorialState(
-        ownerType = MemorialOwnerType.MY_MEMORIAL,
         profile = MemorialMockData.myMemorialState.profile,
         isEditingProfile = true, // 편집 상태 모드 프리뷰
         editFormState = EditProfileFormState(
@@ -190,7 +214,6 @@ private fun MemorialScreenMyEditProfilePreview() {
 @Composable
 private fun MemorialScreenOtherViewPreview() {
     val dummyState = MemorialState(
-        ownerType = MemorialOwnerType.OTHER_MEMORIAL,
         profile = MemorialMockData.otherMemorialState.profile,
         selectedTab = MemorialTab.GUESTBOOK,
         guestBookMessages = MemorialMockData.guestBookMessages
@@ -210,10 +233,9 @@ private fun MemorialScreenOtherViewPreview() {
 @Composable
 private fun MemorialScreenOtherGridViewPreview() {
     val dummyState = MemorialState(
-        ownerType = MemorialOwnerType.OTHER_MEMORIAL,
         profile = MemorialMockData.otherMemorialState.profile,
         selectedTab = MemorialTab.HISTORY,
-        historyImages = MemorialMockData.historyImages
+        historyItems = MemorialMockData.historyItems
     )
 
     MaterialTheme {
@@ -230,7 +252,6 @@ private fun MemorialScreenOtherGridViewPreview() {
 @Composable
 private fun MemorialScreenMyViewPreview() {
     val dummyState = MemorialState(
-        ownerType = MemorialOwnerType.MY_MEMORIAL,
         profile = MemorialMockData.myMemorialState.profile,
         selectedTab = MemorialTab.GUESTBOOK,
         guestBookMessages = MemorialMockData.guestBookMessages
@@ -250,10 +271,9 @@ private fun MemorialScreenMyViewPreview() {
 @Composable
 private fun MemorialScreenMyGridViewPreview() {
     val dummyState = MemorialState(
-        ownerType = MemorialOwnerType.MY_MEMORIAL,
         profile = MemorialMockData.myMemorialState.profile,
         selectedTab = MemorialTab.HISTORY,
-        historyImages = MemorialMockData.historyImages
+        historyItems = MemorialMockData.historyItems
     )
 
     MaterialTheme {

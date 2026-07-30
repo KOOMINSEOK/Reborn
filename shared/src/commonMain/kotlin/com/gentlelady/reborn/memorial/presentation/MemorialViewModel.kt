@@ -11,12 +11,8 @@ import kotlinx.datetime.Clock
 
 class MemorialViewModel : ViewModel() {
 
-    // 초기 상태로 Mock Data 바인딩 (Owner View)
-    private val _state = MutableStateFlow(
-        MemorialMockData.myMemorialState.copy(
-            ownerType = MemorialOwnerType.MY_MEMORIAL
-        )
-    )
+    // 초기 상태로 Mock Data 바인딩
+    private val _state = MutableStateFlow(MemorialMockData.myMemorialState)
     val state: StateFlow<MemorialState> = _state.asStateFlow()
 
     fun onIntent(intent: MemorialIntent) {
@@ -24,11 +20,20 @@ class MemorialViewModel : ViewModel() {
             // 💡 [추가] 뒤로가기 버튼 클릭 처리
             is MemorialIntent.ClickBack -> {
                 _state.update { current ->
-                    if (current.isEditingProfile) {
-                        // 편집 중일 때 뒤로가기를 누르면 편집 모드만 끄고 내 메모리얼 화면 유지
-                        current.copy(isEditingProfile = false)
-                    } else {
-                        current
+                    when {
+                        current.isEditingProfile -> {
+                            // 편집 중일 때 뒤로가기를 누르면 편집 모드만 끄고 내 메모리얼 화면 유지
+                            current.copy(isEditingProfile = false)
+                        }
+                        current.isWritingHistory -> {
+                            // 히스토리 작성 중일 때 뒤로가기를 누르면 작성 화면만 닫고 그리드로 복귀
+                            current.copy(isWritingHistory = false)
+                        }
+                        current.selectedHistoryIndex != null -> {
+                            // 히스토리 상세(추억 보기) 화면에서 뒤로가기를 누르면 그리드로 복귀
+                            current.copy(selectedHistoryIndex = null)
+                        }
+                        else -> current
                     }
                 }
             }
@@ -36,6 +41,11 @@ class MemorialViewModel : ViewModel() {
             // 1. 탭 전환 (히스토리 ↔ 방명록)
             is MemorialIntent.SelectTab -> {
                 _state.update { it.copy(selectedTab = intent.tab) }
+            }
+
+            // 1-1. 히스토리 그리드 사진 클릭 → 상세(추억 보기) 화면 진입
+            is MemorialIntent.ClickHistoryImage -> {
+                _state.update { it.copy(selectedHistoryIndex = intent.index) }
             }
 
             // 2. 프로필 편집 화면 진입
@@ -115,7 +125,49 @@ class MemorialViewModel : ViewModel() {
                 }
             }
 
-            else -> { /* 이미지 클릭 등 기타 네비게이션 처리 */ }
+            // 7. 히스토리 작성 화면 진입
+            is MemorialIntent.ClickAddHistory -> {
+                _state.update {
+                    it.copy(
+                        isWritingHistory = true,
+                        historyWriteFormState = MemorialHistoryWriteFormState()
+                    )
+                }
+            }
+
+            // 8. 히스토리 작성 폼 캡션 입력
+            is MemorialIntent.UpdateHistoryWriteCaption -> {
+                _state.update { current ->
+                    current.copy(historyWriteFormState = current.historyWriteFormState.copy(caption = intent.caption))
+                }
+            }
+
+            // 9. 히스토리 게시 (사진이 선택되어 있을 때만 목록 맨 앞에 추가)
+            is MemorialIntent.ClickPostHistory -> {
+                _state.update { current ->
+                    val selectedImageRes = current.historyWriteFormState.imageRes ?: return@update current
+
+                    val newItem = MemorialHistoryItem(
+                        id = "h_${Clock.System.now().toEpochMilliseconds()}",
+                        imageRes = selectedImageRes,
+                        authorName = "나",
+                        date = "방금 전",
+                        caption = current.historyWriteFormState.caption
+                    )
+                    current.copy(
+                        historyItems = listOf(newItem) + current.historyItems,
+                        isWritingHistory = false,
+                        historyWriteFormState = MemorialHistoryWriteFormState()
+                    )
+                }
+            }
+
+            // 10. 히스토리 작성 취소
+            is MemorialIntent.ClickCloseHistoryWrite -> {
+                _state.update { it.copy(isWritingHistory = false) }
+            }
+
+            else -> { /* 이미지 클릭, 사진 선택 등 기타 네비게이션/플랫폼 연동 처리 */ }
         }
     }
 }

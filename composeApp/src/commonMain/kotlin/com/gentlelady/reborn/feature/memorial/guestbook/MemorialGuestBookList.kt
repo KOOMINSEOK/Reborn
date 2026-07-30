@@ -1,5 +1,5 @@
-// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/components/MemorialGuestBookList.kt
-package com.gentlelady.reborn.feature.memorial.components
+// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/guestbook/MemorialGuestBookList.kt
+package com.gentlelady.reborn.feature.memorial.guestbook
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -26,7 +26,6 @@ import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_arrow_up
 import com.gentlelady.reborn.memorial.presentation.MemorialGuestBookItem
-import com.gentlelady.reborn.memorial.presentation.MemorialOwnerType
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -34,7 +33,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 internal fun MemorialGuestBookList(
     guestBookMessages: List<MemorialGuestBookItem>,
     inputText: String,
-    ownerType: MemorialOwnerType,
     onInputTextChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -66,7 +64,7 @@ internal fun MemorialGuestBookList(
                     top = 12.dp,
                     start = 16.dp,
                     end = 16.dp,
-                    bottom = if (ownerType == MemorialOwnerType.OTHER_MEMORIAL) 80.dp else 16.dp
+                    bottom = 80.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -76,15 +74,13 @@ internal fun MemorialGuestBookList(
             }
         }
 
-        // 2. 타인 관점 페이지일 때만 하단 방명록 입력 바 표시 (시안 1 요구사항)
-        if (ownerType == MemorialOwnerType.OTHER_MEMORIAL) {
-            GuestBookInputBottomBar(
-                inputText = inputText,
-                onInputTextChange = onInputTextChange,
-                onSubmitClick = onSubmitClick,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-        }
+        // 2. 하단 방명록 입력 바 (내 메모리얼/타인 메모리얼 구분 없이 항상 표시)
+        GuestBookInputBottomBar(
+            inputText = inputText,
+            onInputTextChange = onInputTextChange,
+            onSubmitClick = onSubmitClick,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -250,7 +246,6 @@ private fun MemorialGuestBookListOtherViewPreview() {
             MemorialGuestBookList(
                 guestBookMessages = dummyMessages,
                 inputText = "메시지 작성 중...",
-                ownerType = MemorialOwnerType.OTHER_MEMORIAL,
                 onInputTextChange = {},
                 onSubmitClick = {}
             )

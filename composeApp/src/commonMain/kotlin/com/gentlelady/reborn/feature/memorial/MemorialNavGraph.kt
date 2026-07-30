@@ -23,11 +23,11 @@ fun NavGraphBuilder.memorialNavGraph(
             onIntent = { intent ->
                 when (intent) {
                     is MemorialIntent.ClickBack -> {
-                        if (state.isEditingProfile) {
-                            // 💡 편집 중일 때 뒤로가기를 누르면 'My Memorial' 프로필 화면으로만 복귀
+                        if (state.isEditingProfile || state.selectedHistoryIndex != null || state.isWritingHistory) {
+                            // 💡 편집 중이거나 히스토리 상세를 보는 중이면 그 화면만 닫고 메모리얼 메인으로 복귀
                             viewModel.onIntent(intent)
                         } else {
-                            // 💡 편집 모드가 아닐 때 뒤로가기를 누르면 MyProfile 화면으로 복귀
+                            // 💡 메모리얼 메인 화면에서 뒤로가기를 누르면 MyProfile 화면으로 복귀
                             navController.popBackStack()
                         }
                     }
@@ -49,7 +49,11 @@ fun NavGraphBuilder.memorialNavGraph(
             onIntent = { intent ->
                 when (intent) {
                     is MemorialIntent.ClickBack -> {
-                        navController.popBackStack()
+                        if (state.isEditingProfile || state.selectedHistoryIndex != null || state.isWritingHistory) {
+                            viewModel.onIntent(intent)
+                        } else {
+                            navController.popBackStack()
+                        }
                     }
                     else -> {
                         viewModel.onIntent(intent)
