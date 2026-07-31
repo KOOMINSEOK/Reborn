@@ -23,6 +23,7 @@ import com.gentlelady.reborn.feature.memorial.guestbook.MemorialGuestBookList
 import com.gentlelady.reborn.feature.memorial.history.MemorialHistoryDetailScreen
 import com.gentlelady.reborn.feature.memorial.history.MemorialHistoryWriteScreen
 import com.gentlelady.reborn.feature.memorial.wreath.MemorialWreathContent
+import com.gentlelady.reborn.feature.memorial.wreath.MemorialWreathPurchaseScreen
 import com.gentlelady.reborn.ic_flower_plant
 import com.gentlelady.reborn.ic_share
 import com.gentlelady.reborn.memorial.presentation.*
@@ -53,6 +54,11 @@ fun MemorialScreen(
     } else if (state.isWritingHistory) {
         MemorialHistoryWriteScreen(
             formState = state.historyWriteFormState,
+            onIntent = onIntent,
+            modifier = modifier
+        )
+    } else if (state.isPurchasingWreath) {
+        MemorialWreathPurchaseScreen(
             onIntent = onIntent,
             modifier = modifier
         )

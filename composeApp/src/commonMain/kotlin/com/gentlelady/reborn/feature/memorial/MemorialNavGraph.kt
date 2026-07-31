@@ -21,9 +21,10 @@ fun NavGraphBuilder.memorialNavGraph(
         val viewModel: MemorialViewModel = viewModel { MemorialViewModel() }
         val state by viewModel.state.collectAsState()
 
-        // 💡 히스토리 작성 화면이 떠 있는 동안은 바깥(MainScreen)의 바텀 네비게이션 바를 숨긴다.
-        LaunchedEffect(state.isWritingHistory) {
-            onWritingHistoryChange(state.isWritingHistory)
+        // 💡 히스토리 작성/화환 구매 화면이 떠 있는 동안은 바깥(MainScreen)의 바텀 네비게이션 바를 숨긴다.
+        val isFullScreenOverlayActive = state.isWritingHistory || state.isPurchasingWreath
+        LaunchedEffect(isFullScreenOverlayActive) {
+            onWritingHistoryChange(isFullScreenOverlayActive)
         }
         DisposableEffect(Unit) {
             onDispose { onWritingHistoryChange(false) }
@@ -34,7 +35,7 @@ fun NavGraphBuilder.memorialNavGraph(
             onIntent = { intent ->
                 when (intent) {
                     is MemorialIntent.ClickBack -> {
-                        if (state.isEditingProfile || state.selectedHistoryIndex != null || state.isWritingHistory) {
+                        if (state.isEditingProfile || state.selectedHistoryIndex != null || state.isWritingHistory || state.isPurchasingWreath) {
                             // 💡 편집 중이거나 히스토리 상세를 보는 중이면 그 화면만 닫고 메모리얼 메인으로 복귀
                             viewModel.onIntent(intent)
                         } else {
@@ -60,7 +61,7 @@ fun NavGraphBuilder.memorialNavGraph(
             onIntent = { intent ->
                 when (intent) {
                     is MemorialIntent.ClickBack -> {
-                        if (state.isEditingProfile || state.selectedHistoryIndex != null || state.isWritingHistory) {
+                        if (state.isEditingProfile || state.selectedHistoryIndex != null || state.isWritingHistory || state.isPurchasingWreath) {
                             viewModel.onIntent(intent)
                         } else {
                             navController.popBackStack()

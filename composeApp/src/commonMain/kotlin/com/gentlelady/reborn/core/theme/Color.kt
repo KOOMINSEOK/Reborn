@@ -30,6 +30,9 @@ val RebornGridBorderGray = Color(0xFFE2E8F0) // 일반 카드 테두리 선
 val RebornMyBubbleBg = Color(0xFFDBEAFE)     // 내가 쓴 방명록 말풍선 배경
 val RebornOtherBubbleBg = RebornGridIconGray // 다른 사람이 쓴 방명록 말풍선 배경 (F1F5F9)
 
+// 화환 구매 카드 체크리스트 등에 쓰는 성공/체크 컬러
+val RebornCheckGreen = Color(0xFF22C55E)
+
 // 시스템 기본 축
 val RebornWhite = Color(0xFFFFFFFF)
 val RebornBlack = Color(0xFF111111)
