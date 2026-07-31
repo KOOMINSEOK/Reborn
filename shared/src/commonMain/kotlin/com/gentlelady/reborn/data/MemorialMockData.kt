@@ -106,6 +106,51 @@ object MemorialMockData {
             caption = "해변을 걸으며 나눴던 이야기들이 그립다.",
             likes = 132,
             comments = 17
+        ),
+        MemorialHistoryItem(
+            id = "h10",
+            imageRes = Res.drawable.img_post_grid_1,
+            authorName = "정수아",
+            date = "2025년 7월 30일",
+            caption = "그때 다 같이 먹었던 저녁, 웃음이 끊이질 않았지.",
+            likes = 58,
+            comments = 5
+        ),
+        MemorialHistoryItem(
+            id = "h11",
+            imageRes = Res.drawable.img_post_grid_2,
+            authorName = "김영희",
+            date = "2025년 6월 14일",
+            caption = "여름 초입, 시원한 바람이 좋았던 날.",
+            likes = 71,
+            comments = 6
+        ),
+        MemorialHistoryItem(
+            id = "h12",
+            imageRes = Res.drawable.img_post_grid_3,
+            authorName = "박지연",
+            date = "2025년 5월 2일",
+            caption = "함께 걸었던 그 길, 아직도 눈에 선해.",
+            likes = 93,
+            comments = 10
+        ),
+        MemorialHistoryItem(
+            id = "h13",
+            imageRes = Res.drawable.img_post_grid_4,
+            authorName = "이현우",
+            date = "2025년 3월 21일",
+            caption = "봄바람 맞으며 나눴던 이야기들.",
+            likes = 66,
+            comments = 7
+        ),
+        MemorialHistoryItem(
+            id = "h14",
+            imageRes = Res.drawable.img_post_grid_5,
+            authorName = "최민수",
+            date = "2025년 1월 9일",
+            caption = "새해 첫날, 함께 본 첫 해돋이.",
+            likes = 140,
+            comments = 19
         )
     )
 
@@ -119,7 +164,12 @@ object MemorialMockData {
         MemorialWreathItem("w6", "인천가족모임"),
         MemorialWreathItem("w7", "ITDA"),
         MemorialWreathItem("w8", "사랑하는이들"),
-        MemorialWreathItem("w9", "동아리모임")
+        MemorialWreathItem("w9", "동아리모임"),
+        MemorialWreathItem("w10", "박민수"),
+        MemorialWreathItem("w11", "정수아"),
+        MemorialWreathItem("w12", "대학동기"),
+        MemorialWreathItem("w13", "회사동료일동"),
+        MemorialWreathItem("w14", "이웃사랑회")
     )
 
     // 2. 방명록 샘플 데이터 (시안 1 기반)
@@ -141,11 +191,8 @@ object MemorialMockData {
         ),
         selectedTab = MemorialTab.HISTORY,
         historyItems = historyItems,
-        historyCount = 10,
         onlineWreathItems = onlineWreathItems,
-        onlineWreathCount = 30,
         guestBookMessages = guestBookMessages,
-        guestBookCount = 20
     )
 
     // 4. 내 시점 MemorialState (이윤주 페이지)
@@ -160,10 +207,7 @@ object MemorialMockData {
         ),
         selectedTab = MemorialTab.HISTORY,
         historyItems = historyItems,
-        historyCount = 10,
         onlineWreathItems = onlineWreathItems,
-        onlineWreathCount = 30,
         guestBookMessages = guestBookMessages,
-        guestBookCount = 20
     )
 }

@@ -60,12 +60,9 @@ data class MemorialState(
     val profile: MemorialProfileData = MemorialProfileData(),
     val selectedTab: MemorialTab = MemorialTab.HISTORY,
     val historyItems: List<MemorialHistoryItem> = emptyList(),
-    val historyCount: Int = 0,
     val selectedHistoryIndex: Int? = null, // null이 아니면 히스토리 상세(추억 보기) 화면 표시
     val onlineWreathItems: List<MemorialWreathItem> = emptyList(),
-    val onlineWreathCount: Int = 0,
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
-    val guestBookCount: Int = 0,
     val guestBookInputText: String = "",
     val isEditingProfile: Boolean = false, // 프로필 편집 모드 화면 전환 플래그
     val editFormState: EditProfileFormState = EditProfileFormState(),

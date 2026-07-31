@@ -126,9 +126,9 @@ fun MemorialScreen(
                 // 2. 히스토리 / 온라인 화환 / 방명록 탭바
                 MemorialTabBar(
                     selectedTab = state.selectedTab,
-                    historyCount = state.historyCount,
-                    onlineWreathCount = state.onlineWreathCount,
-                    guestBookCount = state.guestBookCount,
+                    historyCount = state.historyItems.size,
+                    onlineWreathCount = state.onlineWreathItems.size,
+                    guestBookCount = state.guestBookMessages.size,
                     onTabSelect = { tab -> onIntent(MemorialIntent.SelectTab(tab)) }
                 )
 
@@ -230,8 +230,7 @@ private fun MemorialScreenWreathEmptyPreview() {
     val dummyState = MemorialState(
         profile = MemorialMockData.otherMemorialState.profile,
         selectedTab = MemorialTab.ONLINE_WREATH,
-        onlineWreathItems = emptyList(),
-        onlineWreathCount = 0
+        onlineWreathItems = emptyList()
     )
 
     MaterialTheme {
@@ -250,8 +249,7 @@ private fun MemorialScreenWreathFilledPreview() {
     val dummyState = MemorialState(
         profile = MemorialMockData.otherMemorialState.profile,
         selectedTab = MemorialTab.ONLINE_WREATH,
-        onlineWreathItems = MemorialMockData.onlineWreathItems,
-        onlineWreathCount = 30
+        onlineWreathItems = MemorialMockData.onlineWreathItems
     )
 
     MaterialTheme {
