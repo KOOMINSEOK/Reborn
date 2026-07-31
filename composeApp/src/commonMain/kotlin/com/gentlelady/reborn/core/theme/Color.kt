@@ -26,6 +26,10 @@ val RebornSlateGray = Color(0xFF64748B)      // 액션 아이콘 및 회색 텍�
 val RebornGridIconGray = Color(0xFFF1F5F9)   // 일반 카드 아이콘 박스 배경
 val RebornGridBorderGray = Color(0xFFE2E8F0) // 일반 카드 테두리 선
 
+// 방명록 채팅 말풍선 배경
+val RebornMyBubbleBg = Color(0xFFDBEAFE)     // 내가 쓴 방명록 말풍선 배경
+val RebornOtherBubbleBg = RebornGridIconGray // 다른 사람이 쓴 방명록 말풍선 배경 (F1F5F9)
+
 // 시스템 기본 축
 val RebornWhite = Color(0xFFFFFFFF)
 val RebornBlack = Color(0xFF111111)

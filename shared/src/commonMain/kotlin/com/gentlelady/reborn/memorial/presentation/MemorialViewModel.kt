@@ -119,7 +119,7 @@ class MemorialViewModel : ViewModel() {
                         timestamp = "방금 전"
                     )
                     current.copy(
-                        guestBookMessages = listOf(newItem) + current.guestBookMessages,
+                        guestBookMessages = current.guestBookMessages + newItem,
                         guestBookInputText = ""
                     )
                 }
