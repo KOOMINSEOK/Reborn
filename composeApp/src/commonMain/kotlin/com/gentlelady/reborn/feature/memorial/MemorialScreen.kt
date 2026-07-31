@@ -22,6 +22,7 @@ import com.gentlelady.reborn.feature.memorial.components.MemorialTabBar
 import com.gentlelady.reborn.feature.memorial.guestbook.MemorialGuestBookList
 import com.gentlelady.reborn.feature.memorial.history.MemorialHistoryDetailScreen
 import com.gentlelady.reborn.feature.memorial.history.MemorialHistoryWriteScreen
+import com.gentlelady.reborn.feature.memorial.wreath.MemorialWreathContent
 import com.gentlelady.reborn.ic_flower_plant
 import com.gentlelady.reborn.ic_share
 import com.gentlelady.reborn.memorial.presentation.*
@@ -153,10 +154,9 @@ fun MemorialScreen(
                             )
                         }
                         MemorialTab.ONLINE_WREATH -> {
-                            ImageGridAlbum(
-                                images = state.onlineWreathImages.map { GridImageSource.Resource(it) },
-                                onImageClick = {},
-                                emptyMessage = "아직 도착한 온라인 화환이 없습니다.",
+                            MemorialWreathContent(
+                                items = state.onlineWreathItems,
+                                onPurchaseClick = { onIntent(MemorialIntent.ClickPurchaseWreath) },
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -212,6 +212,46 @@ private fun MemorialScreenOtherViewPreview() {
         profile = MemorialMockData.otherMemorialState.profile,
         selectedTab = MemorialTab.GUESTBOOK,
         guestBookMessages = MemorialMockData.guestBookMessages
+    )
+
+    MaterialTheme {
+        Surface {
+            MemorialScreen(
+                state = dummyState,
+                onIntent = {}
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun MemorialScreenWreathEmptyPreview() {
+    val dummyState = MemorialState(
+        profile = MemorialMockData.otherMemorialState.profile,
+        selectedTab = MemorialTab.ONLINE_WREATH,
+        onlineWreathItems = emptyList(),
+        onlineWreathCount = 0
+    )
+
+    MaterialTheme {
+        Surface {
+            MemorialScreen(
+                state = dummyState,
+                onIntent = {}
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun MemorialScreenWreathFilledPreview() {
+    val dummyState = MemorialState(
+        profile = MemorialMockData.otherMemorialState.profile,
+        selectedTab = MemorialTab.ONLINE_WREATH,
+        onlineWreathItems = MemorialMockData.onlineWreathItems,
+        onlineWreathCount = 30
     )
 
     MaterialTheme {

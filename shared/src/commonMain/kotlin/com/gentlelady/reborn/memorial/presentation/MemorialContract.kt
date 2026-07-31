@@ -30,6 +30,11 @@ data class MemorialHistoryItem(
     val comments: Int = 0
 )
 
+data class MemorialWreathItem(
+    val id: String,
+    val organizationName: String // 화환을 보낸 단체/보내는 사람 이름 (앨범 타일에 표시될 텍스트)
+)
+
 data class MemorialProfileData(
     val id: String = "",
     val name: String = "",
@@ -57,7 +62,7 @@ data class MemorialState(
     val historyItems: List<MemorialHistoryItem> = emptyList(),
     val historyCount: Int = 0,
     val selectedHistoryIndex: Int? = null, // null이 아니면 히스토리 상세(추억 보기) 화면 표시
-    val onlineWreathImages: List<DrawableResource> = emptyList(),
+    val onlineWreathItems: List<MemorialWreathItem> = emptyList(),
     val onlineWreathCount: Int = 0,
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
     val guestBookCount: Int = 0,
@@ -79,6 +84,7 @@ sealed interface MemorialIntent {
     object SubmitGuestBook : MemorialIntent
     object ClickEditProfile : MemorialIntent
     object ClickTribute : MemorialIntent
+    object ClickPurchaseWreath : MemorialIntent
     data class ClickHistoryImage(val index: Int) : MemorialIntent
 
     // 프로필 편집 화면 전용 인텐트

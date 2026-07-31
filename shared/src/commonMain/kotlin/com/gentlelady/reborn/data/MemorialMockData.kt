@@ -7,6 +7,7 @@ import com.gentlelady.reborn.memorial.presentation.MemorialHistoryItem
 import com.gentlelady.reborn.memorial.presentation.MemorialProfileData
 import com.gentlelady.reborn.memorial.presentation.MemorialState
 import com.gentlelady.reborn.memorial.presentation.MemorialTab
+import com.gentlelady.reborn.memorial.presentation.MemorialWreathItem
 import org.jetbrains.compose.resources.DrawableResource
 import reborn.shared.generated.resources.img_memorial_profile_dummy
 import reborn.shared.generated.resources.img_post_grid_1
@@ -108,6 +109,19 @@ object MemorialMockData {
         )
     )
 
+    // 1-1. 온라인 화환 앨범 샘플 데이터 (지금은 사진 대신 화환을 보낸 단체/사람 이름을 타일에 표시)
+    val onlineWreathItems: List<MemorialWreathItem> = listOf(
+        MemorialWreathItem("w1", "김철수"),
+        MemorialWreathItem("w2", "홍길동"),
+        MemorialWreathItem("w3", "이영희"),
+        MemorialWreathItem("w4", "IBAS"),
+        MemorialWreathItem("w5", "인하가족"),
+        MemorialWreathItem("w6", "인천가족모임"),
+        MemorialWreathItem("w7", "ITDA"),
+        MemorialWreathItem("w8", "사랑하는이들"),
+        MemorialWreathItem("w9", "동아리모임")
+    )
+
     // 2. 방명록 샘플 데이터 (시안 1 기반)
     val guestBookMessages = listOf(
         MemorialGuestBookItem("1", "지연", null, "오늘따라 너 생각이 나니 ㅋㅋ 잘 지내지? 길동아 어제 헤어졌다. 너랑 술 한잔 하고 싶네", "오늘, 10:30 AM"),
@@ -128,6 +142,7 @@ object MemorialMockData {
         selectedTab = MemorialTab.HISTORY,
         historyItems = historyItems,
         historyCount = 10,
+        onlineWreathItems = onlineWreathItems,
         onlineWreathCount = 30,
         guestBookMessages = guestBookMessages,
         guestBookCount = 20
@@ -146,6 +161,7 @@ object MemorialMockData {
         selectedTab = MemorialTab.HISTORY,
         historyItems = historyItems,
         historyCount = 10,
+        onlineWreathItems = onlineWreathItems,
         onlineWreathCount = 30,
         guestBookMessages = guestBookMessages,
         guestBookCount = 20
