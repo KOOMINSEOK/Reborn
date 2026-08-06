@@ -27,7 +27,8 @@ fun ProfileScreen(
     onIntent: (ProfileIntent) -> Unit
 ) {
     Scaffold(
-        containerColor = Color.White
+        containerColor = Color.White,
+        contentWindowInsets = WindowInsets(0.dp) // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
     ) { paddingValues ->
         // 디바이스의 첫 장 가두기 화면 높이를 계산하기 위해 BoxWithConstraints 유지
         BoxWithConstraints(

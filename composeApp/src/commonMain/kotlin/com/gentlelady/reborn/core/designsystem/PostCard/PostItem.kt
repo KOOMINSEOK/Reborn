@@ -1,33 +1,44 @@
 package com.gentlelady.reborn.core.designsystem.PostCard // 대문자 'C'로 정정
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.gentlelady.reborn.core.designsystem.components.ContentCard
 import com.gentlelady.reborn.core.theme.RebornBackground
 import com.gentlelady.reborn.home.domain.model.HomePost
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * 조립되어 외부로 공개되는 메인 피드 카드 아이템
+ * 조립되어 외부로 공개되는 메인 피드 카드 아이템. 공용 ContentCard 위에 홈 피드 전용
+ * 액션 로우(PostActionRow)와 캡션(PostCaption)만 footer로 채워 넣는다.
  */
 @Composable
 fun PostItem(
     post: HomePost,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-        PostHeader(post = post)
-        if (post.isPosthumous) {
-            PosthumousBanner()
+    ContentCard(
+        authorName = post.authorName,
+        subtitle = post.postedAt,
+        authorProfileRes = post.authorProfileUrl,
+        imageRes = post.contentImageUrl,
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        headerBadge = if (post.isPosthumous) {
+            { PosthumousLockBadge() }
+        } else {
+            null
+        },
+        bannerContent = if (post.isPosthumous) {
+            { PosthumousBanner() }
+        } else {
+            null
         }
-        PostImageArea(post = post)
+    ) {
         PostActionRow(post = post)
-        PostCaption(post = post)
+        PostCaption(post = post, modifier = Modifier.padding(bottom = 12.dp))
     }
 }
 

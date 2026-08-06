@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.message
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,6 +30,7 @@ fun MessageScreen(
 ) {
     Scaffold(
         containerColor = Color.White,
+        contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
         topBar = {
             MessageTopAppBar(
                 searchQuery = state.searchQuery,

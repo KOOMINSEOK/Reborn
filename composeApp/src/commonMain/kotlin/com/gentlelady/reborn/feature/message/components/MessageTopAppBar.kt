@@ -44,7 +44,6 @@ internal fun MessageTopAppBar(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.White)
-            .statusBarsPadding()
     ) {
         // 1. 상단 타이틀 및 작성 버튼 액션 행
         Row(

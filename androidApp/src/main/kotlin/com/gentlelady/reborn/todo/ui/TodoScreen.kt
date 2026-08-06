@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.gentlelady.reborn.todo.domain.model.Todo
 import com.gentlelady.reborn.todo.presentation.todo.TodoError
 import com.gentlelady.reborn.todo.presentation.todo.TodoIntent
 import com.gentlelady.reborn.todo.presentation.todo.TodoState
@@ -37,26 +38,12 @@ fun TodoScreen(
     ) {
         Text(text = "Todo", style = MaterialTheme.typography.headlineMedium)
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                modifier = Modifier.weight(1f),
-                value = state.inputText,
-                onValueChange = { onIntent(TodoIntent.InputChanged(it)) },
-                label = { Text("New Todo") },
-                singleLine = true,
-                enabled = !state.isLoading,
-            )
-            Button(
-                onClick = { onIntent(TodoIntent.AddClicked) },
-                enabled = !state.isLoading,
-            ) {
-                Text("Add")
-            }
-        }
+        TodoInputRow(
+            inputText = state.inputText,
+            enabled = !state.isLoading,
+            onInputChanged = { onIntent(TodoIntent.InputChanged(it)) },
+            onAddClicked = { onIntent(TodoIntent.AddClicked) },
+        )
 
         if (state.isLoading) {
             CircularProgressIndicator()
@@ -71,36 +58,80 @@ fun TodoScreen(
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(items = state.items, key = { it.id }) { item ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Checkbox(
-                            checked = item.isCompleted,
-                            onCheckedChange = { onIntent(TodoIntent.ToggleClicked(item.id)) },
-                            enabled = !state.isLoading,
-                        )
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = item.title,
-                            textDecoration = if (item.isCompleted) {
-                                TextDecoration.LineThrough
-                            } else {
-                                TextDecoration.None
-                            },
-                        )
-                        Button(
-                            onClick = { onIntent(TodoIntent.DeleteClicked(item.id)) },
-                            enabled = !state.isLoading,
-                        ) {
-                            Text("Delete")
-                        }
-                    }
-                }
+                TodoItemRow(
+                    item = item,
+                    enabled = !state.isLoading,
+                    onToggle = { onIntent(TodoIntent.ToggleClicked(item.id)) },
+                    onDelete = { onIntent(TodoIntent.DeleteClicked(item.id)) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodoInputRow(
+    inputText: String,
+    enabled: Boolean,
+    onInputChanged: (String) -> Unit,
+    onAddClicked: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        OutlinedTextField(
+            modifier = Modifier.weight(1f),
+            value = inputText,
+            onValueChange = onInputChanged,
+            label = { Text("New Todo") },
+            singleLine = true,
+            enabled = enabled,
+        )
+        Button(
+            onClick = onAddClicked,
+            enabled = enabled,
+        ) {
+            Text("Add")
+        }
+    }
+}
+
+@Composable
+private fun TodoItemRow(
+    item: Todo,
+    enabled: Boolean,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Checkbox(
+                checked = item.isCompleted,
+                onCheckedChange = { onToggle() },
+                enabled = enabled,
+            )
+            Text(
+                modifier = Modifier.weight(1f),
+                text = item.title,
+                textDecoration = if (item.isCompleted) {
+                    TextDecoration.LineThrough
+                } else {
+                    TextDecoration.None
+                },
+            )
+            Button(
+                onClick = onDelete,
+                enabled = enabled,
+            ) {
+                Text("Delete")
             }
         }
     }

@@ -24,6 +24,7 @@ fun SearchScreen(
 ) {
     Scaffold(
         containerColor = RebornBackground, // 시맨틱 컬러 바인딩
+        contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
         topBar = {
             SearchTopAppBar(
                 query = state.query,

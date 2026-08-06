@@ -12,7 +12,6 @@ import com.gentlelady.reborn.*
 
 // 분리된 하위 컴포넌트 임포트
 import com.gentlelady.reborn.feature.main.components.RebornNavItem
-import com.gentlelady.reborn.feature.main.components.CentralAddButton
 
 import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornUnselectedGray
@@ -37,12 +36,13 @@ fun BottomNavigationBar(
 
         // 왼쪽 영역
         RebornNavItem(Res.drawable.ic_nav_home_default, "Home", currentRoute == "home", navItemColors) { onNavigate("home") }
+        RebornNavItem(
+            Res.drawable.ic_flower,
+            "Memorial",
+            currentRoute == "memorial/me" || currentRoute == "wreath/checkout/{tier}" || currentRoute == "wreath/message/{tier}",
+            navItemColors
+        ) { onNavigate("memorial/me") }
         RebornNavItem(Res.drawable.ic_nav_search_default, "Search", currentRoute == "search", navItemColors) { onNavigate("search") }
-
-        // 중앙 영역
-        CentralAddButton(onClick = { /* 게시글 작성 동작 */ })
-
-        // 오른쪽 영역
         RebornNavItem(Res.drawable.ic_nav_message_default, "Message", currentRoute == "message", navItemColors) { onNavigate("message") }
         RebornNavItem(Res.drawable.ic_nav_profile_default, "Profile", currentRoute == "profile", navItemColors) { onNavigate("profile") }
     }
