@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="30dp"
+    android:height="30dp"
+    android:viewportWidth="30"
+    android:viewportHeight="30">
+    <!-- 우상단 플러스(+) 버튼 및 이미지 메인 프레임 -->
+    <path
+        android:pathData="M20 6.25H27.5M23.75 2.5V10M26.25 14.375V23.75C26.25 25.1298 25.1298 26.25 23.75 26.25H6.25C4.87021 26.25 3.75 25.1298 3.75 23.75V6.25C3.75 4.87021 4.87021 3.75 6.25 3.75H15.625"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 내부 산 모양 능선 -->
+    <path
+        android:pathData="M25.75 18.5895L21.8925 14.732C20.9163 13.756 19.3337 13.756 18.3575 14.732L7 26.0895"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 내부 태양/달 (원형) -->
+    <path
+        android:pathData="M8.75 11.25C8.75 12.6298 9.87021 13.75 11.25 13.75C12.6298 13.75 13.75 12.6298 13.75 11.25C13.75 9.87021 12.6298 8.75 11.25 8.75C9.87021 8.75 8.75 9.87021 8.75 11.25V11.25"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

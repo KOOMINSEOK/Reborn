@@ -69,7 +69,8 @@ fun HomeTopAppBar(
             }
             Spacer(modifier = Modifier.width(16.dp))
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+        windowInsets = WindowInsets(0.dp)
     )
 }
 

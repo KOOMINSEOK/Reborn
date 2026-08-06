@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.home
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,7 @@ fun HomeScreen(
 ) {
     Scaffold(
         containerColor = RebornBackground, // 하드코딩 제거: 시맨틱 테마 컬러 적용
+        contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
         topBar = {
             // 새로 개설한 콜백 파라미터에 HomeIntent를 매핑하여 단방향 데이터 흐름을 완성합니다.
             HomeTopAppBar(
@@ -41,7 +43,6 @@ fun HomeScreen(
         ) {
             items(state.posts) { post ->
                 PostItem(post = post)
-                HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)
             }
         }
     }

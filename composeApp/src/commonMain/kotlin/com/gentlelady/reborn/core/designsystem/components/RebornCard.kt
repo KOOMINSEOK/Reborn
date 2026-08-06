@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
@@ -27,15 +28,18 @@ fun RebornCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 20.dp,
     contentPadding: Dp = 16.dp,
+    backgroundColor: Color = RebornSurface,
+    borderColor: Color = RebornGridBorderGray,
+    borderWidth: Dp = 1.dp,
     content: @Composable () -> Unit
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(cornerRadius))
-            .background(RebornSurface)
+            .background(backgroundColor)
             .border(
-                border = BorderStroke(1.dp, RebornGridBorderGray),
+                border = BorderStroke(borderWidth, borderColor),
                 shape = RoundedCornerShape(cornerRadius)
             )
             .padding(contentPadding)

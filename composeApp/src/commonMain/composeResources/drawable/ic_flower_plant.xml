@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 상단 및 중앙 잎사귀 세부 경로 -->
+    <path
+        android:pathData="M12 5C12 3.34425 13.3443 2 15 2C16.6557 2 18 3.34425 18 5C18 6.65575 16.6557 8 15 8M12 5C12 3.34425 10.6557 2 9 2C7.34425 2 6 3.34425 6 5C6 6.65575 7.34425 8 9 8M12 5V6M9 8C7.34425 8 6 9.34425 6 11C6 12.6557 7.34425 14 9 14C10.6557 14 12 12.6557 12 11M9 8H10M15 8C16.6557 8 18 9.34425 18 11C18 12.6557 16.6557 14 15 14C13.3443 14 12 12.6557 12 11M15 8H14M12 11V10"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 중앙 원형 연결부 -->
+    <path
+        android:pathData="M10 8C10 9.10383 10.8962 10 12 10C13.1038 10 14 9.10383 14 8C14 6.89617 13.1038 6 12 6C10.8962 6 10 6.89617 10 8V8"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- 하단 줄기 및 받침 곡선 -->
+    <path
+        android:pathData="M12 10V22M12 22C16.2 22 19 20.333 19 17C14.8 17 12 18.667 12 22M12 22C7.8 22 5 20.333 5 17C9.2 17 12 18.667 12 22"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

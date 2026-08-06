@@ -36,7 +36,12 @@ fun BottomNavigationBar(
             )
 
             RebornNavItem(Res.drawable.ic_nav_home_default, "Home", currentRoute == "home", navItemColors) { onNavigate("home") }
-            RebornNavItem(Res.drawable.ic_flower, "Memorial", currentRoute == "memorial/me", navItemColors) { onNavigate("memorial/me") }
+            RebornNavItem(
+                Res.drawable.ic_flower,
+                "Memorial",
+                currentRoute == "memorial/me" || currentRoute == "wreath/checkout/{tier}" || currentRoute == "wreath/message/{tier}",
+                navItemColors
+            ) { onNavigate("memorial/me") }
             RebornNavItem(Res.drawable.ic_nav_search_default, "Search", currentRoute == "search", navItemColors) { onNavigate("search") }
             RebornNavItem(Res.drawable.ic_nav_message_default, "Message", currentRoute == "message", navItemColors) { onNavigate("message") }
             RebornNavItem(Res.drawable.ic_nav_profile_default, "Profile", currentRoute == "profile", navItemColors) { onNavigate("profile") }
