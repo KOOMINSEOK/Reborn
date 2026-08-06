@@ -18,6 +18,7 @@ import com.gentlelady.reborn.feature.memorial.memorialNavGraph // 👈 memorialN
 import com.gentlelady.reborn.feature.message.MessageScreen
 import com.gentlelady.reborn.feature.profile.profileNavGraph
 import com.gentlelady.reborn.feature.search.searchNavGraph
+import com.gentlelady.reborn.feature.wreath_purchase.wreathNavGraph
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
@@ -109,6 +110,9 @@ fun MainScreen(
                 navController = navController,
                 onWritingHistoryChange = { isMemorialWritingHistory = it }
             )
+
+            // 6. 🆕 화환 구매 서브 그래프 (독립 라우트, memorial/me와 별개로 바텀바 자동 숨김)
+            wreathNavGraph(navController = navController)
         }
     }
 }

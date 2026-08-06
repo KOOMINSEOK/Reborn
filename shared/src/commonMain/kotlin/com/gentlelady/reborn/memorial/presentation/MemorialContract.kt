@@ -68,7 +68,6 @@ data class MemorialState(
     val editFormState: EditProfileFormState = EditProfileFormState(),
     val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그
     val historyWriteFormState: MemorialHistoryWriteFormState = MemorialHistoryWriteFormState(),
-    val isPurchasingWreath: Boolean = false, // 온라인 화환 구매 화면 전환 플래그
     val isLoading: Boolean = false
 )
 
@@ -100,7 +99,4 @@ sealed interface MemorialIntent {
     data class UpdateHistoryWriteCaption(val caption: String) : MemorialIntent
     object ClickPostHistory : MemorialIntent
     object ClickCloseHistoryWrite : MemorialIntent
-
-    // 온라인 화환 구매 화면 전용 인텐트
-    data class ClickBuyWreath(val tier: String) : MemorialIntent
 }

@@ -29,10 +29,6 @@ class MemorialViewModel : ViewModel() {
                             // 히스토리 작성 중일 때 뒤로가기를 누르면 작성 화면만 닫고 그리드로 복귀
                             current.copy(isWritingHistory = false)
                         }
-                        current.isPurchasingWreath -> {
-                            // 화환 구매 화면에서 뒤로가기를 누르면 구매 화면만 닫고 그리드로 복귀
-                            current.copy(isPurchasingWreath = false)
-                        }
                         current.selectedHistoryIndex != null -> {
                             // 히스토리 상세(추억 보기) 화면에서 뒤로가기를 누르면 그리드로 복귀
                             current.copy(selectedHistoryIndex = null)
@@ -185,12 +181,7 @@ class MemorialViewModel : ViewModel() {
                 _state.update { it.copy(isWritingHistory = false) }
             }
 
-            // 11. 온라인 화환 구매 화면 진입
-            is MemorialIntent.ClickPurchaseWreath -> {
-                _state.update { it.copy(isPurchasingWreath = true) }
-            }
-
-            else -> { /* 이미지 클릭, 사진 선택, 화환 결제 등 기타 네비게이션/플랫폼 연동 처리 */ }
+            else -> { /* 이미지 클릭, 사진 선택 등 기타 네비게이션/플랫폼 연동 처리. ClickPurchaseWreath는 NavGraph에서 가로채 화환 라우트로 이동 */ }
         }
     }
 }

@@ -1,5 +1,5 @@
-// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/wreath/MemorialWreathPurchaseScreen.kt
-package com.gentlelady.reborn.feature.memorial.wreath
+// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/wreathpurchase/WreathPurchaseScreen.kt
+package com.gentlelady.reborn.feature.wreath_purchase
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,7 +28,7 @@ import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.img_wreath_basic
 import com.gentlelady.reborn.img_wreath_premium
 import com.gentlelady.reborn.img_wreath_special
-import com.gentlelady.reborn.memorial.presentation.MemorialIntent
+import com.gentlelady.reborn.wreathpurchase.presentation.WreathIntent
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
@@ -37,8 +37,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MemorialWreathPurchaseScreen(
-    onIntent: (MemorialIntent) -> Unit,
+fun WreathPurchaseScreen(
+    selectedTier: String?,
+    onIntent: (WreathIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -58,7 +59,7 @@ fun MemorialWreathPurchaseScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onIntent(MemorialIntent.ClickBack) }) {
+                    IconButton(onClick = { onIntent(WreathIntent.ClickBack) }) {
                         CircleIconBadge(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "뒤로가기",
@@ -89,8 +90,10 @@ fun MemorialWreathPurchaseScreen(
                     "추모 텍스트 작성 (글자 수 200자 제한)"
                 ),
                 buttonText = "스페셜 화환 보내기",
-                onButtonClick = { onIntent(MemorialIntent.ClickBuyWreath("special")) },
+                onButtonClick = { onIntent(WreathIntent.ClickBuy("special")) },
                 imageRes = Res.drawable.img_wreath_special,
+                isSelected = selectedTier == "special",
+                onCardClick = { onIntent(WreathIntent.SelectTier("special")) },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
             )
@@ -105,9 +108,11 @@ fun MemorialWreathPurchaseScreen(
                     "추모 텍스트 작성 (글자 수 100자 제한)"
                 ),
                 buttonText = "기본 화환 보내기",
-                onButtonClick = { onIntent(MemorialIntent.ClickBuyWreath("basic")) },
+                onButtonClick = { onIntent(WreathIntent.ClickBuy("basic")) },
                 imageRes = Res.drawable.img_wreath_basic,
                 accentColor = RebornSlateGray,
+                isSelected = selectedTier == "basic",
+                onCardClick = { onIntent(WreathIntent.SelectTier("basic")) },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
             )
@@ -125,8 +130,10 @@ fun MemorialWreathPurchaseScreen(
                     "화환 테두리 후광 효과"
                 ),
                 buttonText = "프리미엄 화환 보내기",
-                onButtonClick = { onIntent(MemorialIntent.ClickBuyWreath("premium")) },
+                onButtonClick = { onIntent(WreathIntent.ClickBuy("premium")) },
                 imageRes = Res.drawable.img_wreath_premium,
+                isSelected = selectedTier == "premium",
+                onCardClick = { onIntent(WreathIntent.SelectTier("premium")) },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
             )
@@ -136,10 +143,13 @@ fun MemorialWreathPurchaseScreen(
 
 @Preview
 @Composable
-private fun MemorialWreathPurchaseScreenPreview() {
+private fun WreathPurchaseScreenPreview() {
     MaterialTheme {
         Surface {
-            MemorialWreathPurchaseScreen(onIntent = {})
+            WreathPurchaseScreen(
+                selectedTier = "special",
+                onIntent = {}
+            )
         }
     }
 }

@@ -1,8 +1,9 @@
-// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/wreath/WreathProductCard.kt
-package com.gentlelady.reborn.feature.memorial.wreath
+// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/wreathpurchase/WreathProductCard.kt
+package com.gentlelady.reborn.feature.wreath_purchase
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,7 @@ import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.designsystem.components.RebornCard
 import com.gentlelady.reborn.core.theme.RebornCheckGreen
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
+import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornLightBlueBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.ic_flower_plant
@@ -43,6 +45,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * [imageRes]로 img_wreath_basic / img_wreath_premium / img_wreath_special 같은 화환 이미지를 넘기면
  * 그대로 표시되고, 비워두면 플레이스홀더가 표시된다.
  * [accentColor]는 가격 텍스트와 버튼 색상에 쓰인다 (기본형은 무채색, 프리미엄/스페셜은 파란색 강조 등급 차등).
+ * [isSelected]가 true면 카드 테두리가 파란색으로 강조되고, [onCardClick]이 주어지면 카드 전체가 선택 가능해진다.
  */
 @Composable
 fun WreathProductCard(
@@ -54,10 +57,18 @@ fun WreathProductCard(
     onButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
     imageRes: DrawableResource? = null,
-    accentColor: Color = RebornCobaltBlue
+    accentColor: Color = RebornCobaltBlue,
+    isSelected: Boolean = false,
+    onCardClick: (() -> Unit)? = null
 ) {
     // 카드 자체가 길쭉한 비율을 갖도록 최대 폭을 스스로 제한한다 (호출부의 fillMaxWidth와 무관하게 항상 적용)
-    RebornCard(modifier = modifier.widthIn(max = 300.dp)) {
+    RebornCard(
+        modifier = modifier
+            .widthIn(max = 300.dp)
+            .let { if (onCardClick != null) it.clickable(onClick = onCardClick) else it },
+        borderColor = if (isSelected) RebornCobaltBlue else RebornGridBorderGray,
+        borderWidth = if (isSelected) 2.dp else 1.dp
+    ) {
         // 1. 상단: 제목/가격 + 화환 이미지
         Row(
             modifier = Modifier.fillMaxWidth(),
