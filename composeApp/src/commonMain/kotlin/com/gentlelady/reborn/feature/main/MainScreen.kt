@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.gentlelady.reborn.core.designsystem.navigation.BottomNavigationBar
 import com.gentlelady.reborn.feature.home.HomeScreen
 import com.gentlelady.reborn.feature.memorial.memorialNavGraph // 👈 memorialNavGraph 임포트
 import com.gentlelady.reborn.feature.message.MessageScreen

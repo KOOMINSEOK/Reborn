@@ -6,37 +6,28 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gentlelady.reborn.core.designsystem.components.ContentCard
+import com.gentlelady.reborn.core.designsystem.components.RebornCard
 import com.gentlelady.reborn.core.theme.RebornBackground
 import com.gentlelady.reborn.home.domain.model.HomePost
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
- * 조립되어 외부로 공개되는 메인 피드 카드 아이템. 공용 ContentCard 위에 홈 피드 전용
- * 액션 로우(PostActionRow)와 캡션(PostCaption)만 footer로 채워 넣는다.
+ * 조립되어 외부로 공개되는 메인 피드 카드 아이템
  */
 @Composable
 fun PostItem(
     post: HomePost,
     modifier: Modifier = Modifier
 ) {
-    ContentCard(
-        authorName = post.authorName,
-        subtitle = post.postedAt,
-        authorProfileRes = post.authorProfileUrl,
-        imageRes = post.contentImageUrl,
+    RebornCard(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        headerBadge = if (post.isPosthumous) {
-            { PosthumousLockBadge() }
-        } else {
-            null
-        },
-        bannerContent = if (post.isPosthumous) {
-            { PosthumousBanner() }
-        } else {
-            null
-        }
+        contentPadding = 0.dp
     ) {
+        PostHeader(post = post, modifier = Modifier.padding(top = 12.dp))
+        if (post.isPosthumous) {
+            PosthumousBanner()
+        }
+        PostImageArea(post = post)
         PostActionRow(post = post)
         PostCaption(post = post, modifier = Modifier.padding(bottom = 12.dp))
     }
@@ -54,7 +45,7 @@ fun NormalPostItemPreview() {
         authorName = "홍길동",
         authorProfileUrl = null,
         contentImageUrl = null,
-        caption = "일반 상태의 게시물 미리보기 텍스트입니다.",
+        caption = "일반 상태의 게시물 미리보기 텍스트입니다.일반 상태의 게시물 미리보기 텍스트입니다.일반 상태의 게시물 미리보기 텍스트입니다.",
         likes = 12,
         comments = 3,
         postedAt = "2026.02.18",

@@ -9,8 +9,13 @@ import androidx.compose.ui.graphics.Color
 val RebornDeepBlue = Color(0xFF0F62FE)      // 네비게이션 바 선택, 주요 브랜드 컬러
 val RebornCobaltBlue = Color(0xFF0F62FE)    // 메모리얼 아이콘 등 포인트 컬러
 
+// 하단 네비게이션 바 전용 색상
+val RebornNavSelected = Color(0xFF0F62FE)   // 네비게이션 바 아이템 선택 색상
+val RebornNavUnselected = Color(0xFF7B7F8A) // 네비게이션 바 아이템 비선택 색상
+
 // Light Blue Variations
 val RebornLightBlueBg = Color(0xFFEFF4FF)   // 사후 게시글 정보 박스 등 연한 파랑 배경
+val RebornPosthumousBannerBg = Color(0xFFD9E6FF) // 사후 게시글 배너 배경
 val RebornBorderLightBlue = Color(0xFFB9D1FF) // 메모리얼 버튼 테두리
 val RebornSoftBlue = Color(0xFFDCE8FF)
 val RebornDarkBlue = Color(0xFF0F62FE)
@@ -23,6 +28,7 @@ val RebornTopBarDividerGray = Color(0xFFE5E7EB) // 상단바 하단 구분선 �
 val RebornImageBg = Color(0xFFF9FAFB) // 화환 이미지 등 컨텐츠 이미지 배경색
 val RebornInputBorderGray = Color(0xFFCBD5E1) // 입력창/점선 박스 테두리 색상
 val RebornSlateGray = Color(0xFF64748B)      // 액션 아이콘 및 회색 텍스트용 슬레이트 그레이
+val RebornActionIconDark = Color(0xFF3F4451) // 좋아요/댓글/공유/북마크 아이콘 전용 진한 색상
 
 // 🆕 신규 요청 그레이 색상 추가
 val RebornGridIconGray = Color(0xFFF1F5F9)   // 일반 카드 아이콘 박스 배경
