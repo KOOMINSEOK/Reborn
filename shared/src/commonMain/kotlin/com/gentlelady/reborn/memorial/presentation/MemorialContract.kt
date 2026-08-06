@@ -82,6 +82,7 @@ sealed interface MemorialIntent {
     object ClickEditProfile : MemorialIntent
     object ClickTribute : MemorialIntent
     object ClickPurchaseWreath : MemorialIntent
+    data class AddOnlineWreathItem(val item: MemorialWreathItem) : MemorialIntent
     data class ClickHistoryImage(val index: Int) : MemorialIntent
 
     // 프로필 편집 화면 전용 인텐트

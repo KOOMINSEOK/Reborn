@@ -1,5 +1,5 @@
-// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/wreathpurchase/WreathProductCard.kt
-package com.gentlelady.reborn.feature.wreath_purchase
+// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/wreath_purchase/components/WreathProductCard.kt
+package com.gentlelady.reborn.feature.wreath_purchase.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

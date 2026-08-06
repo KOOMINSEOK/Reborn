@@ -20,7 +20,16 @@ class WreathViewModel : ViewModel() {
             is WreathIntent.SelectPaymentMethod -> {
                 _state.update { it.copy(selectedPaymentMethod = intent.method) }
             }
-            // ClickBack / ClickBuy는 NavGraph에서 가로채 네비게이션 처리
+            is WreathIntent.ChangeMessageText -> {
+                _state.update { it.copy(messageText = intent.text.take(100)) }
+            }
+            is WreathIntent.ChangeSenderName -> {
+                _state.update { it.copy(senderName = intent.name) }
+            }
+            is WreathIntent.SelectFlowerDesign -> {
+                _state.update { it.copy(selectedFlowerDesign = intent.design) }
+            }
+            // ClickBack / ClickBuy / ClickPay / ClickSubmitMessage는 NavGraph에서 가로채 네비게이션 처리
             else -> {}
         }
     }

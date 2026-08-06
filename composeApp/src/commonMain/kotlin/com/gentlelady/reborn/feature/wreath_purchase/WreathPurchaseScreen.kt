@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.designsystem.components.RebornBackTopAppBar
 import com.gentlelady.reborn.core.theme.RebornSlateGray
+import com.gentlelady.reborn.feature.wreath_purchase.components.WreathProductCard
 import com.gentlelady.reborn.img_wreath_basic
 import com.gentlelady.reborn.img_wreath_premium
 import com.gentlelady.reborn.img_wreath_special

@@ -181,6 +181,13 @@ class MemorialViewModel : ViewModel() {
                 _state.update { it.copy(isWritingHistory = false) }
             }
 
+            // 11. 화환 구매 플로우 완료 → 온라인 화환 그리드 맨 앞에 추가
+            is MemorialIntent.AddOnlineWreathItem -> {
+                _state.update { current ->
+                    current.copy(onlineWreathItems = listOf(intent.item) + current.onlineWreathItems)
+                }
+            }
+
             else -> { /* 이미지 클릭, 사진 선택 등 기타 네비게이션/플랫폼 연동 처리. ClickPurchaseWreath는 NavGraph에서 가로채 화환 라우트로 이동 */ }
         }
     }

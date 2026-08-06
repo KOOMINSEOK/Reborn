@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,6 +38,8 @@ import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornGridIconGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
+import com.gentlelady.reborn.core.theme.RebornTopBarDividerGray
+import com.gentlelady.reborn.feature.wreath_purchase.components.wreathTierInfo
 import com.gentlelady.reborn.wreathpurchase.presentation.WreathIntent
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -71,7 +74,9 @@ fun WreathCheckoutScreen(
             )
         },
         bottomBar = {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column {
+                HorizontalDivider(color = RebornTopBarDividerGray, thickness = 1.dp)
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -86,7 +91,7 @@ fun WreathCheckoutScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
-                    onClick = {},
+                    onClick = { onIntent(WreathIntent.ClickPay(tier.orEmpty())) },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = RebornCobaltBlue),
                     modifier = Modifier.fillMaxWidth().height(52.dp)
@@ -97,6 +102,7 @@ fun WreathCheckoutScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+                }
                 }
             }
         }

@@ -20,6 +20,7 @@ val RebornBackgroundGray = Color(0xFFF8F9FA) // 앱 공통 배경색
 val RebornUnselectedGray = Color(0xFF9E9E9E) // 네비게이션 바 비활성 탭 색상
 val RebornDividerGray = Color(0xFFEEEEEE)    // 구분선 색상
 val RebornTopBarDividerGray = Color(0xFFE5E7EB) // 상단바 하단 구분선 색상
+val RebornImageBg = Color(0xFFF9FAFB) // 화환 이미지 등 컨텐츠 이미지 배경색
 val RebornInputBorderGray = Color(0xFFCBD5E1) // 입력창/점선 박스 테두리 색상
 val RebornSlateGray = Color(0xFF64748B)      // 액션 아이콘 및 회색 텍스트용 슬레이트 그레이
 
