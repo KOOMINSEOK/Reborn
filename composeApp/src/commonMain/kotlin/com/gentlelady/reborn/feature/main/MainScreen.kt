@@ -47,7 +47,7 @@ fun MainScreen(
     Scaffold(
         bottomBar = {
             // 💡 바텀바를 항상 노출할 라우트 목록 ("memorial/me" 추가). 단, 히스토리 작성 화면에서는 숨긴다.
-            val mainRoutes = listOf("home", "search", "message", "profile", "memorial/me")
+            val mainRoutes = listOf("home", "search", "message", "profile", "memorial/me", "wreath/checkout/{tier}")
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
                     currentRoute = currentRoute,

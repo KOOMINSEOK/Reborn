@@ -28,6 +28,7 @@ fun RebornCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 20.dp,
     contentPadding: Dp = 16.dp,
+    backgroundColor: Color = RebornSurface,
     borderColor: Color = RebornGridBorderGray,
     borderWidth: Dp = 1.dp,
     content: @Composable () -> Unit
@@ -36,7 +37,7 @@ fun RebornCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(cornerRadius))
-            .background(RebornSurface)
+            .background(backgroundColor)
             .border(
                 border = BorderStroke(borderWidth, borderColor),
                 shape = RoundedCornerShape(cornerRadius)

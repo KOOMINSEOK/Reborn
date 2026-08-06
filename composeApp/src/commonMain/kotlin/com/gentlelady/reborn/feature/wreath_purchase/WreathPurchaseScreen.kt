@@ -4,26 +4,16 @@ package com.gentlelady.reborn.feature.wreath_purchase
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
-import com.gentlelady.reborn.core.designsystem.components.CircleIconBadge
+import com.gentlelady.reborn.core.designsystem.components.RebornBackTopAppBar
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.img_wreath_basic
 import com.gentlelady.reborn.img_wreath_premium
@@ -35,7 +25,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * 온라인 화환 구매 화면. 스페셜형 → 기본형 → 프리미엄형 순으로 등급 카드를 세로로 나열한다.
  * 각 카드는 [WreathProductCard]를 그대로 재사용하고, 이 화면은 배치/여백만 담당한다.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WreathPurchaseScreen(
     selectedTier: String?,
@@ -47,28 +36,9 @@ fun WreathPurchaseScreen(
         containerColor = Color.White,
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "온라인 화환 구매",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onIntent(WreathIntent.ClickBack) }) {
-                        CircleIconBadge(
-                            icon = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "뒤로가기",
-                            size = 36.dp
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
-                windowInsets = WindowInsets(0.dp)
+            RebornBackTopAppBar(
+                title = "온라인 화환 구매",
+                onBackClick = { onIntent(WreathIntent.ClickBack) }
             )
         }
     ) { innerPadding ->

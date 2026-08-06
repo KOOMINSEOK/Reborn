@@ -17,6 +17,9 @@ class WreathViewModel : ViewModel() {
             is WreathIntent.SelectTier -> {
                 _state.update { it.copy(selectedTier = intent.tier) }
             }
+            is WreathIntent.SelectPaymentMethod -> {
+                _state.update { it.copy(selectedPaymentMethod = intent.method) }
+            }
             // ClickBack / ClickBuy는 NavGraph에서 가로채 네비게이션 처리
             else -> {}
         }
