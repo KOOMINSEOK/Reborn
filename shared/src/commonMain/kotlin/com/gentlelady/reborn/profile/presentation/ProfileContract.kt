@@ -5,6 +5,7 @@ import com.gentlelady.reborn.profile.domain.model.ProfileFeedItem // 💡 새로
 
 data class ProfileState(
     val username: String = "",
+    val displayName: String = "",
     val profileImageUrl: DrawableResource? = null,
     val backgroundImageUrl: DrawableResource? = null,
     val posthumousFeedCount: Int = 0,

@@ -31,6 +31,7 @@ class ProfileViewModel : ViewModel() {
         _state.update {
             it.copy(
                 username = MockDataSource.profileUsername,
+                displayName = MockDataSource.profileDisplayName,
                 profileImageUrl = MockDataSource.profileImage,
                 backgroundImageUrl = MockDataSource.profileBgImage,
                 posthumousFeedCount = MockDataSource.posthumousFeedCount,

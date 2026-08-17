@@ -237,6 +237,7 @@ object MockDataSource {
     )
 
     val profileUsername = "hong_gild"
+    val profileDisplayName = "홍길동"
     val profileImage = Res.drawable.img_profile_dummy_1
     val profileBgImage = Res.drawable.img_memorial_bg_dummy
     val posthumousFeedCount = 5

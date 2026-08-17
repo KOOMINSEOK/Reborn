@@ -54,8 +54,7 @@ fun ProfileScreen(
                             // 1. 상단 배경, 프로필 아바타, 지표 정보 섹션
                             ProfileHeaderSection(
                                 state = state,
-                                onEditBackgroundClick = { onIntent(ProfileIntent.ClickEditBackground) },
-                                onToggleMemorialModeClick = { onIntent(ProfileIntent.ClickToggleMemorialMode) }
+                                onEditProfileClick = { onIntent(ProfileIntent.ClickEditProfile) }
                             )
 
                             HorizontalDivider(
@@ -124,6 +123,7 @@ fun ProfileScreen(
 private fun ProfileScreenPreview() {
     val previewState = ProfileState(
         username = "hong_gild",
+        displayName = "홍길동",
         posthumousFeedCount = 5,
         followersCount = 248,
         followingCount = 91,
