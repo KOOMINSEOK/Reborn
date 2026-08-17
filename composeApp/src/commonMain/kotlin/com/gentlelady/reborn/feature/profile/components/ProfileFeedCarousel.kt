@@ -2,7 +2,6 @@ package com.gentlelady.reborn.feature.profile.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -36,13 +35,15 @@ internal fun ProfileFeedCarousel(
     onViewAllClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val pagerState = rememberPagerState(pageCount = { feeds.size.coerceAtLeast(1) })
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.White)
             .padding(vertical = 16.dp)
     ) {
-        // 1. 섹션 헤더 타이틀 영역 (피드 - View All)
+        // 1. 섹션 헤더 타이틀 영역 (피드 - 슬라이드 인디케이터 도트)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -56,13 +57,22 @@ internal fun ProfileFeedCarousel(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = "View All",
-                color = RebornCobaltBlue,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable { onViewAllClick() }
-            )
+            if (feeds.isNotEmpty()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    repeat(feeds.size) { index ->
+                        val isSelected = pagerState.currentPage == index
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 3.dp)
+                                .size(6.dp)
+                                .background(
+                                    color = if (isSelected) RebornDeepBlue else RebornDividerGray,
+                                    shape = CircleShape
+                                )
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -80,8 +90,6 @@ internal fun ProfileFeedCarousel(
                 Text("아직 작성된 피드가 없습니다.", color = RebornUnselectedGray, fontSize = 14.sp)
             }
         } else {
-            val pagerState = rememberPagerState(pageCount = { feeds.size })
-
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth(),
@@ -93,28 +101,6 @@ internal fun ProfileFeedCarousel(
                     // 💡 부모 가로폭의 60%만 채우도록 Fraction 비율 명시
                     modifier = Modifier.fillMaxWidth(1f)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 3. 인디케이터 도트 영역 (캡슐 형태)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(feeds.size) { index ->
-                    val isSelected = pagerState.currentPage == index
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 3.dp)
-                            .size(if (isSelected) 12.dp else 6.dp, 6.dp)
-                            .background(
-                                color = if (isSelected) RebornDeepBlue else RebornDividerGray,
-                                shape = CircleShape
-                            )
-                    )
-                }
             }
         }
     }
