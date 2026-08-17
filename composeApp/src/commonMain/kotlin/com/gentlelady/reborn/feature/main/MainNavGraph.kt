@@ -8,6 +8,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
+import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
+import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryState
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
@@ -26,7 +28,9 @@ fun NavGraphBuilder.mainNavGraph(
     myProfileState: MyProfileState,
     onMyProfileIntent: (MyProfileIntent) -> Unit,
     scheduledFeedState: ScheduledFeedState,
-    onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit
+    onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit,
+    paymentHistoryState: PaymentHistoryState,
+    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit
 ) {
     composable("main_flow") {
         MainScreen(
@@ -46,7 +50,9 @@ fun NavGraphBuilder.mainNavGraph(
             myProfileState = myProfileState,
             onMyProfileIntent = onMyProfileIntent, // 💡 MainScreen 내부 핸들러로 위임
             scheduledFeedState = scheduledFeedState,
-            onScheduledFeedIntent = onScheduledFeedIntent
+            onScheduledFeedIntent = onScheduledFeedIntent,
+            paymentHistoryState = paymentHistoryState,
+            onPaymentHistoryIntent = onPaymentHistoryIntent
         )
     }
 }
