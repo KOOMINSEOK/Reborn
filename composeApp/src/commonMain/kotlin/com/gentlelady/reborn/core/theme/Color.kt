@@ -41,6 +41,9 @@ val RebornOtherBubbleBg = RebornGridIconGray // 다른 사람이 쓴 방명록 �
 // 화환 구매 카드 체크리스트 등에 쓰는 성공/체크 컬러
 val RebornCheckGreen = Color(0xFF22C55E)
 
+// 삭제 등 위험(destructive) 액션 텍스트/아이콘 컬러
+val RebornDangerRed = Color(0xFFEF4444)
+
 // 시스템 기본 축
 val RebornWhite = Color(0xFFFFFFFF)
 val RebornBlack = Color(0xFF111111)

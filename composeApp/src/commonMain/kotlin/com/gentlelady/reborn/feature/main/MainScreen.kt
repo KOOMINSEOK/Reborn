@@ -15,6 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gentlelady.reborn.core.designsystem.navigation.BottomNavigationBar
 import com.gentlelady.reborn.feature.home.HomeScreen
+import com.gentlelady.reborn.feature.management.managementNavGraph
 import com.gentlelady.reborn.feature.memorial.memorialNavGraph // 👈 memorialNavGraph 임포트
 import com.gentlelady.reborn.feature.message.MessageScreen
 import com.gentlelady.reborn.feature.myprofile.myProfileNavGraph
@@ -22,6 +23,8 @@ import com.gentlelady.reborn.feature.search.searchNavGraph
 import com.gentlelady.reborn.feature.wreath_purchase.wreathNavGraph
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
+import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
+import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
@@ -38,7 +41,9 @@ fun MainScreen(
     messageState: MessageState,
     onMessageIntent: (MessageIntent) -> Unit,
     myProfileState: MyProfileState,
-    onMyProfileIntent: (MyProfileIntent) -> Unit
+    onMyProfileIntent: (MyProfileIntent) -> Unit,
+    scheduledFeedState: ScheduledFeedState,
+    onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -48,7 +53,7 @@ fun MainScreen(
     Scaffold(
         bottomBar = {
             // 💡 바텀바를 항상 노출할 라우트 목록 ("memorial/me" 추가). 단, 히스토리 작성 화면에서는 숨긴다.
-            val mainRoutes = listOf("home", "search", "message", "profile", "memorial/me", "wreath/checkout/{tier}", "wreath/message/{tier}")
+            val mainRoutes = listOf("home", "search", "message", "profile", "memorial/me", "wreath/checkout/{tier}", "wreath/message/{tier}", "management/scheduled_feed")
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
@@ -101,7 +106,25 @@ fun MainScreen(
                         is MyProfileIntent.ClickToggleMemorialMode -> {
                             navController.navigate("memorial/me")
                         }
+                        // 💡 관리 그리드의 메뉴 클릭을 해당 관리 서브 화면 라우트로 연결
+                        is MyProfileIntent.ClickManagementMenu -> {
+                            when (intent.menuId) {
+                                "scheduled_feed" -> navController.navigate("management/scheduled_feed")
+                                else -> onMyProfileIntent(intent)
+                            }
+                        }
                         else -> onMyProfileIntent(intent)
+                    }
+                }
+            )
+
+            // 4-1. 🆕 "관리" 메뉴 하위 화면들의 서브 그래프
+            managementNavGraph(
+                scheduledFeedState = scheduledFeedState,
+                onScheduledFeedIntent = { intent ->
+                    when (intent) {
+                        is ScheduledFeedIntent.ClickBack -> navController.popBackStack()
+                        else -> onScheduledFeedIntent(intent)
                     }
                 }
             )

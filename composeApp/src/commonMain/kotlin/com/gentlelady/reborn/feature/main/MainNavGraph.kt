@@ -8,6 +8,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
+import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
+import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
 import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 import com.gentlelady.reborn.search.presentation.SearchIntent
@@ -22,7 +24,9 @@ fun NavGraphBuilder.mainNavGraph(
     messageState: MessageState,
     onMessageIntent: (MessageIntent) -> Unit,
     myProfileState: MyProfileState,
-    onMyProfileIntent: (MyProfileIntent) -> Unit
+    onMyProfileIntent: (MyProfileIntent) -> Unit,
+    scheduledFeedState: ScheduledFeedState,
+    onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit
 ) {
     composable("main_flow") {
         MainScreen(
@@ -40,7 +44,9 @@ fun NavGraphBuilder.mainNavGraph(
             messageState = messageState,
             onMessageIntent = onMessageIntent,
             myProfileState = myProfileState,
-            onMyProfileIntent = onMyProfileIntent // 💡 MainScreen 내부 핸들러로 위임
+            onMyProfileIntent = onMyProfileIntent, // 💡 MainScreen 내부 핸들러로 위임
+            scheduledFeedState = scheduledFeedState,
+            onScheduledFeedIntent = onScheduledFeedIntent
         )
     }
 }
