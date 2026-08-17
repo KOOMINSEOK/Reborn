@@ -11,6 +11,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
+import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
+import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryState
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
@@ -33,7 +35,9 @@ fun App(
     scheduledFeedState: ScheduledFeedState,
     onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit,
     paymentHistoryState: PaymentHistoryState,
-    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit
+    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit,
+    archiveState: ArchiveState,
+    onArchiveIntent: (ArchiveIntent) -> Unit
 ) {
     MaterialTheme {
         val rootNavController = rememberNavController()
@@ -57,7 +61,9 @@ fun App(
                 scheduledFeedState = scheduledFeedState,
                 onScheduledFeedIntent = onScheduledFeedIntent,
                 paymentHistoryState = paymentHistoryState,
-                onPaymentHistoryIntent = onPaymentHistoryIntent
+                onPaymentHistoryIntent = onPaymentHistoryIntent,
+                archiveState = archiveState,
+                onArchiveIntent = onArchiveIntent
             )
 
             // 2. 탭바를 숨겨야 하는 몰입형 스와이프 화면만 최상위로 유지

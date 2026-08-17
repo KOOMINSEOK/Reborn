@@ -4,10 +4,13 @@ package com.gentlelady.reborn.feature.management
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.gentlelady.reborn.feature.management.archive.ArchiveScreen
 import com.gentlelady.reborn.feature.management.profile_edit.BasicInfoManagementScreen
 import com.gentlelady.reborn.feature.management.profile_edit.PaymentManagementScreen
 import com.gentlelady.reborn.feature.management.profile_edit.ProfileEditScreen
 import com.gentlelady.reborn.feature.management.scheduled_feed.ScheduledFeedScreen
+import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
+import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryState
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
@@ -24,7 +27,9 @@ fun NavGraphBuilder.managementNavGraph(
     scheduledFeedState: ScheduledFeedState,
     onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit,
     paymentHistoryState: PaymentHistoryState,
-    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit
+    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit,
+    archiveState: ArchiveState,
+    onArchiveIntent: (ArchiveIntent) -> Unit
 ) {
     composable("management/scheduled_feed") {
         ScheduledFeedScreen(
@@ -63,6 +68,18 @@ fun NavGraphBuilder.managementNavGraph(
                 when (intent) {
                     is PaymentHistoryIntent.ClickBack -> navController.popBackStack()
                     else -> onPaymentHistoryIntent(intent)
+                }
+            }
+        )
+    }
+
+    composable("management/archive") {
+        ArchiveScreen(
+            state = archiveState,
+            onIntent = { intent ->
+                when (intent) {
+                    is ArchiveIntent.ClickBack -> navController.popBackStack()
+                    else -> onArchiveIntent(intent)
                 }
             }
         )

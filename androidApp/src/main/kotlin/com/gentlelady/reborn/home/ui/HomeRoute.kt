@@ -9,6 +9,7 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeViewModel
 import com.gentlelady.reborn.search.presentation.SearchViewModel
 import com.gentlelady.reborn.message.presentation.MessageViewModel
+import com.gentlelady.reborn.management.archive.presentation.ArchiveViewModel
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryViewModel
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedViewModel
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent  // 🆕 프로필 인텐트 임포트 추가
@@ -24,6 +25,7 @@ fun HomeRoute() {
     val myProfileViewModel: MyProfileViewModel = koinViewModel() // 🆕 프로필 뇌 추가 주입
     val scheduledFeedViewModel: ScheduledFeedViewModel = koinViewModel() // 🆕 관리 > 예약된 피드 뇌 추가 주입
     val paymentHistoryViewModel: PaymentHistoryViewModel = koinViewModel() // 🆕 관리 > 결제 관리 뇌 추가 주입
+    val archiveViewModel: ArchiveViewModel = koinViewModel() // 🆕 관리 > 보관함 뇌 추가 주입
 
     // 2. 각 영역의 독립적인 MVI State 관찰(수집) 및 단일 진실 공급원(SSOT) 수립
     val homeState by homeViewModel.state.collectAsState()
@@ -32,6 +34,7 @@ fun HomeRoute() {
     val myProfileState by myProfileViewModel.state.collectAsState() // 🆕 프로필 상태 수집 추가
     val scheduledFeedState by scheduledFeedViewModel.state.collectAsState() // 🆕 예약된 피드 상태 수집 추가
     val paymentHistoryState by paymentHistoryViewModel.state.collectAsState() // 🆕 결제 관리 상태 수집 추가
+    val archiveState by archiveViewModel.state.collectAsState() // 🆕 보관함 상태 수집 추가
 
     // 3. 초기 데이터 로드 명령 (Intent) - 최초 화면 진입 시 트리거용
     LaunchedEffect(Unit) {
@@ -55,6 +58,8 @@ fun HomeRoute() {
         scheduledFeedState = scheduledFeedState,
         onScheduledFeedIntent = { intent -> scheduledFeedViewModel.handleIntent(intent) },
         paymentHistoryState = paymentHistoryState,
-        onPaymentHistoryIntent = { intent -> paymentHistoryViewModel.handleIntent(intent) }
+        onPaymentHistoryIntent = { intent -> paymentHistoryViewModel.handleIntent(intent) },
+        archiveState = archiveState,
+        onArchiveIntent = { intent -> archiveViewModel.handleIntent(intent) }
     )
 }

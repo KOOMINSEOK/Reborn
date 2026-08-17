@@ -2,6 +2,7 @@ package com.gentlelady.reborn.di
 
 import com.gentlelady.reborn.home.di.homeModule
 import com.gentlelady.reborn.onboarding.di.onboardingModule
+import com.gentlelady.reborn.management.archive.domain.di.archiveModule
 import com.gentlelady.reborn.management.profile_edit.domain.di.paymentHistoryModule
 import com.gentlelady.reborn.management.scheduled_feed.domain.di.scheduledFeedModule
 import com.gentlelady.reborn.myprofile.domain.di.myProfileModule
@@ -25,6 +26,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
             myProfileModule,// 2. 여기에 검색 모듈을 결합해 줍니다.
             scheduledFeedModule,
             paymentHistoryModule,
+            archiveModule,
             onboardingModule
         )
     }

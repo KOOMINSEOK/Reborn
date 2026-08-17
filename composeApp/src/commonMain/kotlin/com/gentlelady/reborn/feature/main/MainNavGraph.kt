@@ -8,6 +8,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
+import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
+import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryState
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
@@ -30,7 +32,9 @@ fun NavGraphBuilder.mainNavGraph(
     scheduledFeedState: ScheduledFeedState,
     onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit,
     paymentHistoryState: PaymentHistoryState,
-    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit
+    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit,
+    archiveState: ArchiveState,
+    onArchiveIntent: (ArchiveIntent) -> Unit
 ) {
     composable("main_flow") {
         MainScreen(
@@ -52,7 +56,9 @@ fun NavGraphBuilder.mainNavGraph(
             scheduledFeedState = scheduledFeedState,
             onScheduledFeedIntent = onScheduledFeedIntent,
             paymentHistoryState = paymentHistoryState,
-            onPaymentHistoryIntent = onPaymentHistoryIntent
+            onPaymentHistoryIntent = onPaymentHistoryIntent,
+            archiveState = archiveState,
+            onArchiveIntent = onArchiveIntent
         )
     }
 }

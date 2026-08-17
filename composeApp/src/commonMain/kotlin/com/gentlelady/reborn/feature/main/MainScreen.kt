@@ -23,6 +23,8 @@ import com.gentlelady.reborn.feature.search.searchNavGraph
 import com.gentlelady.reborn.feature.wreath_purchase.wreathNavGraph
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
+import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
+import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryState
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
@@ -47,7 +49,9 @@ fun MainScreen(
     scheduledFeedState: ScheduledFeedState,
     onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit,
     paymentHistoryState: PaymentHistoryState,
-    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit
+    onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit,
+    archiveState: ArchiveState,
+    onArchiveIntent: (ArchiveIntent) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -59,7 +63,8 @@ fun MainScreen(
             // 💡 바텀바를 항상 노출할 라우트 목록 ("memorial/me" 추가). 단, 히스토리 작성 화면에서는 숨긴다.
             val mainRoutes = listOf(
                 "home", "search", "message", "profile", "memorial/me", "wreath/checkout/{tier}", "wreath/message/{tier}",
-                "management/scheduled_feed", "management/profile_edit", "management/profile_edit/basic_info", "management/profile_edit/payment"
+                "management/scheduled_feed", "management/profile_edit", "management/profile_edit/basic_info", "management/profile_edit/payment",
+                "management/archive"
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
@@ -118,6 +123,7 @@ fun MainScreen(
                             when (intent.menuId) {
                                 "scheduled_feed" -> navController.navigate("management/scheduled_feed")
                                 "edit_profile" -> navController.navigate("management/profile_edit")
+                                "archive" -> navController.navigate("management/archive")
                                 else -> onMyProfileIntent(intent)
                             }
                         }
@@ -133,7 +139,9 @@ fun MainScreen(
                 scheduledFeedState = scheduledFeedState,
                 onScheduledFeedIntent = onScheduledFeedIntent,
                 paymentHistoryState = paymentHistoryState,
-                onPaymentHistoryIntent = onPaymentHistoryIntent
+                onPaymentHistoryIntent = onPaymentHistoryIntent,
+                archiveState = archiveState,
+                onArchiveIntent = onArchiveIntent
             )
 
             // 5. 🆕 내 서브 NavHost 내부에 memorialNavGraph 추가 (바텀바 내부에서 렌더링됨)
