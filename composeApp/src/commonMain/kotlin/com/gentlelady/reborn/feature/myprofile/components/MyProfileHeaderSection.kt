@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.profile.components
+package com.gentlelady.reborn.feature.myprofile.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,13 +24,13 @@ import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_lock
 import com.gentlelady.reborn.ic_camera
 import com.gentlelady.reborn.img_memorial_profile_dummy
-import com.gentlelady.reborn.profile.presentation.ProfileState
+import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-internal fun ProfileHeaderSection(
-    state: ProfileState,
+internal fun MyProfileHeaderSection(
+    state: MyProfileState,
     onBackClick: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -123,17 +123,17 @@ internal fun ProfileHeaderSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ProfileMetricItem(
+                MyProfileMetricItem(
                     count = state.posthumousFeedCount.toString(),
                     label = "게시물",
                     showLock = true
                 )
-                ProfileMetricItem(
+                MyProfileMetricItem(
                     count = state.followersCount.toString(),
                     label = "팔로워",
                     showLock = false
                 )
-                ProfileMetricItem(
+                MyProfileMetricItem(
                     count = state.followingCount.toString(),
                     label = "팔로잉",
                     showLock = false
@@ -165,7 +165,7 @@ internal fun ProfileHeaderSection(
 }
 
 @Composable
-private fun RowScope.ProfileMetricItem(
+private fun RowScope.MyProfileMetricItem(
     count: String,
     label: String,
     showLock: Boolean,
@@ -213,8 +213,8 @@ private fun RowScope.ProfileMetricItem(
 
 @Preview
 @Composable
-private fun ProfileHeaderSectionPreview() {
-    val previewState = ProfileState(
+private fun MyProfileHeaderSectionPreview() {
+    val previewState = MyProfileState(
         username = "hong_gild",
         displayName = "홍길동",
         posthumousFeedCount = 5,
@@ -223,6 +223,6 @@ private fun ProfileHeaderSectionPreview() {
         profileImageUrl = Res.drawable.img_memorial_profile_dummy
     )
     MaterialTheme {
-        ProfileHeaderSection(state = previewState)
+        MyProfileHeaderSection(state = previewState)
     }
 }

@@ -17,15 +17,15 @@ import com.gentlelady.reborn.core.designsystem.navigation.BottomNavigationBar
 import com.gentlelady.reborn.feature.home.HomeScreen
 import com.gentlelady.reborn.feature.memorial.memorialNavGraph // 👈 memorialNavGraph 임포트
 import com.gentlelady.reborn.feature.message.MessageScreen
-import com.gentlelady.reborn.feature.profile.profileNavGraph
+import com.gentlelady.reborn.feature.myprofile.myProfileNavGraph
 import com.gentlelady.reborn.feature.search.searchNavGraph
 import com.gentlelady.reborn.feature.wreath_purchase.wreathNavGraph
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
-import com.gentlelady.reborn.profile.presentation.ProfileIntent
-import com.gentlelady.reborn.profile.presentation.ProfileState
+import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
+import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 import com.gentlelady.reborn.search.presentation.SearchIntent
 import com.gentlelady.reborn.search.presentation.SearchState
 
@@ -37,8 +37,8 @@ fun MainScreen(
     onSearchIntent: (SearchIntent) -> Unit,
     messageState: MessageState,
     onMessageIntent: (MessageIntent) -> Unit,
-    profileState: ProfileState,
-    onProfileIntent: (ProfileIntent) -> Unit
+    myProfileState: MyProfileState,
+    onMyProfileIntent: (MyProfileIntent) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -93,15 +93,15 @@ fun MainScreen(
             }
 
             // 4. 프로필 화면 서브 그래프
-            profileNavGraph(
-                state = profileState,
+            myProfileNavGraph(
+                state = myProfileState,
                 onIntent = { intent ->
                     when (intent) {
                         // 💡 토글 클릭 시 서브 navController를 통해 "memorial/me"로 전환 (바텀바 유지가능)
-                        is ProfileIntent.ClickToggleMemorialMode -> {
+                        is MyProfileIntent.ClickToggleMemorialMode -> {
                             navController.navigate("memorial/me")
                         }
-                        else -> onProfileIntent(intent)
+                        else -> onMyProfileIntent(intent)
                     }
                 }
             )

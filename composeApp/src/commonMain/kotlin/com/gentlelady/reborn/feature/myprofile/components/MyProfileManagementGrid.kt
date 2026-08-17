@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.profile.components
+package com.gentlelady.reborn.feature.myprofile.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,7 +29,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-internal fun ProfileManagementGrid(
+internal fun MyProfileManagementGrid(
     scheduledCount: Int,
     onMenuClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -170,9 +170,9 @@ private fun ManagementRowItem(
 // --- 프리뷰 규칙 준수: PreviewParameterProvider 차단 및 Direct Injection 데이터 적용 ---
 @Preview
 @Composable
-private fun ProfileManagementGridPreview() {
+private fun MyProfileManagementGridPreview() {
     MaterialTheme {
-        ProfileManagementGrid(
+        MyProfileManagementGrid(
             scheduledCount = 3,
             onMenuClick = {}
         )

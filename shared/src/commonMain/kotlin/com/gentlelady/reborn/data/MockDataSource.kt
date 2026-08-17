@@ -19,7 +19,7 @@ import reborn.shared.generated.resources.img_profile_dummy_3
 import reborn.shared.generated.resources.img_profile_dummy_4
 import reborn.shared.generated.resources.img_profile_dummy_5
 
-import com.gentlelady.reborn.profile.domain.model.ProfileFeedItem
+import com.gentlelady.reborn.myprofile.domain.model.MyProfileFeedItem
 
 object MockDataSource {
 
@@ -236,17 +236,17 @@ object MockDataSource {
         )
     )
 
-    val profileUsername = "hong_gild"
-    val profileDisplayName = "홍길동"
-    val profileImage = Res.drawable.img_profile_dummy_1
-    val profileBgImage = Res.drawable.img_memorial_bg_dummy
+    val myProfileUsername = "hong_gild"
+    val myProfileDisplayName = "홍길동"
+    val myProfileImage = Res.drawable.img_profile_dummy_1
+    val myProfileBgImage = Res.drawable.img_memorial_bg_dummy
     val posthumousFeedCount = 5
     val followersCount = 248
     val followingCount = 91
     val scheduledFeedCount = 3
 
-    val profileFeeds = listOf(
-        ProfileFeedItem(
+    val myProfileFeeds = listOf(
+        MyProfileFeedItem(
             id = "1",
             title = "가을 산책을 하며",
             subtitle = "예전에도 요즘에도 산책하는걸 좋아하는데요 오늘은 북한산으로 산책을 갔답니..",
@@ -254,7 +254,7 @@ object MockDataSource {
             likes = 24,
             comments = 6
         ),
-        ProfileFeedItem(
+        MyProfileFeedItem(
             id = "2",
             title = "요즘 내가 좋아하는 것들",
             subtitle = "여러분들은 어떤 취미를 가지고 계신가요? 저는 최근에 독서와 음악 감상에..",
@@ -262,7 +262,7 @@ object MockDataSource {
             likes = 42,
             comments = 11
         ),
-        ProfileFeedItem(
+        MyProfileFeedItem(
             id = "3",
             title = "세 번째 기록",
             subtitle = "소중한 기억들을 여기에 차곡차곡 남겨둡니다. 나중에 꺼내볼 수 있도록..",

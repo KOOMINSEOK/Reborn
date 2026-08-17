@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.profile
+package com.gentlelady.reborn.feature.myprofile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,17 +14,17 @@ import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_down_arrow
-import com.gentlelady.reborn.feature.profile.components.*
+import com.gentlelady.reborn.feature.myprofile.components.*
 import com.gentlelady.reborn.img_memorial_bg_dummy
-import com.gentlelady.reborn.profile.domain.model.ProfileFeedItem
-import com.gentlelady.reborn.profile.presentation.*
+import com.gentlelady.reborn.myprofile.domain.model.MyProfileFeedItem
+import com.gentlelady.reborn.myprofile.presentation.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun ProfileScreen(
-    state: ProfileState,
-    onIntent: (ProfileIntent) -> Unit
+fun MyProfileScreen(
+    state: MyProfileState,
+    onIntent: (MyProfileIntent) -> Unit
 ) {
     Scaffold(
         containerColor = Color.White,
@@ -52,9 +52,9 @@ fun ProfileScreen(
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             // 1. 상단 배경, 프로필 아바타, 지표 정보 섹션
-                            ProfileHeaderSection(
+                            MyProfileHeaderSection(
                                 state = state,
-                                onEditProfileClick = { onIntent(ProfileIntent.ClickEditProfile) }
+                                onEditProfileClick = { onIntent(MyProfileIntent.ClickEditProfile) }
                             )
 
                             HorizontalDivider(
@@ -70,9 +70,9 @@ fun ProfileScreen(
                                 color = RebornGridIconGray
                             )
 
-                            ProfileFeedCarousel(
+                            MyProfileFeedCarousel(
                                 feeds = state.feeds,
-                                onViewAllClick = { onIntent(ProfileIntent.ClickViewAllFeeds) }
+                                onViewAllClick = { onIntent(MyProfileIntent.ClickViewAllFeeds) }
                             )
                         }
 
@@ -104,9 +104,9 @@ fun ProfileScreen(
                 // [두 번째 뷰포트]: 스크롤을 내렸을 때 노출되는 영역
                 item {
                     // 💡 하단에 불필요한 빈 여백이 남지 않도록 고정/최소 높이 제한을 완전히 제거
-                    ProfileManagementGrid(
+                    MyProfileManagementGrid(
                         scheduledCount = state.scheduledFeedCount,
-                        onMenuClick = { menuId -> onIntent(ProfileIntent.ClickManagementMenu(menuId)) },
+                        onMenuClick = { menuId -> onIntent(MyProfileIntent.ClickManagementMenu(menuId)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 24.dp) // 최하단선과 카드 사이의 숨통 트기용 컴팩트 마진만 배정
@@ -120,8 +120,8 @@ fun ProfileScreen(
 // --- 프리뷰 규칙 준수: PreviewParameterProvider 차단 및 Direct Injection 데이터 적용 ---
 @Preview
 @Composable
-private fun ProfileScreenPreview() {
-    val previewState = ProfileState(
+private fun MyProfileScreenPreview() {
+    val previewState = MyProfileState(
         username = "hong_gild",
         displayName = "홍길동",
         posthumousFeedCount = 5,
@@ -129,11 +129,11 @@ private fun ProfileScreenPreview() {
         followingCount = 91,
         scheduledFeedCount = 3,
         feeds = listOf(
-            ProfileFeedItem("1", "가을 산책을 하며", "예전에도 요즘에도 산책하는걸 좋아하는데요...", Res.drawable.img_memorial_bg_dummy, 24, 6)
+            MyProfileFeedItem("1", "가을 산책을 하며", "예전에도 요즘에도 산책하는걸 좋아하는데요...", Res.drawable.img_memorial_bg_dummy, 24, 6)
         )
     )
     MaterialTheme {
-        ProfileScreen(
+        MyProfileScreen(
             state = previewState,
             onIntent = {}
         )

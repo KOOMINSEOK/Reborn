@@ -1,4 +1,4 @@
-package com.gentlelady.reborn.feature.profile.components
+package com.gentlelady.reborn.feature.myprofile.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,14 +24,14 @@ import com.gentlelady.reborn.ic_like
 import com.gentlelady.reborn.ic_comment
 import com.gentlelady.reborn.img_memorial_bg_dummy
 import com.gentlelady.reborn.img_memorial_profile_dummy
-import com.gentlelady.reborn.profile.domain.model.ProfileFeedItem
+import com.gentlelady.reborn.myprofile.domain.model.MyProfileFeedItem
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.text.get
 
 @Composable
-internal fun ProfileFeedCarousel(
-    feeds: List<ProfileFeedItem>,
+internal fun MyProfileFeedCarousel(
+    feeds: List<MyProfileFeedItem>,
     onViewAllClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -113,7 +113,7 @@ internal fun ProfileFeedCarousel(
 // 2. 하위 자식 컴포저블 수정부
 @Composable
 private fun CarouselCardItem(
-    item: ProfileFeedItem,
+    item: MyProfileFeedItem,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -205,10 +205,10 @@ private fun CarouselCardItem(
 // --- 프리뷰 규칙 준수: PreviewParameterProvider 차단 및 Direct Injection 데이터 적용 ---
 @Preview
 @Composable
-private fun ProfileFeedCarouselFullPreview() {
+private fun MyProfileFeedCarouselFullPreview() {
     // 1. 프리뷰 렌더러 안정성을 위해 함수 내부에서 100% 독립적인 가벼운 더미 리스트 직접 생성 (Direct Injection)
     val previewFeeds = listOf(
-        ProfileFeedItem(
+        MyProfileFeedItem(
             id = "1",
             title = "가을 산책을 하며",
             subtitle = "예전에도 요즘에도 산책하는걸 좋아하는데요 오늘은 북한산으로 산책을 갔답니..",
@@ -216,7 +216,7 @@ private fun ProfileFeedCarouselFullPreview() {
             likes = 24,
             comments = 6
         ),
-        ProfileFeedItem(
+        MyProfileFeedItem(
             id = "2",
             title = "요즘 내가 좋아하는 것들",
             subtitle = "여러분들은 어떤 취미를 가지고 계신가요? 저는 최근에 독서와 음악 감상에..",
@@ -224,7 +224,7 @@ private fun ProfileFeedCarouselFullPreview() {
             likes = 42,
             comments = 11
         ),
-        ProfileFeedItem(
+        MyProfileFeedItem(
             id = "3",
             title = "세 번째 기록",
             subtitle = "소중한 기억들을 여기에 차곡차곡 남겨둡니다. 나중에 꺼내볼 수 있도록..",
@@ -240,7 +240,7 @@ private fun ProfileFeedCarouselFullPreview() {
             color = Color.White
         ) {
             // 외부 의존성(ViewModel, MVI 파이프라인) 없이 순수하게 UI 레이아웃, 여백, 캡슐 도트 인디케이터 뼈대 검증
-            ProfileFeedCarousel(
+            MyProfileFeedCarousel(
                 feeds = previewFeeds,
                 onViewAllClick = {}
             )
@@ -250,14 +250,14 @@ private fun ProfileFeedCarouselFullPreview() {
 
 @Preview
 @Composable
-private fun ProfileFeedCarouselEmptyPreview() {
+private fun MyProfileFeedCarouselEmptyPreview() {
     MaterialTheme {
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color.White
         ) {
             // 데이터가 텅 비어있을 때 "아직 작성된 피드가 없습니다" 방어 문구가 시안대로 예쁘게 나오는지 검증
-            ProfileFeedCarousel(
+            MyProfileFeedCarousel(
                 feeds = emptyList(),
                 onViewAllClick = {}
             )

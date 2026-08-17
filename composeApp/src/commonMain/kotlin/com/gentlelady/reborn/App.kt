@@ -11,8 +11,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
-import com.gentlelady.reborn.profile.presentation.ProfileIntent
-import com.gentlelady.reborn.profile.presentation.ProfileState
+import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
+import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 import com.gentlelady.reborn.search.presentation.SearchIntent
 import com.gentlelady.reborn.search.presentation.SearchState
 
@@ -24,8 +24,8 @@ fun App(
     onSearchIntent: (SearchIntent) -> Unit,
     messageState: MessageState,
     onMessageIntent: (MessageIntent) -> Unit,
-    profileState: ProfileState,
-    onProfileIntent: (ProfileIntent) -> Unit
+    myProfileState: MyProfileState,
+    onMyProfileIntent: (MyProfileIntent) -> Unit
 ) {
     MaterialTheme {
         val rootNavController = rememberNavController()
@@ -44,8 +44,8 @@ fun App(
                 onSearchIntent = onSearchIntent,
                 messageState = messageState,
                 onMessageIntent = onMessageIntent,
-                profileState = profileState,
-                onProfileIntent = onProfileIntent
+                myProfileState = myProfileState,
+                onMyProfileIntent = onMyProfileIntent
             )
 
             // 2. 탭바를 숨겨야 하는 몰입형 스와이프 화면만 최상위로 유지

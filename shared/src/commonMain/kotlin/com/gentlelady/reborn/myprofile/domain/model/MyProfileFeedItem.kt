@@ -1,9 +1,9 @@
-// shared 모듈의 domain 레이어에 안착할 프로필 전용 모델 예시
-package com.gentlelady.reborn.profile.domain.model
+// shared 모듈의 domain 레이어에 안착할 마이프로필 전용 모델 예시
+package com.gentlelady.reborn.myprofile.domain.model
 
 import org.jetbrains.compose.resources.DrawableResource
 
-data class ProfileFeedItem(
+data class MyProfileFeedItem(
     val id: String,
     val title: String,
     val subtitle: String,
