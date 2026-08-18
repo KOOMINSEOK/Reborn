@@ -1,0 +1,19 @@
+<!-- res/drawable/ic_cancel.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="17dp"
+    android:height="17dp"
+    android:viewportWidth="17"
+    android:viewportHeight="17">
+    <path
+        android:pathData="M0.75,8.25 C0.75,12.3894 4.11064,15.75 8.25,15.75 C12.3894,15.75 15.75,12.3894 15.75,8.25 C15.75,4.11064 12.3894,0.75 8.25,0.75 C4.11064,0.75 0.75,4.11064 0.75,8.25 V8.25"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+    <path
+        android:pathData="M6,10.5 L10.5,6"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>

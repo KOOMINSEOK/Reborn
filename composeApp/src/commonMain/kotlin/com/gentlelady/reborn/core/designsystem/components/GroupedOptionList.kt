@@ -21,8 +21,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
-import com.gentlelady.reborn.core.theme.RebornGridIconGray
+import com.gentlelady.reborn.core.theme.RebornIconBoxBlue
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -86,20 +87,20 @@ private fun OptionListRow(
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .background(color = RebornGridIconGray, shape = RoundedCornerShape(12.dp)),
+                    .background(color = RebornIconBoxBlue, shape = RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 when (icon) {
                     is OptionListIcon.Drawable -> Icon(
                         painter = painterResource(icon.res),
                         contentDescription = item.label,
-                        tint = RebornSlateGray,
+                        tint = RebornDeepBlue,
                         modifier = Modifier.size(20.dp)
                     )
                     is OptionListIcon.Vector -> Icon(
                         imageVector = icon.imageVector,
                         contentDescription = item.label,
-                        tint = RebornSlateGray,
+                        tint = RebornDeepBlue,
                         modifier = Modifier.size(20.dp)
                     )
                 }

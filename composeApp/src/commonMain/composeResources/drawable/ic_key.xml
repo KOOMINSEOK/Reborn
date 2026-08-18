@@ -1,0 +1,19 @@
+<!-- res/drawable/ic_key.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="17dp"
+    android:height="16dp"
+    android:viewportWidth="17"
+    android:viewportHeight="16">
+    <path
+        android:pathData="M10.875,4.875 L12.6,6.6 C12.8917,6.88586 13.3584,6.88586 13.65,6.6 L15.225,5.025 C15.5109,4.73337 15.5109,4.26663 15.225,3.975 L13.5,2.25 M15,0.75 L7.80005,7.95"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+    <path
+        android:pathData="M0.75,10.875 C0.75,13.1516 2.59835,15 4.875,15 C7.15165,15 9,13.1516 9,10.875 C9,8.59835 7.15165,6.75 4.875,6.75 C2.59835,6.75 0.75,8.59835 0.75,10.875 V10.875"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>
