@@ -15,8 +15,12 @@ import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
 import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryState
+import com.gentlelady.reborn.management.saved.presentation.SavedIntent
+import com.gentlelady.reborn.management.saved.presentation.SavedState
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
+import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityIntent
+import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
 import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 import com.gentlelady.reborn.search.presentation.SearchIntent
@@ -37,7 +41,11 @@ fun App(
     paymentHistoryState: PaymentHistoryState,
     onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit,
     archiveState: ArchiveState,
-    onArchiveIntent: (ArchiveIntent) -> Unit
+    onArchiveIntent: (ArchiveIntent) -> Unit,
+    savedState: SavedState,
+    onSavedIntent: (SavedIntent) -> Unit,
+    accountVisibilityState: AccountVisibilityState,
+    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit
 ) {
     MaterialTheme {
         val rootNavController = rememberNavController()
@@ -63,7 +71,11 @@ fun App(
                 paymentHistoryState = paymentHistoryState,
                 onPaymentHistoryIntent = onPaymentHistoryIntent,
                 archiveState = archiveState,
-                onArchiveIntent = onArchiveIntent
+                onArchiveIntent = onArchiveIntent,
+                savedState = savedState,
+                onSavedIntent = onSavedIntent,
+                accountVisibilityState = accountVisibilityState,
+                onAccountVisibilityIntent = onAccountVisibilityIntent
             )
 
             // 2. 탭바를 숨겨야 하는 몰입형 스와이프 화면만 최상위로 유지

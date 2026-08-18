@@ -27,8 +27,12 @@ import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
 import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryState
+import com.gentlelady.reborn.management.saved.presentation.SavedIntent
+import com.gentlelady.reborn.management.saved.presentation.SavedState
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedIntent
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
+import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityIntent
+import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
@@ -51,7 +55,11 @@ fun MainScreen(
     paymentHistoryState: PaymentHistoryState,
     onPaymentHistoryIntent: (PaymentHistoryIntent) -> Unit,
     archiveState: ArchiveState,
-    onArchiveIntent: (ArchiveIntent) -> Unit
+    onArchiveIntent: (ArchiveIntent) -> Unit,
+    savedState: SavedState,
+    onSavedIntent: (SavedIntent) -> Unit,
+    accountVisibilityState: AccountVisibilityState,
+    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -64,7 +72,7 @@ fun MainScreen(
             val mainRoutes = listOf(
                 "home", "search", "message", "profile", "memorial/me", "wreath/checkout/{tier}", "wreath/message/{tier}",
                 "management/scheduled_feed", "management/profile_edit", "management/profile_edit/basic_info", "management/profile_edit/payment",
-                "management/archive"
+                "management/archive", "management/saved", "management/security", "management/security/account_visibility"
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
@@ -124,6 +132,8 @@ fun MainScreen(
                                 "scheduled_feed" -> navController.navigate("management/scheduled_feed")
                                 "edit_profile" -> navController.navigate("management/profile_edit")
                                 "archive" -> navController.navigate("management/archive")
+                                "saved" -> navController.navigate("management/saved")
+                                "security" -> navController.navigate("management/security")
                                 else -> onMyProfileIntent(intent)
                             }
                         }
@@ -141,7 +151,11 @@ fun MainScreen(
                 paymentHistoryState = paymentHistoryState,
                 onPaymentHistoryIntent = onPaymentHistoryIntent,
                 archiveState = archiveState,
-                onArchiveIntent = onArchiveIntent
+                onArchiveIntent = onArchiveIntent,
+                savedState = savedState,
+                onSavedIntent = onSavedIntent,
+                accountVisibilityState = accountVisibilityState,
+                onAccountVisibilityIntent = onAccountVisibilityIntent
             )
 
             // 5. 🆕 내 서브 NavHost 내부에 memorialNavGraph 추가 (바텀바 내부에서 렌더링됨)

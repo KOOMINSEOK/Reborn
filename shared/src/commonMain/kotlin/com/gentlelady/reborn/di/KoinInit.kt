@@ -3,6 +3,8 @@ package com.gentlelady.reborn.di
 import com.gentlelady.reborn.home.di.homeModule
 import com.gentlelady.reborn.onboarding.di.onboardingModule
 import com.gentlelady.reborn.management.archive.domain.di.archiveModule
+import com.gentlelady.reborn.management.saved.domain.di.savedModule
+import com.gentlelady.reborn.management.security.domain.di.securityModule
 import com.gentlelady.reborn.management.profile_edit.domain.di.paymentHistoryModule
 import com.gentlelady.reborn.management.scheduled_feed.domain.di.scheduledFeedModule
 import com.gentlelady.reborn.myprofile.domain.di.myProfileModule
@@ -27,6 +29,8 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
             scheduledFeedModule,
             paymentHistoryModule,
             archiveModule,
+            savedModule,
+            securityModule,
             onboardingModule
         )
     }
