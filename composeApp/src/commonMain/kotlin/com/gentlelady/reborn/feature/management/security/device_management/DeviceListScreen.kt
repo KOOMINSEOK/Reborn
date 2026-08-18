@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.core.designsystem.components.RebornBackTopAppBar
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornGridIconGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
@@ -22,7 +23,6 @@ import com.gentlelady.reborn.management.security.device_management.presentation.
 import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementState
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeviceListScreen(
     state: DeviceManagementState,
@@ -31,21 +31,11 @@ fun DeviceListScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "로그인된 기기",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onIntent(DeviceManagementIntent.ClickCloseDeviceList) }) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "닫기", tint = Color.Black)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            RebornBackTopAppBar(
+                title = "로그인된 기기",
+                onBackClick = { onIntent(DeviceManagementIntent.ClickCloseDeviceList) },
+                icon = Icons.Default.Close,
+                iconContentDescription = "닫기"
             )
         }
     ) { paddingValues ->
