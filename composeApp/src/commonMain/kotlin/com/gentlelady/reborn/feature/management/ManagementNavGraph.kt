@@ -12,6 +12,10 @@ import com.gentlelady.reborn.feature.management.saved.SavedScreen
 import com.gentlelady.reborn.feature.management.scheduled_feed.ScheduledFeedScreen
 import com.gentlelady.reborn.feature.management.security.SecurityScreen
 import com.gentlelady.reborn.feature.management.security.account_visibility.AccountVisibilityScreen
+import com.gentlelady.reborn.feature.management.security.blocked_accounts.BlockedAccountsScreen
+import com.gentlelady.reborn.feature.management.security.change_password.ChangePasswordScreen
+import com.gentlelady.reborn.feature.management.security.device_management.DeviceListScreen
+import com.gentlelady.reborn.feature.management.security.device_management.DevicePasswordScreen
 import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
 import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
@@ -22,6 +26,12 @@ import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFee
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityIntent
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityState
+import com.gentlelady.reborn.management.security.blocked_accounts.presentation.BlockedAccountsIntent
+import com.gentlelady.reborn.management.security.blocked_accounts.presentation.BlockedAccountsState
+import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordIntent
+import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordState
+import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementIntent
+import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 
 /**
@@ -40,7 +50,13 @@ fun NavGraphBuilder.managementNavGraph(
     savedState: SavedState,
     onSavedIntent: (SavedIntent) -> Unit,
     accountVisibilityState: AccountVisibilityState,
-    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit
+    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit,
+    deviceManagementState: DeviceManagementState,
+    onDeviceManagementIntent: (DeviceManagementIntent) -> Unit,
+    changePasswordState: ChangePasswordState,
+    onChangePasswordIntent: (ChangePasswordIntent) -> Unit,
+    blockedAccountsState: BlockedAccountsState,
+    onBlockedAccountsIntent: (BlockedAccountsIntent) -> Unit
 ) {
     composable("management/scheduled_feed") {
         ScheduledFeedScreen(
@@ -112,9 +128,9 @@ fun NavGraphBuilder.managementNavGraph(
         SecurityScreen(
             onBackClick = { navController.popBackStack() },
             onClickAccountVisibility = { navController.navigate("management/security/account_visibility") },
-            onClickDeviceManagement = { /* TODO: 로그인 기기 관리 화면 */ },
-            onClickChangePassword = { /* TODO: 비밀번호 변경 화면 */ },
-            onClickBlockedAccounts = { /* TODO: 차단 계정 화면 */ }
+            onClickDeviceManagement = { navController.navigate("management/security/devices") },
+            onClickChangePassword = { navController.navigate("management/security/change_password") },
+            onClickBlockedAccounts = { navController.navigate("management/security/blocked_accounts") }
         )
     }
 
@@ -125,6 +141,57 @@ fun NavGraphBuilder.managementNavGraph(
                 when (intent) {
                     is AccountVisibilityIntent.ClickBack -> navController.popBackStack()
                     else -> onAccountVisibilityIntent(intent)
+                }
+            }
+        )
+    }
+
+    composable("management/security/devices") {
+        DevicePasswordScreen(
+            state = deviceManagementState,
+            onIntent = { intent ->
+                when (intent) {
+                    is DeviceManagementIntent.ClickBack -> navController.popBackStack()
+                    else -> onDeviceManagementIntent(intent)
+                }
+            },
+            onVerified = { navController.navigate("management/security/devices/list") }
+        )
+    }
+
+    composable("management/security/devices/list") {
+        DeviceListScreen(
+            state = deviceManagementState,
+            onIntent = { intent ->
+                when (intent) {
+                    is DeviceManagementIntent.ClickCloseDeviceList ->
+                        navController.popBackStack("management/security", inclusive = false)
+                    else -> onDeviceManagementIntent(intent)
+                }
+            }
+        )
+    }
+
+    composable("management/security/change_password") {
+        ChangePasswordScreen(
+            profileState = myProfileState,
+            state = changePasswordState,
+            onIntent = { intent ->
+                when (intent) {
+                    is ChangePasswordIntent.ClickBack -> navController.popBackStack()
+                    else -> onChangePasswordIntent(intent)
+                }
+            }
+        )
+    }
+
+    composable("management/security/blocked_accounts") {
+        BlockedAccountsScreen(
+            state = blockedAccountsState,
+            onIntent = { intent ->
+                when (intent) {
+                    is BlockedAccountsIntent.ClickBack -> navController.popBackStack()
+                    else -> onBlockedAccountsIntent(intent)
                 }
             }
         )

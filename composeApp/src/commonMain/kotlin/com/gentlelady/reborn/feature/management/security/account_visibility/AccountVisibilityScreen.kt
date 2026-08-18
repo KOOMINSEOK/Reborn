@@ -1,9 +1,9 @@
 package com.gentlelady.reborn.feature.management.security.account_visibility
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gentlelady.reborn.core.designsystem.components.RebornBackTopAppBar
+import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.feature.management.security.account_visibility.components.SwitchToPrivateConfirmDialog
 import com.gentlelady.reborn.feature.management.security.account_visibility.components.VisibilityOptionCard
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityIntent
@@ -35,8 +36,6 @@ fun AccountVisibilityScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(paddingValues)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             VisibilityOptionCard(
                 title = "공개 계정",
@@ -44,9 +43,18 @@ fun AccountVisibilityScreen(
                 isChecked = state.isPublic,
                 onCheckedChange = { checked -> if (checked) onIntent(AccountVisibilityIntent.ClickSetPublic) }
             )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                thickness = 1.dp,
+                color = RebornGridBorderGray
+            )
+
             VisibilityOptionCard(
                 title = "비공개 계정",
-                description = "계정이 비공개 상태인 경우 팔로워로 승인된 회원님의 팔로워만 회원님이 공유하는 사진이나 동영상을 볼 수 있습니다.",
+                description = "계정이 비공개 상태인 경우 회원님이 승인한 팔로워만 회원님이 공유하는 콘텐츠" +
+                        "(해시태그 및 위치 페이지의 사진 또는 동영상 포함)와 회원님의 팔로워 및 팔로잉 리스트를 볼 수 있습니다." +
+                        " 프로필 사진, 사용자 이름 등 프로필의 특정 정보는 RE:BORN 내외의 모든 사람에게 공개됩니다.",
                 isChecked = !state.isPublic,
                 onCheckedChange = { checked -> if (checked) onIntent(AccountVisibilityIntent.ClickSetPrivate) }
             )

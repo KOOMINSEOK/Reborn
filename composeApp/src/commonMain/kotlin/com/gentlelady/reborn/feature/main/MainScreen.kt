@@ -33,6 +33,12 @@ import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFee
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityIntent
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityState
+import com.gentlelady.reborn.management.security.blocked_accounts.presentation.BlockedAccountsIntent
+import com.gentlelady.reborn.management.security.blocked_accounts.presentation.BlockedAccountsState
+import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordIntent
+import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordState
+import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementIntent
+import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
@@ -59,7 +65,13 @@ fun MainScreen(
     savedState: SavedState,
     onSavedIntent: (SavedIntent) -> Unit,
     accountVisibilityState: AccountVisibilityState,
-    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit
+    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit,
+    deviceManagementState: DeviceManagementState,
+    onDeviceManagementIntent: (DeviceManagementIntent) -> Unit,
+    changePasswordState: ChangePasswordState,
+    onChangePasswordIntent: (ChangePasswordIntent) -> Unit,
+    blockedAccountsState: BlockedAccountsState,
+    onBlockedAccountsIntent: (BlockedAccountsIntent) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -72,7 +84,9 @@ fun MainScreen(
             val mainRoutes = listOf(
                 "home", "search", "message", "profile", "memorial/me", "wreath/checkout/{tier}", "wreath/message/{tier}",
                 "management/scheduled_feed", "management/profile_edit", "management/profile_edit/basic_info", "management/profile_edit/payment",
-                "management/archive", "management/saved", "management/security", "management/security/account_visibility"
+                "management/archive", "management/saved", "management/security", "management/security/account_visibility",
+                "management/security/devices", "management/security/devices/list", "management/security/change_password",
+                "management/security/blocked_accounts"
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
@@ -155,7 +169,13 @@ fun MainScreen(
                 savedState = savedState,
                 onSavedIntent = onSavedIntent,
                 accountVisibilityState = accountVisibilityState,
-                onAccountVisibilityIntent = onAccountVisibilityIntent
+                onAccountVisibilityIntent = onAccountVisibilityIntent,
+                deviceManagementState = deviceManagementState,
+                onDeviceManagementIntent = onDeviceManagementIntent,
+                changePasswordState = changePasswordState,
+                onChangePasswordIntent = onChangePasswordIntent,
+                blockedAccountsState = blockedAccountsState,
+                onBlockedAccountsIntent = onBlockedAccountsIntent
             )
 
             // 5. 🆕 내 서브 NavHost 내부에 memorialNavGraph 추가 (바텀바 내부에서 렌더링됨)

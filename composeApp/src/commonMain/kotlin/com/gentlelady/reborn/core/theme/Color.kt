@@ -19,6 +19,7 @@ val RebornPosthumousBannerBg = Color(0xFFD9E6FF) // 사후 게시글 배너 배�
 val RebornBorderLightBlue = Color(0xFFB9D1FF) // 메모리얼 버튼 테두리
 val RebornSoftBlue = Color(0xFFDCE8FF)
 val RebornDarkBlue = Color(0xFF0F62FE)
+val RebornIconBoxBlue = Color(0xFFEFF6FF) // 계정 공개 범위 안내 등 원형/사각 아이콘 박스 배경
 
 // Grays & Neutrals
 val RebornBackgroundGray = Color(0xFFF8F9FA) // 앱 공통 배경색

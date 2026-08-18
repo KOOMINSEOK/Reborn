@@ -18,6 +18,12 @@ import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFee
 import com.gentlelady.reborn.management.scheduled_feed.presentation.ScheduledFeedState
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityIntent
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityState
+import com.gentlelady.reborn.management.security.blocked_accounts.presentation.BlockedAccountsIntent
+import com.gentlelady.reborn.management.security.blocked_accounts.presentation.BlockedAccountsState
+import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordIntent
+import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordState
+import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementIntent
+import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementState
 import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
 import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 import com.gentlelady.reborn.search.presentation.SearchIntent
@@ -42,7 +48,13 @@ fun NavGraphBuilder.mainNavGraph(
     savedState: SavedState,
     onSavedIntent: (SavedIntent) -> Unit,
     accountVisibilityState: AccountVisibilityState,
-    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit
+    onAccountVisibilityIntent: (AccountVisibilityIntent) -> Unit,
+    deviceManagementState: DeviceManagementState,
+    onDeviceManagementIntent: (DeviceManagementIntent) -> Unit,
+    changePasswordState: ChangePasswordState,
+    onChangePasswordIntent: (ChangePasswordIntent) -> Unit,
+    blockedAccountsState: BlockedAccountsState,
+    onBlockedAccountsIntent: (BlockedAccountsIntent) -> Unit
 ) {
     composable("main_flow") {
         MainScreen(
@@ -70,7 +82,13 @@ fun NavGraphBuilder.mainNavGraph(
             savedState = savedState,
             onSavedIntent = onSavedIntent,
             accountVisibilityState = accountVisibilityState,
-            onAccountVisibilityIntent = onAccountVisibilityIntent
+            onAccountVisibilityIntent = onAccountVisibilityIntent,
+            deviceManagementState = deviceManagementState,
+            onDeviceManagementIntent = onDeviceManagementIntent,
+            changePasswordState = changePasswordState,
+            onChangePasswordIntent = onChangePasswordIntent,
+            blockedAccountsState = blockedAccountsState,
+            onBlockedAccountsIntent = onBlockedAccountsIntent
         )
     }
 }
