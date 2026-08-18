@@ -3,7 +3,9 @@ package com.gentlelady.reborn.feature.management.security.change_password
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -42,10 +44,15 @@ fun ChangePasswordScreen(
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp)
         ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp)
+            ) {
             Text(
                 text = "${profileState.displayName} @${profileState.username}",
                 color = RebornSlateGray,
@@ -96,11 +103,14 @@ fun ChangePasswordScreen(
                 modifier = Modifier.clickable { onIntent(ChangePasswordIntent.ClickForgotPassword) }
             )
 
+            }
+
             if (state.resetEmailSent) {
-                Spacer(modifier = Modifier.height(16.dp))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 16.dp)
                         .background(color = RebornBlack, shape = RoundedCornerShape(12.dp))
                         .padding(16.dp)
                 ) {
@@ -113,12 +123,12 @@ fun ChangePasswordScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
             Button(
                 onClick = { onIntent(ChangePasswordIntent.ClickSubmit) },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = RebornDeepBlue)
