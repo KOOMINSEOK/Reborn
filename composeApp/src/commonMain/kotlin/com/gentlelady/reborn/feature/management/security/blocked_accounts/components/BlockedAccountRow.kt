@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.designsystem.components.CircleAvatarImage
-import com.gentlelady.reborn.core.theme.RebornDangerRed
+import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.img_memorial_profile_dummy
 import com.gentlelady.reborn.management.security.blocked_accounts.domain.model.BlockedAccountItem
@@ -31,12 +31,12 @@ internal fun BlockedAccountRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CircleAvatarImage(
             imageRes = item.avatar,
-            size = 44.dp,
+            size = 48.dp,
             fallbackText = item.name,
             borderWidth = 0.dp,
             shadowElevation = 0.dp
@@ -52,12 +52,12 @@ internal fun BlockedAccountRow(
 
         Button(
             onClick = onClickUnblock,
-            shape = RoundedCornerShape(50),
+            shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, RebornDangerRed),
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+            border = BorderStroke(1.dp, RebornGridBorderGray),
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
         ) {
-            Text(text = "차단 해제", color = RebornDangerRed, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(text = "차단 해제", color = Color.Black, fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
     }
 }

@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -40,12 +40,14 @@ fun BlockedAccountsScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp)
         ) {
-            items(state.accounts, key = { it.id }) { account ->
+            itemsIndexed(state.accounts, key = { _, account -> account.id }) { index, account ->
                 BlockedAccountRow(
                     item = account,
                     onClickUnblock = { onIntent(BlockedAccountsIntent.ClickUnblock(account.id)) }
                 )
-                HorizontalDivider(thickness = 1.dp, color = RebornGridBorderGray)
+                if (index != state.accounts.lastIndex) {
+                    HorizontalDivider(thickness = 1.dp, color = RebornGridBorderGray)
+                }
             }
         }
 
