@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.core.theme.RebornDangerRed
 import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornIconBoxBlue
@@ -42,6 +43,7 @@ sealed interface OptionListIcon {
 data class OptionListItem(
     val label: String,
     val icon: OptionListIcon? = null,
+    val isDestructive: Boolean = false,
     val onClick: () -> Unit
 )
 
@@ -59,13 +61,8 @@ fun GroupedOptionList(
         items.forEachIndexed { index, item ->
             OptionListRow(item = item)
             if (index != items.lastIndex) {
-                // 💡 아이콘이 없으면 텍스트 시작 위치(16dp)에 맞춰 좌우 여백을 두고, 있으면 아이콘 뒤 텍스트 위치(64dp)에 맞춘다.
-                val dividerInset = if (item.icon != null) 64.dp else 16.dp
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = dividerInset, end = 16.dp),
-                    thickness = 1.dp,
-                    color = RebornGridBorderGray
-                )
+                // 💡 아이콘 유무와 상관없이 좌우 여백 없이 꽉 채운 구분선.
+                HorizontalDivider(thickness = 1.dp, color = RebornGridBorderGray)
             }
         }
     }
@@ -110,7 +107,7 @@ private fun OptionListRow(
 
         Text(
             text = item.label,
-            color = Color.Black,
+            color = if (item.isDestructive) RebornDangerRed else Color.Black,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f)

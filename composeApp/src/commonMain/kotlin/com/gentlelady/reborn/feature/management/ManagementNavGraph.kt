@@ -4,6 +4,15 @@ package com.gentlelady.reborn.feature.management
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.gentlelady.reborn.feature.management.app_settings.AppSettingsScreen
+import com.gentlelady.reborn.feature.management.app_settings.customer_support.CustomerSupportScreen
+import com.gentlelady.reborn.feature.management.app_settings.customer_support.faq.FaqScreen
+import com.gentlelady.reborn.feature.management.app_settings.customer_support.inquiry.InquiryScreen
+import com.gentlelady.reborn.feature.management.app_settings.notification_settings.NotificationSettingsScreen
+import com.gentlelady.reborn.feature.management.app_settings.terms.TermsScreen
+import com.gentlelady.reborn.feature.management.app_settings.terms.privacy_policy.PrivacyPolicyScreen
+import com.gentlelady.reborn.feature.management.app_settings.terms.terms_of_use.TermsOfUseScreen
+import com.gentlelady.reborn.feature.management.app_settings.terms.withdrawal.WithdrawalScreen
 import com.gentlelady.reborn.feature.management.archive.ArchiveScreen
 import com.gentlelady.reborn.feature.management.profile_edit.BasicInfoManagementScreen
 import com.gentlelady.reborn.feature.management.profile_edit.PaymentManagementScreen
@@ -16,6 +25,10 @@ import com.gentlelady.reborn.feature.management.security.blocked_accounts.Blocke
 import com.gentlelady.reborn.feature.management.security.change_password.ChangePasswordScreen
 import com.gentlelady.reborn.feature.management.security.device_management.DeviceListScreen
 import com.gentlelady.reborn.feature.management.security.device_management.DevicePasswordScreen
+import com.gentlelady.reborn.management.app_settings.customer_support.faq.presentation.FaqIntent
+import com.gentlelady.reborn.management.app_settings.customer_support.faq.presentation.FaqState
+import com.gentlelady.reborn.management.app_settings.notification_settings.presentation.NotificationSettingsIntent
+import com.gentlelady.reborn.management.app_settings.notification_settings.presentation.NotificationSettingsState
 import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
 import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
@@ -56,7 +69,11 @@ fun NavGraphBuilder.managementNavGraph(
     changePasswordState: ChangePasswordState,
     onChangePasswordIntent: (ChangePasswordIntent) -> Unit,
     blockedAccountsState: BlockedAccountsState,
-    onBlockedAccountsIntent: (BlockedAccountsIntent) -> Unit
+    onBlockedAccountsIntent: (BlockedAccountsIntent) -> Unit,
+    notificationSettingsState: NotificationSettingsState,
+    onNotificationSettingsIntent: (NotificationSettingsIntent) -> Unit,
+    faqState: FaqState,
+    onFaqIntent: (FaqIntent) -> Unit
 ) {
     composable("management/scheduled_feed") {
         ScheduledFeedScreen(
@@ -194,6 +211,78 @@ fun NavGraphBuilder.managementNavGraph(
                     else -> onBlockedAccountsIntent(intent)
                 }
             }
+        )
+    }
+
+    composable("management/app_settings") {
+        AppSettingsScreen(
+            onBackClick = { navController.popBackStack() },
+            onClickNotificationSettings = { navController.navigate("management/app_settings/notifications") },
+            onClickCustomerSupport = { navController.navigate("management/app_settings/support") },
+            onClickTerms = { navController.navigate("management/app_settings/terms") }
+        )
+    }
+
+    composable("management/app_settings/notifications") {
+        NotificationSettingsScreen(
+            state = notificationSettingsState,
+            onIntent = { intent ->
+                when (intent) {
+                    is NotificationSettingsIntent.ClickBack -> navController.popBackStack()
+                    else -> onNotificationSettingsIntent(intent)
+                }
+            }
+        )
+    }
+
+    composable("management/app_settings/support") {
+        CustomerSupportScreen(
+            onBackClick = { navController.popBackStack() },
+            onClickInquiry = { navController.navigate("management/app_settings/support/inquiry") },
+            onClickFaq = { navController.navigate("management/app_settings/support/faq") }
+        )
+    }
+
+    composable("management/app_settings/support/inquiry") {
+        InquiryScreen(
+            onBackClick = { navController.popBackStack() },
+            onClickKakaoChannel = { /* TODO: 카카오톡 채널 외부 링크 연동 */ }
+        )
+    }
+
+    composable("management/app_settings/support/faq") {
+        FaqScreen(
+            state = faqState,
+            onIntent = { intent ->
+                when (intent) {
+                    is FaqIntent.ClickBack -> navController.popBackStack()
+                    else -> onFaqIntent(intent)
+                }
+            }
+        )
+    }
+
+    composable("management/app_settings/terms") {
+        TermsScreen(
+            onBackClick = { navController.popBackStack() },
+            onClickTermsOfUse = { navController.navigate("management/app_settings/terms/terms_of_use") },
+            onClickPrivacyPolicy = { navController.navigate("management/app_settings/terms/privacy_policy") },
+            onClickWithdrawal = { navController.navigate("management/app_settings/terms/withdrawal") }
+        )
+    }
+
+    composable("management/app_settings/terms/terms_of_use") {
+        TermsOfUseScreen(onBackClick = { navController.popBackStack() })
+    }
+
+    composable("management/app_settings/terms/privacy_policy") {
+        PrivacyPolicyScreen(onBackClick = { navController.popBackStack() })
+    }
+
+    composable("management/app_settings/terms/withdrawal") {
+        WithdrawalScreen(
+            onBackClick = { navController.popBackStack() },
+            onClickWithdraw = { /* TODO: 실제 회원 탈퇴 및 데이터 삭제 API 연동 */ }
         )
     }
 }

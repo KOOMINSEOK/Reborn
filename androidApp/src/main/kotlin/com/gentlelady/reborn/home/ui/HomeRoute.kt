@@ -9,6 +9,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeViewModel
 import com.gentlelady.reborn.search.presentation.SearchViewModel
 import com.gentlelady.reborn.message.presentation.MessageViewModel
+import com.gentlelady.reborn.management.app_settings.customer_support.faq.presentation.FaqViewModel
+import com.gentlelady.reborn.management.app_settings.notification_settings.presentation.NotificationSettingsViewModel
 import com.gentlelady.reborn.management.archive.presentation.ArchiveViewModel
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryViewModel
 import com.gentlelady.reborn.management.saved.presentation.SavedViewModel
@@ -36,6 +38,8 @@ fun HomeRoute() {
     val deviceManagementViewModel: DeviceManagementViewModel = koinViewModel() // 🆕 관리 > 로그인 기기 관리 뇌 추가 주입
     val changePasswordViewModel: ChangePasswordViewModel = koinViewModel() // 🆕 관리 > 비밀번호 변경 뇌 추가 주입
     val blockedAccountsViewModel: BlockedAccountsViewModel = koinViewModel() // 🆕 관리 > 차단 계정 뇌 추가 주입
+    val notificationSettingsViewModel: NotificationSettingsViewModel = koinViewModel() // 🆕 관리 > 알림 설정 뇌 추가 주입
+    val faqViewModel: FaqViewModel = koinViewModel() // 🆕 관리 > FAQ 뇌 추가 주입
 
     // 2. 각 영역의 독립적인 MVI State 관찰(수집) 및 단일 진실 공급원(SSOT) 수립
     val homeState by homeViewModel.state.collectAsState()
@@ -50,6 +54,8 @@ fun HomeRoute() {
     val deviceManagementState by deviceManagementViewModel.state.collectAsState() // 🆕 로그인 기기 관리 상태 수집 추가
     val changePasswordState by changePasswordViewModel.state.collectAsState() // 🆕 비밀번호 변경 상태 수집 추가
     val blockedAccountsState by blockedAccountsViewModel.state.collectAsState() // 🆕 차단 계정 상태 수집 추가
+    val notificationSettingsState by notificationSettingsViewModel.state.collectAsState() // 🆕 알림 설정 상태 수집 추가
+    val faqState by faqViewModel.state.collectAsState() // 🆕 FAQ 상태 수집 추가
 
     // 3. 초기 데이터 로드 명령 (Intent) - 최초 화면 진입 시 트리거용
     LaunchedEffect(Unit) {
@@ -85,6 +91,10 @@ fun HomeRoute() {
         changePasswordState = changePasswordState,
         onChangePasswordIntent = { intent -> changePasswordViewModel.handleIntent(intent) },
         blockedAccountsState = blockedAccountsState,
-        onBlockedAccountsIntent = { intent -> blockedAccountsViewModel.handleIntent(intent) }
+        onBlockedAccountsIntent = { intent -> blockedAccountsViewModel.handleIntent(intent) },
+        notificationSettingsState = notificationSettingsState,
+        onNotificationSettingsIntent = { intent -> notificationSettingsViewModel.handleIntent(intent) },
+        faqState = faqState,
+        onFaqIntent = { intent -> faqViewModel.handleIntent(intent) }
     )
 }

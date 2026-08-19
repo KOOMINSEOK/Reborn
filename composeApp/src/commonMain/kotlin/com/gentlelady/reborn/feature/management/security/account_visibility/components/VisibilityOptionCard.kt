@@ -14,9 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornSlateGray
+import com.gentlelady.reborn.core.theme.RebornSwitchTrackOff
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-private val SwitchOffTrackColor = Color(0xFFE5E7EB)
 
 /**
  * "공개 계정" / "비공개 계정"처럼 제목+토글+설명 문구로 구성된 옵션 섹션.
@@ -53,9 +52,9 @@ internal fun VisibilityOptionCard(
                 thumbContent = { Box(modifier = Modifier.size(SwitchDefaults.IconSize)) },
                 colors = SwitchDefaults.colors(
                     checkedTrackColor = RebornCobaltBlue,
-                    uncheckedTrackColor = SwitchOffTrackColor,
+                    uncheckedTrackColor = RebornSwitchTrackOff,
                     uncheckedThumbColor = Color.White,
-                    uncheckedBorderColor = SwitchOffTrackColor
+                    uncheckedBorderColor = RebornSwitchTrackOff
                 )
             )
         }

@@ -8,6 +8,10 @@ import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeState
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
+import com.gentlelady.reborn.management.app_settings.customer_support.faq.presentation.FaqIntent
+import com.gentlelady.reborn.management.app_settings.customer_support.faq.presentation.FaqState
+import com.gentlelady.reborn.management.app_settings.notification_settings.presentation.NotificationSettingsIntent
+import com.gentlelady.reborn.management.app_settings.notification_settings.presentation.NotificationSettingsState
 import com.gentlelady.reborn.management.archive.presentation.ArchiveIntent
 import com.gentlelady.reborn.management.archive.presentation.ArchiveState
 import com.gentlelady.reborn.management.profile_edit.presentation.PaymentHistoryIntent
@@ -54,7 +58,11 @@ fun NavGraphBuilder.mainNavGraph(
     changePasswordState: ChangePasswordState,
     onChangePasswordIntent: (ChangePasswordIntent) -> Unit,
     blockedAccountsState: BlockedAccountsState,
-    onBlockedAccountsIntent: (BlockedAccountsIntent) -> Unit
+    onBlockedAccountsIntent: (BlockedAccountsIntent) -> Unit,
+    notificationSettingsState: NotificationSettingsState,
+    onNotificationSettingsIntent: (NotificationSettingsIntent) -> Unit,
+    faqState: FaqState,
+    onFaqIntent: (FaqIntent) -> Unit
 ) {
     composable("main_flow") {
         MainScreen(
@@ -88,7 +96,11 @@ fun NavGraphBuilder.mainNavGraph(
             changePasswordState = changePasswordState,
             onChangePasswordIntent = onChangePasswordIntent,
             blockedAccountsState = blockedAccountsState,
-            onBlockedAccountsIntent = onBlockedAccountsIntent
+            onBlockedAccountsIntent = onBlockedAccountsIntent,
+            notificationSettingsState = notificationSettingsState,
+            onNotificationSettingsIntent = onNotificationSettingsIntent,
+            faqState = faqState,
+            onFaqIntent = onFaqIntent
         )
     }
 }
