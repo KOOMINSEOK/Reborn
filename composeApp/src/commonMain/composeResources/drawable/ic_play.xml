@@ -1,0 +1,13 @@
+<!-- res/drawable/ic_play.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="15dp"
+    android:height="17dp"
+    android:viewportWidth="15"
+    android:viewportHeight="17">
+    <path
+        android:pathData="M0.833252,2.50066 C0.833075,1.90375 1.15213,1.35232 1.66971,1.05499 C2.18729,0.757652 2.82437,0.759815 3.33992,1.06066 L13.3374,6.89232 C13.8509,7.19026 14.1671,7.73881 14.1676,8.33244 C14.1681,8.92607 13.8529,9.47517 13.3399,9.77399 L3.33992,15.6073 C2.82437,15.9082 2.18729,15.9103 1.66971,15.613 C1.15213,15.3157 0.833075,14.7642 0.833252,14.1673 V2.50066"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.66667"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>

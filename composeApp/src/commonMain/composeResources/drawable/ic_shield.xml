@@ -1,0 +1,13 @@
+<!-- res/drawable/ic_shield.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="18dp"
+    android:height="18dp"
+    android:viewportWidth="18"
+    android:viewportHeight="18">
+    <path
+        android:pathData="M15,9.25034 C15,13.0003 12.375,14.8753 9.255,15.9628 C9.09162,16.0182 8.91415,16.0156 8.7525,15.9553 C5.625,14.8753 3,13.0003 3,9.25034 V4.00034 C3,3.5864 3.33606,3.25034 3.75,3.25034 C5.25,3.25034 7.125,2.35034 8.43,1.21034 C8.75826,0.929888 9.24174,0.929888 9.57,1.21034 C10.8825,2.35784 12.75,3.25034 14.25,3.25034 C14.6639,3.25034 15,3.5864 15,4.00034 V9.25034"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>

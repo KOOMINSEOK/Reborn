@@ -1,0 +1,13 @@
+<!-- res/drawable/ic_at_sign.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="19dp"
+    android:height="19dp"
+    android:viewportWidth="19"
+    android:viewportHeight="19">
+    <path
+        android:pathData="M12.5006,5.83431 V10.001 C12.5006,11.3808 13.6208,12.501 15.0006,12.501 C16.3804,12.501 17.5006,11.3808 17.5006,10.001 V9.16764 C17.5006,5.30283 14.8433,1.94519 11.0819,1.05724 C7.32048,0.169284 3.44213,1.98407 1.71374,5.44086 C-0.0146601,8.89766 0.860518,13.0892 3.82773,15.5656 C6.79495,18.0419 11.0754,18.1532 14.1673,15.8343"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.66667"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>

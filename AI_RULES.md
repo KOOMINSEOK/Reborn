@@ -517,3 +517,37 @@ Rules:
 * `{Feature}MockData.kt` objects are consumed the same way `MockDataSource` was: ViewModel initial `MutableStateFlow` values, never referenced from `@Preview` functions (see Section 10.4)
 
 ---
+
+## 23. Color Usage Rules (STRICT)
+
+> ⚠️ All colors MUST be sourced from `composeApp/src/commonMain/kotlin/com/gentlelady/reborn/core/theme/Color.kt`. NEVER declare a `Color(0x...)` literal inside a feature/screen/component file.
+
+Rules:
+
+* Before writing any color, check `Color.kt` first for an existing token with the same hex value or the same semantic meaning
+* If a token with the exact hex value already exists (even under a different semantic name), reuse it — do NOT redeclare the same value under a new local `val`
+* If no matching token exists, ADD a new `val Reborn...` to `Color.kt` (with a short Korean comment describing where it's used) and import it — do NOT declare `private val` color literals inside feature files
+* This applies to raw hex colors AND derived colors used as fixed brand/semantic constants (e.g. a Kakao yellow button color, a switch's off-track color)
+* `Color.White`, `Color.Black`, `Color.Transparent`, and one-off `.copy(alpha = ...)` calls on an existing `Reborn...` token are fine as-is and do not need a new token
+
+FORBIDDEN:
+
+```kotlin
+// ❌ inside a feature screen/component file
+private val KakaoYellow = Color(0xFFFEE500)
+```
+
+REQUIRED:
+
+```kotlin
+// ✅ in Color.kt
+val RebornKakaoYellow = Color(0xFFFEE500) // 카카오톡 채널 버튼 브랜드 컬러
+
+// ✅ in the feature file
+import com.gentlelady.reborn.core.theme.RebornKakaoYellow
+```
+
+If violated:
+→ Move the color into `Color.kt` and update the call site before considering the task done.
+
+---

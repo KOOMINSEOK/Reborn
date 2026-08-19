@@ -1,0 +1,19 @@
+<!-- res/drawable/ic_phone.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp"
+    android:height="17dp"
+    android:viewportWidth="12"
+    android:viewportHeight="17">
+    <path
+        android:pathData="M2.25,0.75 H9.75 C10.5779,0.75 11.25,1.42213 11.25,2.25 V14.25 C11.25,15.0779 10.5779,15.75 9.75,15.75 H2.25 C1.42213,15.75 0.75,15.0779 0.75,14.25 V2.25 C0.75,1.42213 1.42213,0.75 2.25,0.75 V0.75"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+    <path
+        android:pathData="M6,12.75 H6.0075"
+        android:strokeColor="#0F62FE"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>

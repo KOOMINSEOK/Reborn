@@ -19,12 +19,14 @@ val RebornPosthumousBannerBg = Color(0xFFD9E6FF) // 사후 게시글 배너 배�
 val RebornBorderLightBlue = Color(0xFFB9D1FF) // 메모리얼 버튼 테두리
 val RebornSoftBlue = Color(0xFFDCE8FF)
 val RebornDarkBlue = Color(0xFF0F62FE)
+val RebornIconBoxBlue = Color(0xFFEFF6FF) // 계정 공개 범위 안내 등 원형/사각 아이콘 박스 배경
 
 // Grays & Neutrals
 val RebornBackgroundGray = Color(0xFFF8F9FA) // 앱 공통 배경색
 val RebornUnselectedGray = Color(0xFF9E9E9E) // 네비게이션 바 비활성 탭 색상
 val RebornDividerGray = Color(0xFFEEEEEE)    // 구분선 색상
 val RebornTopBarDividerGray = Color(0xFFE5E7EB) // 상단바 하단 구분선 색상
+val RebornSwitchTrackOff = RebornTopBarDividerGray // Switch 미선택(꺼짐) 트랙/테두리 색상 (E5E7EB와 동일값 재사용)
 val RebornImageBg = Color(0xFFF9FAFB) // 화환 이미지 등 컨텐츠 이미지 배경색
 val RebornInputBorderGray = Color(0xFFCBD5E1) // 입력창/점선 박스 테두리 색상
 val RebornSlateGray = Color(0xFF64748B)      // 액션 아이콘 및 회색 텍스트용 슬레이트 그레이
@@ -41,9 +43,15 @@ val RebornOtherBubbleBg = RebornGridIconGray // 다른 사람이 쓴 방명록 �
 // 화환 구매 카드 체크리스트 등에 쓰는 성공/체크 컬러
 val RebornCheckGreen = Color(0xFF22C55E)
 
+// 삭제 등 위험(destructive) 액션 텍스트/아이콘 컬러
+val RebornDangerRed = Color(0xFFEF4444)
+
 // 시스템 기본 축
 val RebornWhite = Color(0xFFFFFFFF)
 val RebornBlack = Color(0xFF111111)
+
+// 외부 브랜드 컬러 (카카오톡 채널 버튼 등)
+val RebornKakaoYellow = Color(0xFFFEE500)
 
 // ========================================================================
 // 2. Semantic Mapping (프로필 관리 그리드 전용 변수 등록)
