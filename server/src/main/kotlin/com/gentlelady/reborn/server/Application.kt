@@ -3,6 +3,7 @@ package com.gentlelady.reborn.server
 import com.gentlelady.reborn.server.plugins.configureDatabase
 import com.gentlelady.reborn.server.plugins.configureMonitoring
 import com.gentlelady.reborn.server.plugins.configureRouting
+import com.gentlelady.reborn.server.plugins.configureSecurity
 import com.gentlelady.reborn.server.plugins.configureSerialization
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
@@ -17,5 +18,6 @@ fun Application.module() {
     configureMonitoring()
     configureSerialization()
     configureDatabase()
+    configureSecurity()
     configureRouting()
 }

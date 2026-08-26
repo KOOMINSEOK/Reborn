@@ -16,7 +16,7 @@ fun Application.configureMonitoring() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             call.application.log.error("Unhandled exception", cause)
-            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "internal_error"))
+            call.respond(HttpStatusCode.InternalServerError, ErrorResponse("internal_error"))
         }
     }
 }
