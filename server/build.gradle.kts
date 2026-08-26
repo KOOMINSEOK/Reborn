@@ -16,6 +16,12 @@ kotlin {
     jvmToolchain(17)
 }
 
+tasks.test {
+    // 로컬 server/.env 가 테스트로 새지 않도록 격리 (빈 값 = 파일보다 우선)
+    environment("DB_URL", "")
+    environment("SUPABASE_URL", "")
+}
+
 dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -23,6 +29,8 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.call.logging)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
 
     implementation(libs.hikaricp)
     implementation(libs.postgresql)

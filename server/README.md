@@ -10,36 +10,57 @@ Reborn 앱의 API 서버. Kotlin + Ktor (JVM 17).
 
 → http://localhost:8080/health
 
-DB 환경변수가 없으면 **DB 없이 기동**한다. `/health` 응답:
+설정이 없어도 서버는 뜬다. 이 경우:
+- `/health` → `{ "status": "ok", "db": "not_configured" }`
+- `/me` → `401` (인증 비활성)
 
-```json
-{ "status": "ok", "db": "not_configured" }
-```
+## 설정 (`server/.env`)
 
-## 환경변수
-
-| 변수 | 필수 | 예시 |
-|---|---|---|
-| `PORT` | 아니오 (기본 8080) | `8080` |
-| `DB_URL` | 아니오 (없으면 DB 스킵) | `jdbc:postgresql://db.xxxx.supabase.co:5432/postgres` |
-| `DB_USER` | 아니오 (기본 `postgres`) | `postgres` |
-| `DB_PASSWORD` | 아니오 | `••••••` |
-
-`DB_URL` 을 넣으면 부팅 시 Flyway 마이그레이션(`src/main/resources/db/migration`)이 적용되고
-`/health` 의 `db` 가 `connected` 로 바뀐다.
-
-로컬에서 값을 넣고 돌리려면:
+`.env` 는 gitignore 된다. 실제 환경변수가 있으면 그게 우선한다.
 
 ```bash
-DB_URL="jdbc:postgresql://localhost:5432/reborn" DB_USER=postgres DB_PASSWORD=postgres ./gradlew :server:run
+# 인증 — Supabase 액세스 토큰(ES256) 검증
+SUPABASE_URL=https://xxxx.supabase.co
+
+# DB — 있으면 부팅 시 Flyway 마이그레이션 자동 적용
+DB_URL=jdbc:postgresql://<host>:<port>/postgres
+DB_USER=postgres
+DB_PASSWORD=<프로젝트 생성 시 설정한 비번>
+
+# (나중) 관리자 호출·네이버 브릿지용
+# SUPABASE_SECRET_KEY=sb_secret_...
 ```
+
+| 변수 | 없을 때 |
+|---|---|
+| `SUPABASE_URL` | 인증 비활성, 보호 라우트는 401 |
+| `DB_URL` | DB 없이 기동, `/health` 의 `db` 는 `not_configured` |
+| `DB_USER` | 기본 `postgres` |
+| `PORT` | 기본 `8080` |
+
+## 엔드포인트
+
+| 메서드 | 경로 | 인증 | 설명 |
+|---|---|---|---|
+| GET | `/health` | — | 상태 + DB 연결 여부 |
+| GET | `/me` | Bearer | 토큰의 사용자 id / email |
+
+`/me` 호출 예:
+
+```bash
+curl localhost:8080/me -H "Authorization: Bearer <앱에서 받은 Supabase 액세스 토큰>"
+```
+
+## 인증 동작
+
+Supabase 가 발급한 JWT 를 `SUPABASE_URL/auth/v1/.well-known/jwks.json` 의 공개키로 검증한다
+(ES256, 비대칭). 서버는 시크릿을 보관하지 않으며 키 회전에 자동 대응한다.
+
+DB 마이그레이션 `V2__auth.sql` 는 `profiles.id` 를 `auth.users` 에 FK 로 연결하고,
+가입 시 임시 프로필(`user_<uuid>`)을 자동 생성하는 트리거를 건다.
 
 ## 테스트
 
 ```bash
 ./gradlew :server:test
 ```
-
-## 다음 단계
-
-인증(Supabase JWT 검증 + `GET /me`)은 `feature/server-auth` 브랜치에서.
