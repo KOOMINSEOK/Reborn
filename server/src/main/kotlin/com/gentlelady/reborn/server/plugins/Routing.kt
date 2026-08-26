@@ -1,7 +1,9 @@
 package com.gentlelady.reborn.server.plugins
 
 import com.gentlelady.reborn.server.feed.FeedRepository
+import com.gentlelady.reborn.server.feed.PostInteractionRepository
 import com.gentlelady.reborn.server.feed.feedRoutes
+import com.gentlelady.reborn.server.feed.postInteractionRoutes
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
@@ -12,6 +14,7 @@ import io.ktor.server.routing.routing
 
 fun Application.configureRouting() {
     val feedRepository = FeedRepository()
+    val postInteractionRepository = PostInteractionRepository()
 
     routing {
         get("/health") {
@@ -27,5 +30,6 @@ fun Application.configureRouting() {
         }
 
         feedRoutes(feedRepository)
+        postInteractionRoutes(postInteractionRepository)
     }
 }

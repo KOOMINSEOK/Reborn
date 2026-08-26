@@ -60,14 +60,15 @@ class FeedRepository {
             req.isPosthumous, status, publishAt,
         ) { it.getString("id") } ?: error("post insert returned nothing")
 
-        return getPost(UUID.fromString(id)) ?: error("post $id vanished after insert")
+        return getPost(authorId, UUID.fromString(id)) ?: error("post $id vanished after insert")
     }
 
-    fun getPost(id: UUID): PostResponse? =
-        Db.queryFirst(POST_SELECT + " where p.id = ?", id) { it.toPost("following") }
+    /** viewerId 관점의 게시물 한 건 (liked 플래그 포함). */
+    fun getPost(viewerId: UUID, id: UUID): PostResponse? =
+        Db.queryFirst(POST_SELECT + " where p.id = ?", viewerId, id) { it.toPost("following") }
 
     /** 팔로우한 추모의 최신 게시물. */
-    fun followingFeed(userId: UUID, limit: Int): List<PostResponse> =
+    fun followingFeed(viewerId: UUID, limit: Int): List<PostResponse> =
         Db.query(
             POST_SELECT + """
             where p.status = 'published'
@@ -75,7 +76,7 @@ class FeedRepository {
             order by p.created_at desc
             limit ?
             """.trimIndent(),
-            userId, limit,
+            viewerId, viewerId, limit,
         ) { it.toPost("following") }
 
     /**
@@ -83,7 +84,7 @@ class FeedRepository {
      * ponytail: 결정적 score 정렬(무작위 없음) → offset 페이지네이션이 일관됨.
      * 다양성용 무작위는 시드 기반으로 나중에. 차단 필터는 blocks 테이블 생기면 추가.
      */
-    fun recommendedFeed(userId: UUID, limit: Int): List<PostResponse> =
+    fun recommendedFeed(viewerId: UUID, limit: Int): List<PostResponse> =
         Db.query(
             POST_SELECT + """
             where p.status = 'published'
@@ -96,14 +97,16 @@ class FeedRepository {
             ) desc
             limit ?
             """.trimIndent(),
-            userId, userId, limit,
+            viewerId, viewerId, viewerId, limit,
         ) { it.toPost("recommended") }
 }
 
+/** 첫 `?` = viewerId (liked 서브쿼리). where 절 파라미터는 그 뒤에 온다. */
 private const val POST_SELECT = """
     select p.id, p.memorial_id, m.name as memorial_name, m.handle as memorial_handle,
            p.author_id, p.caption, p.image_url, p.is_posthumous, p.status,
-           p.like_count, p.comment_count, p.created_at
+           p.like_count, p.comment_count, p.created_at,
+           exists(select 1 from post_likes pl where pl.post_id = p.id and pl.user_id = ?) as liked
     from posts p
     join memorials m on m.id = p.memorial_id
 """
@@ -132,6 +135,7 @@ private fun ResultSet.toPost(source: String) = PostResponse(
     status = getString("status"),
     likeCount = getInt("like_count"),
     commentCount = getInt("comment_count"),
+    liked = getBoolean("liked"),
     createdAt = getObject("created_at", OffsetDateTime::class.java).toString(),
     source = source,
 )

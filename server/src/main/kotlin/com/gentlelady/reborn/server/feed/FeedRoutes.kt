@@ -54,6 +54,11 @@ private fun Route.postEndpoints(repo: FeedRepository) {
         }
         call.respond(HttpStatusCode.Created, repo.createPost(call.userId(), req))
     }
+    get("/posts/{id}") {
+        val post = repo.getPost(call.userId(), UUID.fromString(call.parameters["id"]))
+            ?: return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("post_not_found"))
+        call.respond(post)
+    }
 }
 
 private fun Route.feedEndpoint(repo: FeedRepository) {

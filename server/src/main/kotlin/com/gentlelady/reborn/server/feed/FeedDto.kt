@@ -48,6 +48,7 @@ data class PostResponse(
     val status: String,
     val likeCount: Int,
     val commentCount: Int,
+    val liked: Boolean = false,
     val createdAt: String,
     /** "following" | "recommended" — 이 항목이 피드에 들어온 이유. */
     val source: String = "following",
@@ -56,5 +57,27 @@ data class PostResponse(
 @Serializable
 data class FeedResponse(
     val items: List<PostResponse>,
+    val nextOffset: Int? = null,
+)
+
+@Serializable
+data class LikeResponse(val liked: Boolean, val likeCount: Int)
+
+@Serializable
+data class CreateCommentRequest(val body: String)
+
+@Serializable
+data class CommentResponse(
+    val id: String,
+    val postId: String,
+    val authorId: String,
+    val authorName: String,
+    val body: String,
+    val createdAt: String,
+)
+
+@Serializable
+data class CommentListResponse(
+    val items: List<CommentResponse>,
     val nextOffset: Int? = null,
 )

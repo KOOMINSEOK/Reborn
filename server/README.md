@@ -49,7 +49,13 @@ DB_PASSWORD=<프로젝트 생성 시 설정한 비번>
 | POST | `/memorials/{id}/follow` | Bearer | 팔로우 |
 | DELETE | `/memorials/{id}/follow` | Bearer | 언팔로우 |
 | POST | `/posts` | Bearer | 게시물 작성 (`publishAt` 지정 시 예약) |
+| GET | `/posts/{id}` | Bearer | 게시물 상세 (`liked` 포함) |
 | GET | `/feed?offset=&limit=` | Bearer | 팔로우 ∪ 추천 게시물 (3:1 인터리브) |
+| POST | `/posts/{id}/like` | Bearer | 좋아요 → `{liked, likeCount}` |
+| DELETE | `/posts/{id}/like` | Bearer | 좋아요 취소 |
+| GET | `/posts/{id}/comments?offset=&limit=` | Bearer | 댓글 목록 |
+| POST | `/posts/{id}/comments` | Bearer | 댓글 작성 |
+| DELETE | `/comments/{id}` | Bearer | 본인 댓글 삭제 |
 
 `/me` 호출 예:
 
@@ -73,6 +79,9 @@ DB 마이그레이션 `V2__auth.sql` 는 `profiles.id` 를 `auth.users` 에 FK �
 `V3__feed.sql` 이 `memorials` · `follows` · `posts` 를 만든다.
 `GET /feed` 는 팔로우한 추모의 최신글과 추천글(비팔로우·공개·시간감쇠 랭킹)을 3:1 로 섞는다.
 추천 랭킹은 결정적(`ln(1+likes+2*comments) - age/45000`)이라 offset 페이지네이션이 일관된다.
+
+`V4__post_interactions.sql` 이 `post_likes` · `post_comments` 를 만든다.
+`posts.like_count` / `comment_count` 는 DB 트리거가 자동 동기화한다 (앱/서버가 직접 안 건드림).
 
 ## 테스트
 
