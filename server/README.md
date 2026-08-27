@@ -44,12 +44,24 @@ DB_PASSWORD=<프로젝트 생성 시 설정한 비번>
 |---|---|---|---|
 | GET | `/health` | — | 상태 + DB 연결 여부 |
 | GET | `/me` | Bearer | 토큰의 사용자 id / email |
-| POST | `/memorials` | Bearer | 추모 프로필 생성 |
-| GET | `/memorials/{id}` | Bearer | 추모 프로필 조회 |
-| POST | `/memorials/{id}/follow` | Bearer | 팔로우 |
-| DELETE | `/memorials/{id}/follow` | Bearer | 언팔로우 |
-| POST | `/posts` | Bearer | 게시물 작성 (`publishAt` 지정 시 예약) |
-| GET | `/feed?offset=&limit=` | Bearer | 팔로우 ∪ 추천 게시물 (3:1 인터리브) |
+| **내 프로필 글 (posts)** | | | 인스타식. 생전/생후(`isPosthumous`) 분류 |
+| POST | `/posts` | Bearer | 글 작성 (`publishAt` 지정 시 사후 발행 예약) |
+| GET | `/posts/{id}` | Bearer | 글 상세 (`liked` 포함) |
+| GET | `/feed?offset=&limit=` | Bearer | 팔로우한 사람 ∪ 추천 (3:1 인터리브) |
+| POST/DELETE | `/posts/{id}/like` | Bearer | 좋아요 → `{liked, likeCount}` |
+| GET/POST | `/posts/{id}/comments` | Bearer | 댓글 목록 / 작성 |
+| DELETE | `/post-comments/{id}` | Bearer | 본인 댓글 삭제 |
+| **팔로우 (사람↔사람)** | | | |
+| POST/DELETE | `/users/{id}/follow` | Bearer | 팔로우 / 언팔로우 |
+| **추모 페이지 (memorials)** | | | 타인이 개설. 히스토리·방명록이 붙음 |
+| POST | `/memorials` | Bearer | 추모 페이지 개설 |
+| GET | `/memorials/{id}` | Bearer | 조회 |
+| POST/DELETE | `/memorials/{id}/follow` | Bearer | 추모 페이지 팔로우 |
+| POST/GET | `/memorials/{id}/history` | Bearer | 히스토리(추억) 글 작성 / 목록 |
+| GET | `/history/{id}` | Bearer | 히스토리 글 상세 |
+| POST/DELETE | `/history/{id}/like` | Bearer | 히스토리 좋아요 |
+| GET/POST | `/history/{id}/comments` | Bearer | 히스토리 댓글 |
+| DELETE | `/history-comments/{id}` | Bearer | 본인 히스토리 댓글 삭제 |
 
 `/me` 호출 예:
 
@@ -58,7 +70,7 @@ curl localhost:8080/me -H "Authorization: Bearer <앱에서 받은 Supabase 액�
 ```
 
 이미지는 서버를 거치지 않는다: 앱이 Supabase Storage 에 직접 업로드하고
-그 URL 을 `POST /posts` 의 `imageUrl` 로 넘긴다.
+그 URL 을 `imageUrl` 로 넘긴다.
 
 ## 인증 동작
 
@@ -68,11 +80,20 @@ Supabase 가 발급한 JWT 를 `SUPABASE_URL/auth/v1/.well-known/jwks.json` 의 
 DB 마이그레이션 `V2__auth.sql` 는 `profiles.id` 를 `auth.users` 에 FK 로 연결하고,
 가입 시 임시 프로필(`user_<uuid>`)을 자동 생성하는 트리거를 건다.
 
-## 피드
+## 도메인 모델
 
-`V3__feed.sql` 이 `memorials` · `follows` · `posts` 를 만든다.
-`GET /feed` 는 팔로우한 추모의 최신글과 추천글(비팔로우·공개·시간감쇠 랭킹)을 3:1 로 섞는다.
+- **posts** — 내 프로필에 쓰는 내 글. 생전/생후 분류. **홈 피드**가 이걸 보여준다.
+- **memorials** — 타인이 개설한 특정 고인의 추모 페이지.
+- **memorial_history** — 추모 페이지에 친구·가족이 올리는 추억 글.
+- **follows** — 사람 ↔ 사람 (피드 개인화). **memorial_follows** — 사람 → 추모 페이지.
+
+`GET /feed` = 팔로우한 사람의 최신글 ∪ 추천글(비팔로우·비공개아님·시간감쇠 랭킹)을 3:1 로 섞음.
 추천 랭킹은 결정적(`ln(1+likes+2*comments) - age/45000`)이라 offset 페이지네이션이 일관된다.
+
+좋아요/댓글 로직은 posts·memorial_history 가 동일 구조라 `InteractionRepo` 한 클래스로 재사용한다.
+모든 카운트(`like_count`·`comment_count`·`follower_count`)는 DB 트리거가 관리 — 코드가 직접 안 건드림.
+
+마이그레이션: V1 profiles · V2 auth · V3 feed(초안) · V4 post 상호작용 · V5 모델 정리(posts↔프로필, 사람 팔로우, 히스토리 분리).
 
 ## 테스트
 

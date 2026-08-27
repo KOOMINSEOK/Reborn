@@ -7,10 +7,9 @@ class FeedTest {
 
     private fun post(id: String, source: String) = PostResponse(
         id = id,
-        memorialId = "m",
-        memorialName = "m",
-        memorialHandle = "m",
         authorId = "a",
+        authorName = "a",
+        authorHandle = "a",
         caption = "",
         isPosthumous = false,
         status = "published",
@@ -27,10 +26,7 @@ class FeedTest {
 
         val ids = interleave(following, recommended).map { it.id }
 
-        assertEquals(
-            listOf("f1", "f2", "f3", "r1", "f4", "f5", "f6", "r2", "f7", "r3"),
-            ids,
-        )
+        assertEquals(listOf("f1", "f2", "f3", "r1", "f4", "f5", "f6", "r2", "f7", "r3"), ids)
     }
 
     @Test

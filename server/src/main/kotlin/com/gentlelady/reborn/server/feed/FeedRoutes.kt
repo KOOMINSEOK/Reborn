@@ -20,28 +20,19 @@ private const val FOLLOWING_TO_RECOMMENDED = 3
 
 fun Route.feedRoutes(repo: FeedRepository) {
     authenticate(SUPABASE_AUTH) {
-        memorialEndpoints(repo)
+        followEndpoints(repo)
         postEndpoints(repo)
         feedEndpoint(repo)
     }
 }
 
-private fun Route.memorialEndpoints(repo: FeedRepository) {
-    post("/memorials") {
-        val req = call.receive<CreateMemorialRequest>()
-        call.respond(HttpStatusCode.Created, repo.createMemorial(call.userId(), req))
-    }
-    get("/memorials/{id}") {
-        val memorial = repo.getMemorial(UUID.fromString(call.parameters["id"]))
-            ?: return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
-        call.respond(memorial)
-    }
-    post("/memorials/{id}/follow") {
-        repo.follow(call.userId(), UUID.fromString(call.parameters["id"]))
+private fun Route.followEndpoints(repo: FeedRepository) {
+    post("/users/{id}/follow") {
+        repo.followUser(call.userId(), UUID.fromString(call.parameters["id"]))
         call.respond(HttpStatusCode.NoContent)
     }
-    delete("/memorials/{id}/follow") {
-        repo.unfollow(call.userId(), UUID.fromString(call.parameters["id"]))
+    delete("/users/{id}/follow") {
+        repo.unfollowUser(call.userId(), UUID.fromString(call.parameters["id"]))
         call.respond(HttpStatusCode.NoContent)
     }
 }
@@ -49,10 +40,12 @@ private fun Route.memorialEndpoints(repo: FeedRepository) {
 private fun Route.postEndpoints(repo: FeedRepository) {
     post("/posts") {
         val req = call.receive<CreatePostRequest>()
-        if (!repo.memorialExists(UUID.fromString(req.memorialId))) {
-            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("memorial_not_found"))
-        }
         call.respond(HttpStatusCode.Created, repo.createPost(call.userId(), req))
+    }
+    get("/posts/{id}") {
+        val post = repo.getPost(call.userId(), UUID.fromString(call.parameters["id"]))
+            ?: return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("post_not_found"))
+        call.respond(post)
     }
 }
 
