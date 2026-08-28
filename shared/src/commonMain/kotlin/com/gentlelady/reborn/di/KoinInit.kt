@@ -3,6 +3,7 @@ package com.gentlelady.reborn.di
 import com.gentlelady.reborn.core.auth.di.authModule
 import com.gentlelady.reborn.core.network.di.networkModule
 import com.gentlelady.reborn.home.di.homeModule
+import com.gentlelady.reborn.memorial.di.memorialModule
 import com.gentlelady.reborn.onboarding.di.onboardingModule
 import com.gentlelady.reborn.management.app_settings.domain.di.appSettingsModule
 import com.gentlelady.reborn.management.archive.domain.di.archiveModule
@@ -28,6 +29,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
             networkModule,
             todoModule,
             homeModule,
+            memorialModule,
             searchModule,
             messageModule,
             myProfileModule,// 2. 여기에 검색 모듈을 결합해 줍니다.

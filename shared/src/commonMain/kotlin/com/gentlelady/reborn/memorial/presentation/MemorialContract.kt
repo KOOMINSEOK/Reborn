@@ -4,6 +4,9 @@ package com.gentlelady.reborn.memorial.presentation
 import androidx.compose.ui.graphics.ImageBitmap
 import org.jetbrains.compose.resources.DrawableResource
 
+/** 서버 미연결 시 폴백에 쓰는, 데모용 시드 메모리얼 id. */
+const val DEMO_MEMORIAL_ID = "00000000-0000-0000-0000-0000000000c1"
+
 enum class MemorialTab {
     HISTORY,
     ONLINE_WREATH,
@@ -23,8 +26,9 @@ data class MemorialHistoryItem(
     val authorName: String,
     val date: String,
     val caption: String,
+    val imageUrl: String? = null, // 서버 이미지 URL
     val imageRes: DrawableResource? = null, // 앱 번들 목업 이미지 (프리뷰/목데이터용)
-    val imageBitmap: ImageBitmap? = null, // 갤러리에서 직접 등록한 이미지 (imageRes보다 우선 적용)
+    val imageBitmap: ImageBitmap? = null, // 갤러리에서 직접 등록한 이미지 (우선 적용)
     val authorProfileRes: DrawableResource? = null,
     val likes: Int = 0,
     val comments: Int = 0
@@ -41,13 +45,7 @@ data class MemorialProfileData(
     val handle: String = "",
     val bio: String = "",
     val followerCount: Int = 0,
-    val profileImageRes: DrawableResource? = null
-)
-
-data class EditProfileFormState(
-    val name: String = "",
-    val handle: String = "",
-    val bio: String = "",
+    val profileImageUrl: String? = null, // 서버 이미지 URL
     val profileImageRes: DrawableResource? = null
 )
 
@@ -57,6 +55,7 @@ data class MemorialHistoryWriteFormState(
 )
 
 data class MemorialState(
+    val memorialId: String = DEMO_MEMORIAL_ID,
     val profile: MemorialProfileData = MemorialProfileData(),
     val selectedTab: MemorialTab = MemorialTab.HISTORY,
     val historyItems: List<MemorialHistoryItem> = emptyList(),
@@ -64,14 +63,13 @@ data class MemorialState(
     val onlineWreathItems: List<MemorialWreathItem> = emptyList(),
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
     val guestBookInputText: String = "",
-    val isEditingProfile: Boolean = false, // 프로필 편집 모드 화면 전환 플래그
-    val editFormState: EditProfileFormState = EditProfileFormState(),
     val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그
     val historyWriteFormState: MemorialHistoryWriteFormState = MemorialHistoryWriteFormState(),
     val isLoading: Boolean = false
 )
 
 sealed interface MemorialIntent {
+    data class LoadMemorial(val memorialId: String) : MemorialIntent
     object ClickBack : MemorialIntent
     object ClickShare : MemorialIntent
     object ClickMusic : MemorialIntent
@@ -79,19 +77,10 @@ sealed interface MemorialIntent {
     data class SelectTab(val tab: MemorialTab) : MemorialIntent
     data class UpdateGuestBookInput(val text: String) : MemorialIntent
     object SubmitGuestBook : MemorialIntent
-    object ClickEditProfile : MemorialIntent
     object ClickTribute : MemorialIntent
     object ClickPurchaseWreath : MemorialIntent
     data class AddOnlineWreathItem(val item: MemorialWreathItem) : MemorialIntent
     data class ClickHistoryImage(val index: Int) : MemorialIntent
-
-    // 프로필 편집 화면 전용 인텐트
-    data class UpdateEditName(val name: String) : MemorialIntent
-    data class UpdateEditHandle(val handle: String) : MemorialIntent
-    data class UpdateEditBio(val bio: String) : MemorialIntent
-    object ClickChangeProfileImage : MemorialIntent
-    object ClickSaveProfile : MemorialIntent
-    object ClickCloseEditProfile : MemorialIntent
 
     // 히스토리 작성 화면 전용 인텐트
     object ClickAddHistory : MemorialIntent

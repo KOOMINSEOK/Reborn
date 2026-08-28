@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
@@ -46,7 +47,9 @@ fun ContentCard(
     subtitle: String,
     modifier: Modifier = Modifier,
     authorProfileRes: DrawableResource? = null,
+    authorProfileUrl: String? = null,
     imageRes: DrawableResource? = null,
+    imageUrl: String? = null,
     imageBitmap: ImageBitmap? = null,
     showMoreIcon: Boolean = true,
     headerBadge: (@Composable () -> Unit)? = null,
@@ -60,6 +63,7 @@ fun ContentCard(
         ContentCardHeader(
             authorName = authorName,
             authorProfileRes = authorProfileRes,
+            authorProfileUrl = authorProfileUrl,
             subtitle = subtitle,
             showMoreIcon = showMoreIcon,
             headerBadge = headerBadge,
@@ -70,6 +74,7 @@ fun ContentCard(
 
         when {
             imageBitmap != null -> ContentCardImage(imageBitmap = imageBitmap)
+            !imageUrl.isNullOrBlank() -> ContentCardImage(imageUrl = imageUrl)
             imageRes != null -> ContentCardImage(imageRes = imageRes)
         }
 
@@ -81,6 +86,7 @@ fun ContentCard(
 private fun ContentCardHeader(
     authorName: String,
     authorProfileRes: DrawableResource?,
+    authorProfileUrl: String?,
     subtitle: String,
     showMoreIcon: Boolean,
     headerBadge: (@Composable () -> Unit)?,
@@ -92,6 +98,7 @@ private fun ContentCardHeader(
     ) {
         CircleAvatarImage(
             imageRes = authorProfileRes,
+            imageUrl = authorProfileUrl,
             size = 36.dp,
             fallbackText = authorName,
             borderWidth = 0.dp,
@@ -123,6 +130,26 @@ private fun ContentCardHeader(
         if (showMoreIcon) {
             Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = RebornUnselectedGray)
         }
+    }
+}
+
+@Composable
+private fun ContentCardImage(
+    imageUrl: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .padding(top = 8.dp)
+    ) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth().height(250.dp),
+            contentScale = ContentScale.Crop
+        )
     }
 }
 

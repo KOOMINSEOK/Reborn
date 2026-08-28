@@ -23,7 +23,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 internal fun MemorialHeaderSection(
     profile: MemorialProfileData,
-    onEditProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -37,6 +36,7 @@ internal fun MemorialHeaderSection(
         val avatarSize = 80.dp
         Box {
             CircleAvatarImage(
+                imageUrl = profile.profileImageUrl,
                 imageRes = profile.profileImageRes,
                 size = avatarSize,
                 fallbackText = profile.name,
@@ -120,8 +120,7 @@ private fun MemorialHeaderSectionOtherPreview() {
                     handle = "uexjurjece",
                     bio = "인생, 헤맨만큼 내 땅이다",
                     followerCount = 5
-                ),
-                onEditProfileClick = {}
+                )
             )
         }
     }
@@ -138,8 +137,7 @@ private fun MemorialHeaderSectionMyPreview() {
                     handle = "uexjurjece",
                     bio = "Forever in our hearts, guiding us with love and light.",
                     followerCount = 12
-                ),
-                onEditProfileClick = {}
+                )
             )
         }
     }

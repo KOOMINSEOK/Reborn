@@ -179,30 +179,14 @@ object MemorialMockData {
         MemorialGuestBookItem("3", "현우", null, "오늘 김첨지랑 같이 우리 예전에 갔던 올림픽 공원 갔어. 생각나서 찍었던 사진도 봤는데 ㅋㅋㅋ 길동아 거긴 날씨가 어떠냐?", "10월 24일, 9:00 AM")
     )
 
-    // 3. 타인 시점 MemorialState (홍길동 페이지)
-    val otherMemorialState = MemorialState(
+    // 추모 페이지(고인: 홍길동) — 타인이 개설한 페이지를 보는 시점. 편집 개념 없음.
+    val memorialState = MemorialState(
         profile = MemorialProfileData(
-            id = "other_1",
+            id = "seed_memorial",
             name = "홍길동",
-            handle = "uexjurjece",
+            handle = "seed_memorial_hong",
             bio = "인생, 헤맨만큼 내 땅이다",
             followerCount = 5,
-            profileImageRes = dummyProfileRes
-        ),
-        selectedTab = MemorialTab.HISTORY,
-        historyItems = historyItems,
-        onlineWreathItems = onlineWreathItems,
-        guestBookMessages = guestBookMessages,
-    )
-
-    // 4. 내 시점 MemorialState (이윤주 페이지)
-    val myMemorialState = MemorialState(
-        profile = MemorialProfileData(
-            id = "my_1",
-            name = "이윤주",
-            handle = "uexjurjece",
-            bio = "Forever in our hearts, guiding us with love and light.",
-            followerCount = 12,
             profileImageRes = dummyProfileRes
         ),
         selectedTab = MemorialTab.HISTORY,

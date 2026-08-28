@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import org.jetbrains.compose.resources.DrawableResource
@@ -58,7 +59,16 @@ fun CircleAvatarImage(
     ) {
         Box(contentAlignment = Alignment.Center) {
             when {
-                // TODO: imageUrl 비동기 로딩 미구현. Coil3 등 도입 시 AsyncImage로 교체 예정.
+                !imageUrl.isNullOrBlank() -> {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = contentDescription,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 imageRes != null -> {
                     Image(
                         painter = painterResource(imageRes),

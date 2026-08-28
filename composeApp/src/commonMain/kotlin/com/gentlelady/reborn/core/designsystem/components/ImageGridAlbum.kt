@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import org.jetbrains.compose.resources.painterResource
@@ -86,6 +87,14 @@ private fun ImageGridCell(
             .clickable(onClick = onClick)
     ) {
         when (image) {
+            is GridImageSource.Url -> {
+                AsyncImage(
+                    model = image.url,
+                    contentDescription = "Grid Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             is GridImageSource.Resource -> {
                 Image(
                     painter = painterResource(image.res),
