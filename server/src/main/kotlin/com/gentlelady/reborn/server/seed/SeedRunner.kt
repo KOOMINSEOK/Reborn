@@ -63,6 +63,17 @@ object SeedRunner {
                 IMG_PREFIX + p.image, p.posthumous, daysAgo(p.daysAgo),
             )
         }
+        SeedData.scheduledPosts.forEach { s ->
+            Db.update(
+                """
+                insert into posts (id, author_id, caption, is_posthumous, status, publish_at)
+                values (?, ?, ?, true, 'scheduled', ?)
+                on conflict (id) do nothing
+                """.trimIndent(),
+                s.id, SeedData.userIdByName.getValue(s.authorName), s.caption,
+                OffsetDateTime.now().plusMinutes(s.publishInMinutes),
+            )
+        }
     }
 
     private fun seedMemorialAndHistory() {

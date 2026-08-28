@@ -21,6 +21,8 @@ tasks.test {
     environment("DB_URL", "")
     environment("SUPABASE_URL", "")
     environment("SEED_DEV", "")
+    environment("PUBLISH_TICKER_SECONDS", "")
+    environment("INTERNAL_SECRET", "")
 }
 
 dependencies {
