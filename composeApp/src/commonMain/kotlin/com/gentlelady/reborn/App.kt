@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import coil3.SingletonImageLoader
+import com.gentlelady.reborn.core.image.newRebornImageLoader
 import com.gentlelady.reborn.feature.main.mainNavGraph
 import com.gentlelady.reborn.feature.memorial.memorialNavGraph
 import com.gentlelady.reborn.feature.memorial_swipe.memorialSwipeNavGraph
@@ -67,6 +69,8 @@ fun App(
     faqState: FaqState,
     onFaqIntent: (FaqIntent) -> Unit
 ) {
+    SingletonImageLoader.setSafe { context -> newRebornImageLoader(context) }
+
     MaterialTheme {
         val rootNavController = rememberNavController()
 

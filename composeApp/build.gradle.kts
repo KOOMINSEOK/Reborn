@@ -49,6 +49,9 @@ kotlin {
                 implementation(compose.components.uiToolingPreview)
                 implementation(compose.components.resources)
                 implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha02")
+
+                implementation(libs.coil.compose)
+                implementation(libs.coil.network.ktor3)
             }
         }
 
@@ -57,6 +60,7 @@ kotlin {
                 implementation(libs.compose.uiToolingPreview)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.koin.core)
+                implementation(libs.ktor.client.okhttp) // Coil 네트워크 페처용 엔진
             }
         }
 
