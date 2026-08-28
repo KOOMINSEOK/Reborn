@@ -25,8 +25,14 @@ object SeedRunner {
             seedUsers()
             seedPosts()
             seedMemorialAndHistory()
+            seedGuestbook()
         }.onFailure { log.error("시드 실패 (서버는 계속 기동)", it) }
-            .onSuccess { log.info("시드 완료: 유저 ${SeedData.users.size}, 게시물 ${SeedData.posts.size}, 히스토리 ${SeedData.history.size}") }
+            .onSuccess {
+                log.info(
+                    "시드 완료: 유저 ${SeedData.users.size}, 게시물 ${SeedData.posts.size}, " +
+                        "히스토리 ${SeedData.history.size}, 방명록 ${SeedData.guestbook.size}",
+                )
+            }
     }
 
     private fun seedUsers() {
@@ -78,6 +84,19 @@ object SeedRunner {
                 """.trimIndent(),
                 h.id, SeedData.memorialId, SeedData.userIdByName.getValue(h.authorName),
                 h.caption, IMG_PREFIX + h.image, daysAgo(h.daysAgo),
+            )
+        }
+    }
+
+    private fun seedGuestbook() {
+        SeedData.guestbook.forEach { g ->
+            Db.update(
+                """
+                insert into guestbook_entries (id, memorial_id, author_id, message, created_at)
+                values (?, ?, ?, ?, ?)
+                on conflict (id) do nothing
+                """.trimIndent(),
+                g.id, SeedData.memorialId, SeedData.userIdByName.getValue(g.authorName), g.message, daysAgo(g.daysAgo),
             )
         }
     }

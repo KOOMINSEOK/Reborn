@@ -46,3 +46,20 @@ data class HistoryResponse(
 
 @Serializable
 data class HistoryListResponse(val items: List<HistoryResponse>, val nextOffset: Int? = null)
+
+@Serializable
+data class CreateGuestbookRequest(val message: String)
+
+@Serializable
+data class GuestbookEntryResponse(
+    val id: String,
+    val memorialId: String,
+    val authorId: String,
+    val authorName: String,
+    val authorAvatarUrl: String? = null,
+    val message: String,
+    val createdAt: String,
+)
+
+@Serializable
+data class GuestbookListResponse(val items: List<GuestbookEntryResponse>, val nextOffset: Int? = null)

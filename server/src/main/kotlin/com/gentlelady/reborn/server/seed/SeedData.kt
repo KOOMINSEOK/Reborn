@@ -8,6 +8,7 @@ internal object SeedData {
     data class SeedUser(val id: UUID, val name: String, val email: String)
     data class SeedPost(val id: UUID, val authorName: String, val caption: String, val image: String, val posthumous: Boolean, val daysAgo: Long)
     data class SeedHistory(val id: UUID, val authorName: String, val caption: String, val image: String, val daysAgo: Long)
+    data class SeedGuestbook(val id: UUID, val authorName: String, val message: String, val daysAgo: Long)
 
     private fun uid(suffix: String) = UUID.fromString("00000000-0000-0000-0000-0000000000$suffix")
 
@@ -45,5 +46,11 @@ internal object SeedData {
         SeedHistory(uid("d7"), "박지연", "그 카페에서 마신 커피 맛이 아직도 기억나.", "img_post_grid_7.png", 269),
         SeedHistory(uid("d8"), "이현우", "바닷가에서 보낸 여유로운 오후.", "img_post_grid_8.png", 313),
         SeedHistory(uid("d9"), "최민수", "해변을 걸으며 나눴던 이야기들이 그립다.", "img_post_grid_9.png", 358),
+    )
+
+    val guestbook = listOf(
+        SeedGuestbook(uid("e1"), "박지연", "오늘따라 너 생각이 나니 ㅋㅋ 잘 지내지? 길동아 너랑 술 한잔 하고 싶네", 0),
+        SeedGuestbook(uid("e2"), "정수아", "보고싶어 ♥", 1),
+        SeedGuestbook(uid("e3"), "이현우", "오늘 예전에 갔던 올림픽 공원 갔어. 생각나서 찍었던 사진도 봤는데 ㅋㅋㅋ 길동아 거긴 날씨가 어떠냐?", 3),
     )
 }

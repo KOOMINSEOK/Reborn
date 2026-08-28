@@ -22,6 +22,7 @@ fun Route.memorialRoutes(repo: MemorialRepository, historyInteractions: Interact
     authenticate(SUPABASE_AUTH) {
         memorialEndpoints(repo)
         historyEndpoints(repo)
+        guestbookEndpoints(repo)
         interactionRoutes("/history", "/history-comments", historyInteractions)
     }
 }
@@ -64,5 +65,34 @@ private fun Route.historyEndpoints(repo: MemorialRepository) {
         val history = repo.getHistory(call.userId(), UUID.fromString(call.parameters["id"]))
             ?: return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("history_not_found"))
         call.respond(history)
+    }
+}
+
+private fun Route.guestbookEndpoints(repo: MemorialRepository) {
+    post("/memorials/{id}/guestbook") {
+        val memorialId = UUID.fromString(call.parameters["id"])
+        val message = call.receive<CreateGuestbookRequest>().message.trim()
+        if (message.isEmpty()) {
+            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("empty_message"))
+        }
+        if (!repo.exists(memorialId)) {
+            return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
+        }
+        call.respond(HttpStatusCode.Created, repo.createGuestbookEntry(memorialId, call.userId(), message))
+    }
+    get("/memorials/{id}/guestbook") {
+        val memorialId = UUID.fromString(call.parameters["id"])
+        val offset = call.request.queryParameters["offset"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, MAX_LIMIT) ?: DEFAULT_LIMIT
+        val items = repo.listGuestbook(memorialId, offset, limit)
+        call.respond(GuestbookListResponse(items, if (items.size == limit) offset + limit else null))
+    }
+    delete("/guestbook/{id}") {
+        val removed = repo.deleteGuestbookEntry(UUID.fromString(call.parameters["id"]), call.userId())
+        if (removed == 0) {
+            call.respond(HttpStatusCode.NotFound, ErrorResponse("guestbook_entry_not_found"))
+        } else {
+            call.respond(HttpStatusCode.NoContent)
+        }
     }
 }
