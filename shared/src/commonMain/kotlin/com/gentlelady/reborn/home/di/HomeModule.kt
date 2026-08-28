@@ -8,7 +8,7 @@ import org.koin.dsl.module
 
 val homeModule = module {
     // Data
-    single<HomeRepository> { HomeRepositoryImpl() }
+    single<HomeRepository> { HomeRepositoryImpl(get()) }
 
     // Domain
     factory { GetHomeFeedUseCase(get()) }
