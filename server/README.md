@@ -64,6 +64,7 @@ DB_PASSWORD=<프로젝트 생성 시 설정한 비번>
 | DELETE | `/history-comments/{id}` | Bearer | 본인 히스토리 댓글 삭제 |
 | POST/GET | `/memorials/{id}/guestbook` | Bearer | 방명록 작성 / 목록 |
 | DELETE | `/guestbook/{id}` | Bearer | 본인 방명록 삭제 |
+| POST | `/internal/publish-due` | `X-Internal-Secret` | 예약(생후) 글 발행 — Cloud Scheduler 용 |
 
 `/me` 호출 예:
 
@@ -95,7 +96,21 @@ DB 마이그레이션 `V2__auth.sql` 는 `profiles.id` 를 `auth.users` 에 FK �
 좋아요/댓글 로직은 posts·memorial_history 가 동일 구조라 `InteractionRepo` 한 클래스로 재사용한다.
 모든 카운트(`like_count`·`comment_count`·`follower_count`)는 DB 트리거가 관리 — 코드가 직접 안 건드림.
 
-마이그레이션: V1 profiles · V2 auth · V3 feed(초안) · V4 post 상호작용 · V5 모델 정리(posts↔프로필, 사람 팔로우, 히스토리 분리).
+마이그레이션: V1 profiles · V2 auth · V3 feed(초안) · V4 post 상호작용 · V5 모델 정리(posts↔프로필, 사람 팔로우, 히스토리 분리) · V6 방명록.
+
+## 예약발행 (생후 게시글)
+
+`POST /posts` 에 `publishAt` 을 주면 `status=scheduled` 로 저장된다. 발행은:
+- **프로덕션**: Cloud Scheduler 가 매분 `POST /internal/publish-due` (헤더 `X-Internal-Secret: $INTERNAL_SECRET`) 호출
+  ```bash
+  gcloud scheduler jobs create http reborn-publish-due \
+    --schedule="* * * * *" --uri="https://<서버>/internal/publish-due" \
+    --http-method=POST --headers="X-Internal-Secret=<시크릿>"
+  ```
+- **로컬 개발**: `.env` 에 `PUBLISH_TICKER_SECONDS=30` → 서버가 30초마다 직접 실행
+  (인스턴스 여러 개면 티커 끄고 Scheduler 만 — 중복 방지)
+
+발행 시 `created_at` 을 현재로 갱신 → 피드에 새 글로 뜬다.
 
 ## 테스트
 

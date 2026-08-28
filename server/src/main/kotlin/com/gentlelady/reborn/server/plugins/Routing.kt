@@ -4,6 +4,7 @@ import com.gentlelady.reborn.server.feed.FeedRepository
 import com.gentlelady.reborn.server.feed.feedRoutes
 import com.gentlelady.reborn.server.interaction.InteractionRepo
 import com.gentlelady.reborn.server.interaction.interactionRoutes
+import com.gentlelady.reborn.server.internal.internalRoutes
 import com.gentlelady.reborn.server.memorial.MemorialRepository
 import com.gentlelady.reborn.server.memorial.memorialRoutes
 import io.ktor.http.HttpStatusCode
@@ -28,6 +29,8 @@ fun Application.configureRouting() {
 
         // 시드용 더미 이미지. resources/static/seed/*.png → /static/seed/*.png
         staticResources("/static", "static")
+
+        internalRoutes()
 
         authenticate(SUPABASE_AUTH) {
             get("/me") {

@@ -29,6 +29,12 @@ internal object SeedData {
         SeedPost(uid("b2"), "김첨지", "나의 마지막 기록이 여러분에게 닿기를...", "img_post_dummy2.png", posthumous = true, daysAgo = 40),
     )
 
+    /** 예약발행 데모용. publish_at 이 seed 후 2분 뒤 → 티커/스케줄러가 published 로 뒤집는다. */
+    data class SeedScheduledPost(val id: UUID, val authorName: String, val caption: String, val publishInMinutes: Long)
+    val scheduledPosts = listOf(
+        SeedScheduledPost(uid("b3"), "정수아", "예약 발행 테스트 글입니다. 발행 시각이 지나면 피드에 나타납니다.", publishInMinutes = 2),
+    )
+
     /** 홍길동(고인) 추모 페이지. 개설자는 타인(김영희). */
     val memorialId = uid("c1")
     const val MEMORIAL_NAME = "홍길동"
