@@ -53,6 +53,8 @@ DB_PASSWORD=<프로젝트 생성 시 설정한 비번>
 | DELETE | `/post-comments/{id}` | Bearer | 본인 댓글 삭제 |
 | **팔로우 (사람↔사람)** | | | |
 | POST/DELETE | `/users/{id}/follow` | Bearer | 팔로우 / 언팔로우 |
+| POST/DELETE | `/users/{id}/block` | Bearer | 차단 / 차단해제 (차단 시 양방향 팔로우도 끊김) |
+| GET | `/blocks` | Bearer | 내가 차단한 사용자 목록 |
 | **추모 페이지 (memorials)** | | | 타인이 개설. 히스토리·방명록이 붙음 |
 | POST | `/memorials` | Bearer | 추모 페이지 개설 |
 | GET | `/memorials/{id}` | Bearer | 조회 |
@@ -96,7 +98,9 @@ DB 마이그레이션 `V2__auth.sql` 는 `profiles.id` 를 `auth.users` 에 FK �
 좋아요/댓글 로직은 posts·memorial_history 가 동일 구조라 `InteractionRepo` 한 클래스로 재사용한다.
 모든 카운트(`like_count`·`comment_count`·`follower_count`)는 DB 트리거가 관리 — 코드가 직접 안 건드림.
 
-마이그레이션: V1 profiles · V2 auth · V3 feed(초안) · V4 post 상호작용 · V5 모델 정리(posts↔프로필, 사람 팔로우, 히스토리 분리) · V6 방명록.
+마이그레이션: V1 profiles · V2 auth · V3 feed(초안) · V4 post 상호작용 · V5 모델 정리(posts↔프로필, 사람 팔로우, 히스토리 분리) · V6 방명록 · V7 차단.
+
+`GET /feed` 는 양방향 차단 관계인 사용자의 글을 제외한다 (내가 차단했거나 나를 차단한 경우 모두).
 
 ## 예약발행 (생후 게시글)
 
