@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.di
 
+import com.gentlelady.reborn.core.network.di.networkModule
 import com.gentlelady.reborn.home.di.homeModule
 import com.gentlelady.reborn.onboarding.di.onboardingModule
 import com.gentlelady.reborn.management.app_settings.domain.di.appSettingsModule
@@ -22,6 +23,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
     startKoin {
         appDeclaration()
         modules(
+            networkModule,
             todoModule,
             homeModule,
             searchModule,
