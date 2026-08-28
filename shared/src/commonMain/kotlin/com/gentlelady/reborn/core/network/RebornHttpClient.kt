@@ -23,6 +23,10 @@ fun createRebornHttpClient(tokenProvider: TokenProvider): HttpClient = HttpClien
             loadTokens {
                 tokenProvider.accessToken()?.let { BearerTokens(it, refreshToken = "") }
             }
+            // 401 이면 TokenProvider 에 다시 물어본다 (세션 갱신/로그인 직후 반영).
+            refreshTokens {
+                tokenProvider.accessToken()?.let { BearerTokens(it, refreshToken = "") }
+            }
         }
     }
 
