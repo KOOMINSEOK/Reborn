@@ -15,6 +15,7 @@ import com.gentlelady.reborn.memorial.presentation.MemorialViewModel
 import com.gentlelady.reborn.memorial.presentation.MemorialWreathItem
 import com.gentlelady.reborn.wreathpurchase.presentation.WreathIntent
 import com.gentlelady.reborn.wreathpurchase.presentation.WreathViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.random.Random
 
 fun NavGraphBuilder.wreathNavGraph(navController: NavHostController) {
@@ -65,7 +66,7 @@ fun NavGraphBuilder.wreathNavGraph(navController: NavHostController) {
 
         // 💡 "memorial/me" 백스택 엔트리와 ViewModel을 공유해서, 화환 남기기 결과를 메모리얼 화환 탭에 바로 반영한다.
         val memorialEntry = remember(backStackEntry) { navController.getBackStackEntry("memorial/me") }
-        val memorialViewModel: MemorialViewModel = viewModel(viewModelStoreOwner = memorialEntry)
+        val memorialViewModel: MemorialViewModel = koinViewModel(viewModelStoreOwner = memorialEntry)
 
         val onIntent: (WreathIntent) -> Unit = { intent ->
             when (intent) {

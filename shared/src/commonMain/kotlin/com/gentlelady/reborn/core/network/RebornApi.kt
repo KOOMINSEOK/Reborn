@@ -1,6 +1,9 @@
 package com.gentlelady.reborn.core.network
 
 import com.gentlelady.reborn.core.network.dto.FeedDto
+import com.gentlelady.reborn.core.network.dto.GuestbookListDto
+import com.gentlelady.reborn.core.network.dto.HistoryListDto
+import com.gentlelady.reborn.core.network.dto.MemorialProfileDto
 import com.gentlelady.reborn.core.network.dto.PostDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -18,4 +21,19 @@ class RebornApi(private val client: HttpClient) {
 
     suspend fun post(id: String): PostDto =
         client.get("posts/$id").body()
+
+    suspend fun memorial(id: String): MemorialProfileDto =
+        client.get("memorials/$id").body()
+
+    suspend fun memorialHistory(id: String, offset: Int = 0, limit: Int = 30): HistoryListDto =
+        client.get("memorials/$id/history") {
+            parameter("offset", offset)
+            parameter("limit", limit)
+        }.body()
+
+    suspend fun guestbook(id: String, offset: Int = 0, limit: Int = 30): GuestbookListDto =
+        client.get("memorials/$id/guestbook") {
+            parameter("offset", offset)
+            parameter("limit", limit)
+        }.body()
 }

@@ -37,14 +37,8 @@ fun MemorialScreen(
 ) {
     val selectedHistoryItem = state.selectedHistoryIndex?.let { state.historyItems.getOrNull(it) }
 
-    // 💡 state.isEditingProfile / selectedHistoryIndex 플래그에 따라 하위 화면으로 즉시 전환 연동
-    if (state.isEditingProfile) {
-        MemorialEditProfileScreen(
-            formState = state.editFormState,
-            onIntent = onIntent,
-            modifier = modifier
-        )
-    } else if (selectedHistoryItem != null) {
+    // 💡 selectedHistoryIndex / isWritingHistory 플래그에 따라 하위 화면으로 즉시 전환
+    if (selectedHistoryItem != null) {
         MemorialHistoryDetailScreen(
             item = selectedHistoryItem,
             onIntent = onIntent,
@@ -117,11 +111,8 @@ fun MemorialScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // 1. 프로필 헤더 영역
-                MemorialHeaderSection(
-                    profile = state.profile,
-                    onEditProfileClick = { onIntent(MemorialIntent.ClickEditProfile) }
-                )
+                // 1. 프로필 헤더 영역 (편집 없음 — 추모 페이지는 타인이 개설한 페이지를 보는 것)
+                MemorialHeaderSection(profile = state.profile)
 
                 // 2. 히스토리 / 온라인 화환 / 방명록 탭바
                 MemorialTabBar(
@@ -142,9 +133,16 @@ fun MemorialScreen(
                     when (state.selectedTab) {
                         MemorialTab.HISTORY -> {
                             ImageGridAlbum(
-                                images = state.historyItems.map { item ->
-                                    item.imageBitmap?.let { GridImageSource.Bitmap(it) }
-                                        ?: GridImageSource.Resource(item.imageRes!!)
+                                images = state.historyItems.mapNotNull { item ->
+                                    val bitmap = item.imageBitmap
+                                    val url = item.imageUrl
+                                    val res = item.imageRes
+                                    when {
+                                        bitmap != null -> GridImageSource.Bitmap(bitmap)
+                                        !url.isNullOrBlank() -> GridImageSource.Url(url)
+                                        res != null -> GridImageSource.Resource(res)
+                                        else -> null
+                                    }
                                 },
                                 onImageClick = { index ->
                                     onIntent(MemorialIntent.ClickHistoryImage(index))
@@ -182,36 +180,20 @@ fun MemorialScreen(
 
 @Preview
 @Composable
-private fun MemorialScreenMyEditProfilePreview() {
-    val dummyState = MemorialState(
-        profile = MemorialMockData.myMemorialState.profile,
-        isEditingProfile = true, // 편집 상태 모드 프리뷰
-        editFormState = EditProfileFormState(
-            name = "이윤주",
-            handle = "uexjurjece",
-            bio = "Forever in our hearts, guiding us with love and light.",
-            profileImageRes = MemorialMockData.dummyProfileRes
-        )
-    )
-
+private fun MemorialScreenHistoryPreview() {
     MaterialTheme {
         Surface {
-            MemorialScreen(
-                state = dummyState,
-                onIntent = {}
-            )
+            MemorialScreen(state = MemorialMockData.memorialState, onIntent = {})
         }
     }
 }
 
-// Direct Injection 프리뷰 규칙 준수
 @Preview
 @Composable
-private fun MemorialScreenOtherViewPreview() {
-    val dummyState = MemorialState(
-        profile = MemorialMockData.otherMemorialState.profile,
+private fun MemorialScreenGuestBookPreview() {
+    val dummyState = MemorialMockData.memorialState.copy(
         selectedTab = MemorialTab.GUESTBOOK,
-        guestBookMessages = MemorialMockData.guestBookMessages
+        guestBookMessages = MemorialMockData.guestBookMessages,
     )
 
     MaterialTheme {
@@ -227,8 +209,7 @@ private fun MemorialScreenOtherViewPreview() {
 @Preview
 @Composable
 private fun MemorialScreenWreathEmptyPreview() {
-    val dummyState = MemorialState(
-        profile = MemorialMockData.otherMemorialState.profile,
+    val dummyState = MemorialMockData.memorialState.copy(
         selectedTab = MemorialTab.ONLINE_WREATH,
         onlineWreathItems = emptyList()
     )
@@ -246,75 +227,14 @@ private fun MemorialScreenWreathEmptyPreview() {
 @Preview
 @Composable
 private fun MemorialScreenWreathFilledPreview() {
-    val dummyState = MemorialState(
-        profile = MemorialMockData.otherMemorialState.profile,
+    val dummyState = MemorialMockData.memorialState.copy(
         selectedTab = MemorialTab.ONLINE_WREATH,
         onlineWreathItems = MemorialMockData.onlineWreathItems
     )
 
     MaterialTheme {
         Surface {
-            MemorialScreen(
-                state = dummyState,
-                onIntent = {}
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun MemorialScreenOtherGridViewPreview() {
-    val dummyState = MemorialState(
-        profile = MemorialMockData.otherMemorialState.profile,
-        selectedTab = MemorialTab.HISTORY,
-        historyItems = MemorialMockData.historyItems
-    )
-
-    MaterialTheme {
-        Surface {
-            MemorialScreen(
-                state = dummyState,
-                onIntent = {}
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun MemorialScreenMyViewPreview() {
-    val dummyState = MemorialState(
-        profile = MemorialMockData.myMemorialState.profile,
-        selectedTab = MemorialTab.GUESTBOOK,
-        guestBookMessages = MemorialMockData.guestBookMessages
-    )
-
-    MaterialTheme {
-        Surface {
-            MemorialScreen(
-                state = dummyState,
-                onIntent = {}
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun MemorialScreenMyGridViewPreview() {
-    val dummyState = MemorialState(
-        profile = MemorialMockData.myMemorialState.profile,
-        selectedTab = MemorialTab.HISTORY,
-        historyItems = MemorialMockData.historyItems
-    )
-
-    MaterialTheme {
-        Surface {
-            MemorialScreen(
-                state = dummyState,
-                onIntent = {}
-            )
+            MemorialScreen(state = dummyState, onIntent = {})
         }
     }
 }
