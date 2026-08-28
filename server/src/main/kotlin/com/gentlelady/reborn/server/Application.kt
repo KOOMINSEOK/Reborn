@@ -5,7 +5,9 @@ import com.gentlelady.reborn.server.plugins.configureMonitoring
 import com.gentlelady.reborn.server.plugins.configureRouting
 import com.gentlelady.reborn.server.plugins.configureSecurity
 import com.gentlelady.reborn.server.plugins.configureSerialization
+import com.gentlelady.reborn.server.seed.SeedRunner
 import io.ktor.server.application.Application
+import io.ktor.server.application.log
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
@@ -20,4 +22,5 @@ fun Application.module() {
     configureDatabase()
     configureSecurity()
     configureRouting()
+    SeedRunner.runIfEnabled(log)
 }

@@ -10,6 +10,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -24,6 +25,9 @@ fun Application.configureRouting() {
         get("/health") {
             call.respond(HealthResponse(status = "ok", db = Db.status()))
         }
+
+        // 시드용 더미 이미지. resources/static/seed/*.png → /static/seed/*.png
+        staticResources("/static", "static")
 
         authenticate(SUPABASE_AUTH) {
             get("/me") {

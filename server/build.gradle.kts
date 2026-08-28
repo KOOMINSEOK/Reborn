@@ -20,6 +20,7 @@ tasks.test {
     // 로컬 server/.env 가 테스트로 새지 않도록 격리 (빈 값 = 파일보다 우선)
     environment("DB_URL", "")
     environment("SUPABASE_URL", "")
+    environment("SEED_DEV", "")
 }
 
 dependencies {
