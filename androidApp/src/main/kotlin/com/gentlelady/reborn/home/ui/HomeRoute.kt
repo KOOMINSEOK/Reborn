@@ -4,7 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.gentlelady.reborn.App
+import com.gentlelady.reborn.auth.presentation.AuthViewModel
+import com.gentlelady.reborn.feature.auth.LoginScreen
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeViewModel
 import com.gentlelady.reborn.search.presentation.SearchViewModel
@@ -25,6 +30,20 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeRoute() {
+    // 로그인 게이트: 세션 없으면 로그인 화면. "둘러보기"로 건너뛰면 mock 으로 앱 사용.
+    val authViewModel: AuthViewModel = koinViewModel()
+    val loginState by authViewModel.state.collectAsState()
+    var skippedLogin by rememberSaveable { mutableStateOf(false) }
+
+    if (!loginState.loggedIn && !skippedLogin) {
+        LoginScreen(
+            state = loginState,
+            onIntent = authViewModel::handleIntent,
+            onSkip = { skippedLogin = true },
+        )
+        return
+    }
+
     // 1. Koin을 통해 Shared 모듈의 네 개의 뇌(ViewModel)를 모두 주입받음
     val homeViewModel: HomeViewModel = koinViewModel()
     val searchViewModel: SearchViewModel = koinViewModel()
@@ -64,6 +83,11 @@ fun HomeRoute() {
 
         // 🆕 최초 진입 시 가상 데이터 소스(MockDataSource)로부터 프로필 정보를 당겨오도록 명령 트리거
         myProfileViewModel.handleIntent(MyProfileIntent.LoadProfile)
+    }
+
+    // 로그인 상태가 바뀌면 피드를 다시 불러온다 (mock ↔ 서버 데이터 전환).
+    LaunchedEffect(loginState.loggedIn) {
+        homeViewModel.handleIntent(HomeIntent.LoadFeed)
     }
 
     // 4. composeApp의 공통 진입점인 App() 호출 및 완벽한 최상위 데이터 파이프라인 완결

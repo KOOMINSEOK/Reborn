@@ -2,20 +2,21 @@ package com.gentlelady.reborn.home.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gentlelady.reborn.data.MockDataSource // 1. Mock 데이터 가져오기
 import com.gentlelady.reborn.home.domain.usecase.GetHomeFeedUseCase
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
-    private val getHomeFeedUseCase: GetHomeFeedUseCase
+    private val getHomeFeedUseCase: GetHomeFeedUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
     init {
-        // 2. ViewModel이 생성되자마자 즉시 데이터 로드
         loadFeed()
     }
 
@@ -29,13 +30,8 @@ class HomeViewModel(
     private fun loadFeed() {
         viewModelScope.launch {
             _state.update { HomeReducer.reduce(it, HomeResult.Loading) }
-
-            // 3. 프로토타입 단계에서는 Mock 데이터를 사용
-            val posts = MockDataSource.homePosts
-
-            // 실제 서버 연동 시에는 아래 주석처럼 사용
-            // val posts = getHomeFeedUseCase()
-
+            // 서버 우선, 실패 시 레포지토리가 mock 으로 폴백한다.
+            val posts = getHomeFeedUseCase()
             _state.update { HomeReducer.reduce(it, HomeResult.FeedLoaded(posts)) }
         }
     }
