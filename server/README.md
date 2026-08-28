@@ -62,6 +62,8 @@ DB_PASSWORD=<프로젝트 생성 시 설정한 비번>
 | POST/DELETE | `/history/{id}/like` | Bearer | 히스토리 좋아요 |
 | GET/POST | `/history/{id}/comments` | Bearer | 히스토리 댓글 |
 | DELETE | `/history-comments/{id}` | Bearer | 본인 히스토리 댓글 삭제 |
+| POST/GET | `/memorials/{id}/guestbook` | Bearer | 방명록 작성 / 목록 |
+| DELETE | `/guestbook/{id}` | Bearer | 본인 방명록 삭제 |
 
 `/me` 호출 예:
 

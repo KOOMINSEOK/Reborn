@@ -23,5 +23,7 @@ class MemorialRoutesTest {
         assertEquals(HttpStatusCode.Unauthorized, client.get("/memorials/$id/history").status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/history/$id").status)
         assertEquals(HttpStatusCode.Unauthorized, client.post("/history/$id/like").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.post("/memorials/$id/guestbook").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/memorials/$id/guestbook").status)
     }
 }

@@ -58,6 +58,41 @@ class MemorialRepository {
             viewerId, memorialId, limit, offset,
             map = ResultSet::toHistory,
         )
+
+    fun createGuestbookEntry(memorialId: UUID, authorId: UUID, message: String): GuestbookEntryResponse =
+        Db.queryFirst(
+            """
+            with g as (
+                insert into guestbook_entries (memorial_id, author_id, message)
+                values (?, ?, ?)
+                returning id, memorial_id, author_id, message, created_at
+            )
+            select g.id, g.memorial_id, g.author_id, pr.display_name as author_name,
+                   pr.avatar_url as author_avatar_url, g.message, g.created_at
+            from g join profiles pr on pr.id = g.author_id
+            """.trimIndent(),
+            memorialId, authorId, message,
+            map = ResultSet::toGuestbookEntry,
+        ) ?: error("guestbook insert returned nothing")
+
+    fun listGuestbook(memorialId: UUID, offset: Int, limit: Int): List<GuestbookEntryResponse> =
+        Db.query(
+            """
+            select g.id, g.memorial_id, g.author_id, pr.display_name as author_name,
+                   pr.avatar_url as author_avatar_url, g.message, g.created_at
+            from guestbook_entries g
+            join profiles pr on pr.id = g.author_id
+            where g.memorial_id = ?
+            order by g.created_at desc
+            limit ? offset ?
+            """.trimIndent(),
+            memorialId, limit, offset,
+            map = ResultSet::toGuestbookEntry,
+        )
+
+    /** 본인 방명록만 삭제. 삭제된 행 수(0 = 없음 또는 남의 글). */
+    fun deleteGuestbookEntry(entryId: UUID, requesterId: UUID): Int =
+        Db.update("delete from guestbook_entries where id = ? and author_id = ?", entryId, requesterId)
 }
 
 /** 첫 `?` = viewerId (liked 서브쿼리). where 절 파라미터는 그 뒤에 온다. */
@@ -78,6 +113,16 @@ private fun ResultSet.toMemorial() = MemorialResponse(
     visibility = getString("visibility"),
     profileImageUrl = getString("profile_image_url"),
     followerCount = getInt("follower_count"),
+)
+
+private fun ResultSet.toGuestbookEntry() = GuestbookEntryResponse(
+    id = getString("id"),
+    memorialId = getString("memorial_id"),
+    authorId = getString("author_id"),
+    authorName = getString("author_name"),
+    authorAvatarUrl = getString("author_avatar_url"),
+    message = getString("message"),
+    createdAt = getObject("created_at", OffsetDateTime::class.java).toString(),
 )
 
 private fun ResultSet.toHistory() = HistoryResponse(
