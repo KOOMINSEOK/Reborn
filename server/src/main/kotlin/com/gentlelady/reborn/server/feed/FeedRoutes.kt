@@ -35,6 +35,17 @@ private fun Route.followEndpoints(repo: FeedRepository) {
         repo.unfollowUser(call.userId(), UUID.fromString(call.parameters["id"]))
         call.respond(HttpStatusCode.NoContent)
     }
+    post("/users/{id}/block") {
+        repo.blockUser(call.userId(), UUID.fromString(call.parameters["id"]))
+        call.respond(HttpStatusCode.NoContent)
+    }
+    delete("/users/{id}/block") {
+        repo.unblockUser(call.userId(), UUID.fromString(call.parameters["id"]))
+        call.respond(HttpStatusCode.NoContent)
+    }
+    get("/blocks") {
+        call.respond(BlockedListResponse(repo.listBlocked(call.userId())))
+    }
 }
 
 private fun Route.postEndpoints(repo: FeedRepository) {

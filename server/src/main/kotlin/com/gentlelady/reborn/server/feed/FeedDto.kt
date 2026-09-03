@@ -33,3 +33,14 @@ data class PostResponse(
 
 @Serializable
 data class FeedResponse(val items: List<PostResponse>, val nextOffset: Int? = null)
+
+@Serializable
+data class BlockedUserResponse(
+    val id: String,
+    val name: String,
+    val handle: String,
+    val avatarUrl: String? = null,
+)
+
+@Serializable
+data class BlockedListResponse(val items: List<BlockedUserResponse>)

@@ -23,6 +23,8 @@ class FeedRoutesTest {
         assertEquals(HttpStatusCode.Unauthorized, client.get("/posts/$id").status)
         assertEquals(HttpStatusCode.Unauthorized, client.post("/users/$id/follow").status)
         assertEquals(HttpStatusCode.Unauthorized, client.delete("/users/$id/follow").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.post("/users/$id/block").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/blocks").status)
         assertEquals(HttpStatusCode.Unauthorized, client.post("/posts/$id/like").status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/posts/$id/comments").status)
     }
