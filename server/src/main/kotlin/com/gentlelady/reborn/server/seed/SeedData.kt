@@ -5,7 +5,7 @@ import java.util.UUID
 /** 앱의 HomeMockData / MemorialMockData 를 서버 시드로 옮긴 것. 고정 UUID → idempotent. */
 internal object SeedData {
 
-    data class SeedUser(val id: UUID, val name: String, val email: String)
+    data class SeedUser(val id: UUID, val name: String, val email: String, val bio: String? = null)
     data class SeedPost(val id: UUID, val authorName: String, val caption: String, val image: String, val posthumous: Boolean, val daysAgo: Long)
     data class SeedHistory(val id: UUID, val authorName: String, val caption: String, val image: String, val daysAgo: Long)
     data class SeedGuestbook(val id: UUID, val authorName: String, val message: String, val daysAgo: Long)
@@ -13,9 +13,9 @@ internal object SeedData {
     private fun uid(suffix: String) = UUID.fromString("00000000-0000-0000-0000-0000000000$suffix")
 
     val users = listOf(
-        SeedUser(uid("a1"), "홍길동", "seed-hong@reborn.local"),
-        SeedUser(uid("a2"), "김첨지", "seed-kimc@reborn.local"),
-        SeedUser(uid("a3"), "김영희", "seed-younghee@reborn.local"),
+        SeedUser(uid("a1"), "홍길동", "seed-hong@reborn.local", "인생, 헤맨만큼 내 땅이다"),
+        SeedUser(uid("a2"), "김첨지", "seed-kimc@reborn.local", "오늘도 한 걸음"),
+        SeedUser(uid("a3"), "김영희", "seed-younghee@reborn.local", "기록하는 사람"),
         SeedUser(uid("a4"), "박지연", "seed-jiyeon@reborn.local"),
         SeedUser(uid("a5"), "이현우", "seed-hyunwoo@reborn.local"),
         SeedUser(uid("a6"), "최민수", "seed-minsu@reborn.local"),
