@@ -9,12 +9,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.designsystem.MessageCard.RebornChatRow
 import com.gentlelady.reborn.core.theme.RebornDividerGray
+import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.feature.message.components.MessageTopAppBar
 import com.gentlelady.reborn.message.presentation.ChatRoomItem
 import com.gentlelady.reborn.message.presentation.GuestBookItem
@@ -33,9 +36,8 @@ fun MessageScreen(
         contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
         topBar = {
             MessageTopAppBar(
-                searchQuery = state.searchQuery,
                 currentTab = state.currentTab,
-                onSearchQueryChange = { onIntent(MessageIntent.UpdateSearchQuery(it)) },
+                onSearchClick = { onIntent(MessageIntent.ClickSearchBar) },
                 onTabSelect = { onIntent(MessageIntent.SelectTab(it)) },
                 onWriteClick = { onIntent(MessageIntent.ClickWriteAction) }
             )
@@ -61,6 +63,14 @@ fun MessageScreen(
                     }
                 }
                 MessageTab.GUEST_BOOK -> {
+                    item {
+                        Text(
+                            text = "내가 남긴 방명록 기록",
+                            fontSize = 12.sp,
+                            color = RebornSlateGray,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
                     itemsIndexed(state.guestBooks) { index, book ->
                         RebornChatRow(
                             name = book.deceasedName,

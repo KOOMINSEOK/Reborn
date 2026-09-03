@@ -7,8 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gentlelady.reborn.core.designsystem.PostCard.PostItem
 import com.gentlelady.reborn.core.designsystem.MemorialCard.MemorialProfileItem
+import com.gentlelady.reborn.core.designsystem.PostCard.PostItem
 import com.gentlelady.reborn.core.theme.RebornBackground
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.feature.search.components.SearchTopAppBar
@@ -23,18 +23,18 @@ fun SearchScreen(
     onIntent: (SearchIntent) -> Unit
 ) {
     Scaffold(
-        containerColor = RebornBackground, // 시맨틱 컬러 바인딩
-        contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
+        containerColor = RebornBackground,
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             SearchTopAppBar(
                 query = state.query,
                 onQueryChange = { onIntent(SearchIntent.UpdateQuery(it)) },
                 currentTab = state.currentTab.index,
                 onTabSelected = { index ->
-                    // 인덱스를 기반으로 확장된 enum 탭 매핑 처리
                     val selectedTab = SearchTab.entries.firstOrNull { it.index == index } ?: SearchTab.LIKES
                     onIntent(SearchIntent.ChangeTab(selectedTab))
-                }
+                },
+                showSortChips = state.isSearching
             )
         }
     ) { padding ->
@@ -43,24 +43,19 @@ fun SearchScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // 기획 변경 사항 반영: 탭 분기에 따른 전용 컴포넌트 출력 시스템
-            when (state.currentTab) {
-                SearchTab.LIKES, SearchTab.VIEWS -> {
-                    // 1. Post 전용 렌더링 영역
-                    items(state.postResults) { post ->
-                        PostItem(post = post)
-                        HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)
-                    }
+            if (state.isSearching) {
+                // 이름 검색 결과: 사용자/메모리얼 카드 (currentTab 기준 정렬)
+                items(state.results, key = { it.id }) { item ->
+                    MemorialProfileItem(
+                        item = item,
+                        onVisitClick = { id -> onIntent(SearchIntent.ClickResultItem(id)) }
+                    )
                 }
-                SearchTab.FLOWERS -> {
-                    // 2. Memorial 전용 렌더링 영역
-                    items(state.memorialResults) { memorialItem ->
-                        MemorialProfileItem(
-                            item = memorialItem,
-                            onVisitClick = { id -> onIntent(SearchIntent.ClickResultItem(id)) }
-                        )
-                        HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)
-                    }
+            } else {
+                // 검색 전 기본 화면: 무작위 게시글 피드
+                items(state.randomFeed, key = { it.id }) { post ->
+                    PostItem(post = post)
+                    HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)
                 }
             }
         }
@@ -69,66 +64,48 @@ fun SearchScreen(
 
 @Preview
 @Composable
-private fun SearchScreenPostTabPreview() {
-    // Screen 1 기획서 시안 타겟 프리뷰
-    val mockPostState = SearchState(
-        query = "박지수",
-        currentTab = SearchTab.LIKES,
-        postResults = listOf(
+private fun SearchScreenDefaultFeedPreview() {
+    val mockState = SearchState(
+        query = "",
+        randomFeed = listOf(
             com.gentlelady.reborn.home.domain.model.HomePost(
                 id = "p1",
                 authorName = "박지수",
                 authorProfileUrl = null,
                 contentImageUrl = null,
-                caption = "안녕하세요, 저는 다름아니라 최근 00사건에서 화두가 되었던...",
-                likes = 3200,
-                comments = 148,
+                caption = "햇살이 부서지는 숲길을 걷고 오늘의 평안을 기록합니다.",
+                likes = 1800,
+                comments = 214,
                 postedAt = "2026.06.11"
             )
         )
     )
-    MaterialTheme {
-        Surface {
-            SearchScreen(state = mockPostState, onIntent = {})
-        }
-    }
+    MaterialTheme { Surface { SearchScreen(state = mockState, onIntent = {}) } }
 }
 
 @Preview
 @Composable
-private fun SearchScreenMemorialTabPreview() {
-    // Screen 2 기획서 시안 타겟 프리뷰 (조화많은순)
-    val mockMemorialState = SearchState(
-        query = "",
+private fun SearchScreenResultsPreview() {
+    val mockState = SearchState(
+        query = "이수진",
         currentTab = SearchTab.FLOWERS,
-        memorialResults = listOf(
+        results = listOf(
             com.gentlelady.reborn.search.domain.entity.MemorialSearchItem(
-                id = "m1",
-                rank = 1,
-                name = "이수진",
-                birthDate = "1965",
-                deathDate = "2023",
-                location = "서울",
-                flowerCount = "24.8k",
-                profileImageUrl = null,
-                isVerified = false
+                id = "m1", rank = 1, name = "이수진", birthDate = "1965", deathDate = "2023",
+                location = "서울", flowerCount = "24.8k", profileImageUrl = null,
+                isDeceased = false, hasProfile = true, hasMemorial = true
             ),
             com.gentlelady.reborn.search.domain.entity.MemorialSearchItem(
-                id = "m2",
-                rank = 2,
-                name = "김민준",
-                birthDate = "1978",
-                deathDate = "2022",
-                location = "부산",
-                flowerCount = "18.3k",
-                profileImageUrl = null,
-                isVerified = true // 블루 체크 렌더링 활성화
+                id = "m2", rank = 2, name = "이수진", birthDate = "1988", deathDate = "-",
+                location = "부산", flowerCount = "11.2k", profileImageUrl = null,
+                isDeceased = false, hasProfile = true, hasMemorial = false
+            ),
+            com.gentlelady.reborn.search.domain.entity.MemorialSearchItem(
+                id = "m3", rank = 3, name = "이수진", birthDate = "1951", deathDate = "2019",
+                location = "인천", flowerCount = "8.6k", profileImageUrl = null,
+                isDeceased = true, hasProfile = false, hasMemorial = true
             )
         )
     )
-    MaterialTheme {
-        Surface {
-            SearchScreen(state = mockMemorialState, onIntent = {})
-        }
-    }
+    MaterialTheme { Surface { SearchScreen(state = mockState, onIntent = {}) } }
 }

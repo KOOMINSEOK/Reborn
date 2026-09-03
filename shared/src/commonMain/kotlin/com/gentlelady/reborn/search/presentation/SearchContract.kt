@@ -4,7 +4,8 @@ import com.gentlelady.reborn.home.domain.model.HomePost
 import com.gentlelady.reborn.search.domain.entity.MemorialSearchItem
 
 /**
- * 탭 유형 정의 (0, 1: Post 피드 계열 / 2: 메모리얼 랭킹 계열)
+ * 검색 결과 정렬 기준.
+ * 기본(검색 전) 화면에서는 노출되지 않고, 이름 검색을 실행했을 때만 정렬 버튼으로 노출된다.
  */
 enum class SearchTab(val index: Int) {
     LIKES(0),      // 좋아요순
@@ -13,26 +14,30 @@ enum class SearchTab(val index: Int) {
 }
 
 // ========================================================================
-// 1. 상태(State) 정의: UI가 그려야 할 독립 데이터 세트
+// 1. 상태(State)
 // ========================================================================
 data class SearchState(
     val query: String = "",
     val isLoading: Boolean = false,
-    val currentTab: SearchTab = SearchTab.LIKES, // Int 대신 안정적인 Enum 적용
+    val currentTab: SearchTab = SearchTab.LIKES,
 
-    // 기획 변경 반영: 하나의 공통 SearchItem 리스트를 버리고, 탭에 맞는 전용 도메인 모델을 가짐
-    val postResults: List<HomePost> = emptyList(),
-    val memorialResults: List<MemorialSearchItem> = emptyList(),
+    // 검색 전 기본 화면: 생전/사후/메모리얼 히스토리 게시글 중 무작위 3개
+    val randomFeed: List<HomePost> = emptyList(),
+    // 이름 검색 결과 (currentTab 기준 정렬됨)
+    val results: List<MemorialSearchItem> = emptyList(),
 
     val error: String? = null
-)
+) {
+    /** 검색어가 있으면 정렬 버튼 + 결과 리스트, 없으면 무작위 피드 */
+    val isSearching: Boolean get() = query.isNotBlank()
+}
 
 // ========================================================================
-// 2. 인텐트(Intent) 정의: 유저의 모든 액션/의도 명세
+// 2. 인텐트(Intent)
 // ========================================================================
 sealed interface SearchIntent {
     data class UpdateQuery(val query: String) : SearchIntent
     data object ExecuteSearch : SearchIntent
-    data class ChangeTab(val tab: SearchTab) : SearchIntent // Enum 기반 타겟팅으로 변경
+    data class ChangeTab(val tab: SearchTab) : SearchIntent
     data class ClickResultItem(val itemId: String) : SearchIntent
 }

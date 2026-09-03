@@ -17,7 +17,7 @@ import com.gentlelady.reborn.core.designsystem.navigation.BottomNavigationBar
 import com.gentlelady.reborn.feature.home.HomeScreen
 import com.gentlelady.reborn.feature.management.managementNavGraph
 import com.gentlelady.reborn.feature.memorial.memorialNavGraph // 👈 memorialNavGraph 임포트
-import com.gentlelady.reborn.feature.message.MessageScreen
+import com.gentlelady.reborn.feature.message.messageNavGraph
 import com.gentlelady.reborn.feature.myprofile.myProfileNavGraph
 import com.gentlelady.reborn.feature.search.searchNavGraph
 import com.gentlelady.reborn.feature.wreath_purchase.wreathNavGraph
@@ -135,13 +135,12 @@ fun MainScreen(
                 onIntent = onSearchIntent
             )
 
-            // 3. 메시지 화면 슬롯
-            composable("message") {
-                MessageScreen(
-                    state = messageState,
-                    onIntent = onMessageIntent
-                )
-            }
+            // 3. 메시지 화면 그래프 (메인 + 검색 2종 + 1:1 대화창)
+            messageNavGraph(
+                navController = navController,
+                state = messageState,
+                onIntent = onMessageIntent
+            )
 
             // 4. 프로필 화면 서브 그래프
             myProfileNavGraph(
