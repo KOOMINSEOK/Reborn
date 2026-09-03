@@ -1,62 +1,72 @@
 package com.gentlelady.reborn.feature.message
 
-import androidx.compose.runtime.*
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.gentlelady.reborn.data.MockDataSource
+import com.gentlelady.reborn.feature.message.components.ChatDetailScreen
+import com.gentlelady.reborn.feature.message.components.GuestBookSearchScreen
+import com.gentlelady.reborn.feature.message.components.MessageSuggestScreen
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
 import com.gentlelady.reborn.message.presentation.MessageTab
 
 /**
- * Reborn 네비게이션 규칙: App.kt의 목차 역할을 수행하기 위한 확장 함수 구조
+ * 메시지 피처 네비게이션.
+ * 메인(message) + 검색 화면 2종 + 1:1 대화창을 등록한다.
+ * 검색/대화창 화면은 하단 탭이 없는 전체 화면이며 로컬 상태로만 동작한다(프로토타입).
  */
 fun NavGraphBuilder.messageNavGraph(
-    onNavigateToChatDetail: (String) -> Unit,
-    onNavigateToGuestBookDetail: (String) -> Unit
+    navController: NavHostController,
+    state: MessageState,
+    onIntent: (MessageIntent) -> Unit
 ) {
-    composable(route = "message_main") {
-
-        // 1. 프로토타입 구동을 위해 MockDataSource를 기본값으로 품은 가변 상태(State) 선언
-        var uiState by remember {
-            mutableStateOf(
-                MessageState(
-                    currentTab = MessageTab.MESSAGE,
-                    chatRooms = MockDataSource.messageChatRooms,   // 가공해 둔 덤프 데이터 연결
-                    guestBooks = MockDataSource.messageGuestBooks  // 가공해 둔 덤프 데이터 연결
-                )
-            )
-        }
-
-        // 2. 단방향 MVI Intent 가로채기 파이프라인 (실제 앱 구동 시 작동 활성화용)
-        val onIntent: (MessageIntent) -> Unit = { intent ->
-            when (intent) {
-                is MessageIntent.SelectTab -> {
-                    // 유저가 탭을 누르면 State를 변경하여 화면 리렌더링 및 하단 파란줄 이동 트리거
-                    uiState = uiState.copy(currentTab = intent.tab)
-                }
-                is MessageIntent.UpdateSearchQuery -> {
-                    // 검색창에 글자를 치면 키보드 입력 값이 실시간 반영되도록 동적 매핑
-                    uiState = uiState.copy(searchQuery = intent.query)
-                }
-                is MessageIntent.ClickChatRoom -> {
-                    // 규칙 준수: 네비게이션 제어 로직은 하위 Screen이 아닌 NavHost 컨텍스트 람다로 밖으로 던짐
-                    onNavigateToChatDetail(intent.roomId)
-                }
-                is MessageIntent.ClickGuestBook -> {
-                    onNavigateToGuestBookDetail(intent.bookId)
-                }
-                is MessageIntent.ClickWriteAction -> {
-                    // 우상단 ic_write 버튼을 눌렀을 때의 동작 처리부
-                }
-                else -> { /* 추가 처리 필요 시 작성 */ }
-            }
-        }
-
-        // 3. 순수 Stateless UI 스크린에 바인딩
+    composable("message") {
         MessageScreen(
-            state = uiState,
-            onIntent = onIntent
+            state = state,
+            onIntent = { intent ->
+                when (intent) {
+                    is MessageIntent.ClickSearchBar -> navController.navigate(
+                        if (state.currentTab == MessageTab.MESSAGE) "message/search"
+                        else "message/guestbook_search"
+                    )
+                    is MessageIntent.ClickChatRoom -> navController.navigate("message/chat/${intent.roomId}")
+                    is MessageIntent.ClickGuestBook -> {
+                        // TODO(stub): 내가 남긴 방명록의 추모 페이지 방명록 화면으로 이동
+                    }
+                    else -> onIntent(intent)
+                }
+            }
+        )
+    }
+
+    composable("message/search") {
+        MessageSuggestScreen(
+            suggested = MockDataSource.messageSuggestedUsers,
+            onBack = { navController.popBackStack() },
+            onUserClick = {
+                // TODO(stub): 해당 사용자 프로필 화면으로 이동
+            }
+        )
+    }
+
+    composable("message/guestbook_search") {
+        GuestBookSearchScreen(
+            all = MockDataSource.messageGuestBooks,
+            onBack = { navController.popBackStack() },
+            onResultClick = {
+                // TODO(stub): 내 댓글이 있는 추모 페이지 방명록 화면으로 이동
+            }
+        )
+    }
+
+    composable("message/chat/{roomId}") { backStackEntry ->
+        val roomId = backStackEntry.arguments?.getString("roomId").orEmpty()
+        val room = MockDataSource.messageChatRooms.firstOrNull { it.id == roomId }
+        ChatDetailScreen(
+            title = room?.name ?: "대화",
+            initialMessages = MockDataSource.chatConversationOf(roomId),
+            onBack = { navController.popBackStack() }
         )
     }
 }

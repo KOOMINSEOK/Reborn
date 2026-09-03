@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -17,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,9 +31,8 @@ import org.jetbrains.compose.resources.painterResource
  */
 @Composable
 internal fun MessageTopAppBar(
-    searchQuery: String,
     currentTab: MessageTab,
-    onSearchQueryChange: (String) -> Unit,
+    onSearchClick: () -> Unit,
     onTabSelect: (MessageTab) -> Unit,
     onWriteClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -80,11 +77,10 @@ internal fun MessageTopAppBar(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 3. 커스텀 검색창 (배경색 세맨틱 컬러 매칭 및 하드코딩 완전 제거)
+        // 3. 검색창 (탭 클릭 시 전용 검색 화면으로 이동, 여기서는 입력 불가한 버튼 형태)
         MessageSearchBar(
-            value = searchQuery,
-            onValueChange = onSearchQueryChange,
             currentTab = currentTab,
+            onClick = onSearchClick,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
@@ -97,17 +93,21 @@ internal fun MessageTopAppBar(
  */
 @Composable
 private fun MessageSearchBar(
-    value: String,
-    onValueChange: (String) -> Unit,
     currentTab: MessageTab,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp),
+            .height(44.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
         shape = RoundedCornerShape(22.dp),
-        color = RebornLightBlueBg // 0xFFEFF4FF 상수 적용으로 에러 제거
+        color = RebornLightBlueBg
     ) {
         Row(
             modifier = Modifier
@@ -117,35 +117,16 @@ private fun MessageSearchBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "검색 아이콘",
+                contentDescription = "검색",
                 tint = RebornSlateGray,
                 modifier = Modifier.size(20.dp)
             )
-
             Spacer(modifier = Modifier.width(8.dp))
-
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                if (value.isEmpty()) {
-                    Text(
-                        text = if (currentTab == MessageTab.MESSAGE) "Search messages..." else "방명록 기록 검색...",
-                        fontSize = 14.sp,
-                        color = RebornSlateGray
-                    )
-                }
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    textStyle = TextStyle(
-                        fontSize = 14.sp,
-                        color = Color.Black
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            }
+            Text(
+                text = if (currentTab == MessageTab.MESSAGE) "사용자 검색..." else "방명록 기록 검색...",
+                fontSize = 14.sp,
+                color = RebornSlateGray
+            )
         }
     }
 }
@@ -272,9 +253,8 @@ private fun MessageTopAppBarMessageTabPreview() {
     MaterialTheme {
         Surface {
             MessageTopAppBar(
-                searchQuery = "",
                 currentTab = MessageTab.MESSAGE,
-                onSearchQueryChange = {},
+                onSearchClick = {},
                 onTabSelect = {},
                 onWriteClick = {}
             )
@@ -287,9 +267,8 @@ private fun MessageTopAppBarGuestBookTabPreview() {
     MaterialTheme {
         Surface {
             MessageTopAppBar(
-                searchQuery = "",
                 currentTab = MessageTab.GUEST_BOOK,
-                onSearchQueryChange = {},
+                onSearchClick = {},
                 onTabSelect = {},
                 onWriteClick = {}
             )

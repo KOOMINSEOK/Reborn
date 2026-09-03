@@ -27,6 +27,9 @@ sealed interface MessageIntent {
     // 상단 탭 전환 이벤트 (메시지 탭 <-> 방명록 탭)
     data class SelectTab(val tab: MessageTab) : MessageIntent
 
+    // 상단 검색창 클릭 이벤트 (탭에 따라 사용자 검색 / 방명록 검색 화면으로 전환)
+    data object ClickSearchBar : MessageIntent
+
     // 메시지 채팅방 아이템 클릭 이벤트 (채팅 상세방 화면 전환용)
     data class ClickChatRoom(val roomId: String) : MessageIntent
 
@@ -61,5 +64,26 @@ data class GuestBookItem(
     val deceasedName: String,       // 고인 이름 (UI 상에서 앞에 '故'가 붙고 이름 옆에 🌸가 노출됨)
     val recentContent: String,      // 방명록 내용 요약
     val relativeTime: String,       // 상대적 시간 묘사 (예: "1년 전", "방금 전")
-    val avatarUrl: String = ""      // 고인 아바타 이미지 경로 혹은 리소스 키
+    val avatarUrl: String = "",     // 고인 아바타 이미지 경로 혹은 리소스 키
+    val daysAgo: Int = 0            // 최신순 정렬 기준 (작을수록 최근)
+)
+
+/**
+ * 메시지 탭 검색 화면의 '추천 더보기' 사용자 항목
+ */
+data class SuggestedUser(
+    val id: String,
+    val name: String,
+    val handle: String,             // 예: "lee_junnnn"
+    val avatarUrl: String = ""
+)
+
+/**
+ * 1:1 대화창의 말풍선 한 개
+ */
+data class ChatMessage(
+    val id: String,
+    val text: String,
+    val isMine: Boolean,            // true면 우측 파란 말풍선, false면 좌측 회색 말풍선
+    val showAvatar: Boolean = false // 상대 말풍선 묶음의 마지막에만 아바타 노출
 )
