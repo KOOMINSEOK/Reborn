@@ -48,9 +48,13 @@ import com.gentlelady.reborn.core.theme.RebornSlateGray
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+/**
+ * 생전/사후 게시글 작성 화면. 제목만 다르고 본문 UI는 동일하다.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LivingPostWriteScreen(
+fun PostWriteScreen(
+    title: String,
     onClose: () -> Unit,
     onSubmit: () -> Unit,
     modifier: Modifier = Modifier
@@ -78,7 +82,7 @@ fun LivingPostWriteScreen(
                     }
                 },
                 title = {
-                    Text(text = "생전 게시글 작성", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text(text = title, fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 },
                 actions = {
                     TextButton(onClick = onSubmit) {
@@ -370,10 +374,10 @@ private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: D
 
 @Preview
 @Composable
-private fun LivingPostWriteScreenPreview() {
+private fun PostWriteScreenPreview() {
     MaterialTheme {
         Surface {
-            LivingPostWriteScreen(onClose = {}, onSubmit = {})
+            PostWriteScreen(title = "생전 게시글 작성", onClose = {}, onSubmit = {})
         }
     }
 }

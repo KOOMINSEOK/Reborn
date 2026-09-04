@@ -100,7 +100,9 @@ fun MainScreen(
                 "management/app_settings/support/inquiry", "management/app_settings/support/faq",
                 "management/app_settings/terms", "management/app_settings/terms/terms_of_use",
                 "management/app_settings/terms/privacy_policy", "management/app_settings/terms/withdrawal",
-                "feed_write/entry" // 바텀시트 뒤로 홈 화면의 바텀바가 그대로 보여야 하므로 유지
+                // 작성 플로우 전 화면에서 바텀바를 그대로 노출한다 (디자인 시안 기준)
+                "feed_write/entry", "feed_write/living", "feed_write/posthumous",
+                "feed_write/schedule", "feed_write/target_select"
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
