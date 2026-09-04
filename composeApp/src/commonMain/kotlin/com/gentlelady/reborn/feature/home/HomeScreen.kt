@@ -24,7 +24,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeState
 @Composable
 fun HomeScreen(
     state: HomeState,
-    onIntent: (HomeIntent) -> Unit = {}
+    onIntent: (HomeIntent) -> Unit = {},
+    onAddClick: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = RebornBackground, // 하드코딩 제거: 시맨틱 테마 컬러 적용
@@ -32,7 +33,8 @@ fun HomeScreen(
         topBar = {
             // 새로 개설한 콜백 파라미터에 HomeIntent를 매핑하여 단방향 데이터 흐름을 완성합니다.
             HomeTopAppBar(
-                onMemorialClick = { onIntent(HomeIntent.ClickMemorialIcon) }
+                onMemorialClick = { onIntent(HomeIntent.ClickMemorialIcon) },
+                onAddClick = onAddClick
             )
         }
     ) { padding ->

@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gentlelady.reborn.core.designsystem.navigation.BottomNavigationBar
+import com.gentlelady.reborn.feature.feedwrite.feedWriteNavGraph
 import com.gentlelady.reborn.feature.home.HomeScreen
 import com.gentlelady.reborn.feature.management.managementNavGraph
 import com.gentlelady.reborn.feature.memorial.memorialNavGraph // 👈 memorialNavGraph 임포트
@@ -98,7 +99,8 @@ fun MainScreen(
                 "management/app_settings", "management/app_settings/notifications", "management/app_settings/support",
                 "management/app_settings/support/inquiry", "management/app_settings/support/faq",
                 "management/app_settings/terms", "management/app_settings/terms/terms_of_use",
-                "management/app_settings/terms/privacy_policy", "management/app_settings/terms/withdrawal"
+                "management/app_settings/terms/privacy_policy", "management/app_settings/terms/withdrawal",
+                "feed_write/entry" // 바텀시트 뒤로 홈 화면의 바텀바가 그대로 보여야 하므로 유지
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
@@ -125,9 +127,13 @@ fun MainScreen(
             composable("home") {
                 HomeScreen(
                     state = homeState,
-                    onIntent = onHomeIntent
+                    onIntent = onHomeIntent,
+                    onAddClick = { navController.navigate("feed_write/entry") }
                 )
             }
+
+            // 6-1. 🆕 "+" 버튼으로 진입하는 게시글 작성 플로우
+            feedWriteNavGraph(navController = navController)
 
             // 2. 검색 화면 그래프
             searchNavGraph(
