@@ -1,4 +1,8 @@
-package com.gentlelady.reborn.feature.feedwrite
+package com.gentlelady.reborn.feedwrite.presentation
+
+import kotlinx.datetime.LocalDate
+
+enum class FeedPostType { LIVING, POSTHUMOUS }
 
 enum class ScheduleOption(val label: String) {
     ONE_DAY("1일 후"),
@@ -27,3 +31,17 @@ val MOCK_RECOMMENDED_FOLLOWERS = listOf(
     FollowerItem("4", "최수아", "@sua_choi"),
     FollowerItem("5", "정우진", "@woojin_j")
 )
+
+data class FeedWriteState(
+    val scheduleOption: ScheduleOption = ScheduleOption.ONE_WEEK,
+    val customDate: LocalDate? = null,
+    val visibility: PostVisibility = PostVisibility.FOLLOWERS,
+    val selectedFollowerIds: Set<String> = emptySet()
+)
+
+sealed interface FeedWriteIntent {
+    data class SelectScheduleOption(val option: ScheduleOption) : FeedWriteIntent
+    data class SelectCustomDate(val date: LocalDate) : FeedWriteIntent
+    data class SelectVisibility(val visibility: PostVisibility) : FeedWriteIntent
+    data class ToggleFollower(val id: String) : FeedWriteIntent
+}

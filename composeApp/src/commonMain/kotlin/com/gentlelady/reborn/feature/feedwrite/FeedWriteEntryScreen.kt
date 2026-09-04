@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.foundation.border
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,13 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.core.designsystem.components.SelectionCheckCircle
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornLightBlueBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
+import com.gentlelady.reborn.feedwrite.presentation.FeedPostType
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-enum class FeedPostType { LIVING, POSTHUMOUS }
 
 /**
  * "+" 버튼으로 진입하는 작성하기 바텀시트. 피드/리마인드 탭과 생전·사후 게시글 선택을 제공한다.
@@ -173,22 +171,7 @@ private fun PostTypeOptionRow(
             Spacer(modifier = Modifier.height(2.dp))
             Text(text = subtitle, fontSize = 12.sp, color = RebornSlateGray)
         }
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "선택됨",
-                tint = RebornCobaltBlue,
-                modifier = Modifier.size(22.dp)
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(22.dp)
-                    .clip(CircleShape)
-                    .background(Color.White)
-                    .border(width = 1.5.dp, color = RebornDividerGray, shape = CircleShape)
-            )
-        }
+        SelectionCheckCircle(isSelected = isSelected)
     }
 }
 

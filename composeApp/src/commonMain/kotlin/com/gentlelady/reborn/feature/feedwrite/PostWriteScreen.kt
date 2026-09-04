@@ -29,17 +29,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.core.designsystem.dashedBorder
 import com.gentlelady.reborn.core.platform.rememberGalleryImagePicker
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornInputBorderGray
@@ -359,17 +355,6 @@ private fun formatDuration(totalSeconds: Int): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
-}
-
-private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, strokeWidth: Dp = 2.dp): Modifier = drawBehind {
-    drawRoundRect(
-        color = color,
-        cornerRadius = CornerRadius(cornerRadius.toPx(), cornerRadius.toPx()),
-        style = Stroke(
-            width = strokeWidth.toPx(),
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f)
-        )
-    )
 }
 
 @Preview

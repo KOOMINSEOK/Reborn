@@ -37,6 +37,10 @@ import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornLightBlueBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
+import com.gentlelady.reborn.feedwrite.presentation.FeedWriteIntent
+import com.gentlelady.reborn.feedwrite.presentation.FeedWriteState
+import com.gentlelady.reborn.feedwrite.presentation.PostVisibility
+import com.gentlelady.reborn.feedwrite.presentation.ScheduleOption
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -44,7 +48,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleSettingsScreen(
-    viewModel: FeedWriteViewModel,
+    state: FeedWriteState,
+    onIntent: (FeedWriteIntent) -> Unit,
     onBack: () -> Unit,
     onEditTargets: () -> Unit,
     onComplete: () -> Unit,
@@ -106,7 +111,7 @@ fun ScheduleSettingsScreen(
                 modifier = Modifier.heightIn(max = 200.dp)
             ) {
                 items(ScheduleOption.entries.toList()) { option ->
-                    val isSelected = viewModel.scheduleOption == option
+                    val isSelected = state.scheduleOption == option
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -119,7 +124,7 @@ fun ScheduleSettingsScreen(
                                 shape = RoundedCornerShape(10.dp)
                             )
                             .clickable {
-                                viewModel.scheduleOption = option
+                                onIntent(FeedWriteIntent.SelectScheduleOption(option))
                                 showCalendar = option == ScheduleOption.CUSTOM
                             },
                         contentAlignment = Alignment.Center
@@ -137,10 +142,10 @@ fun ScheduleSettingsScreen(
             if (showCalendar) {
                 Spacer(modifier = Modifier.height(12.dp))
                 MonthCalendar(
-                    selectedDate = viewModel.customDate,
+                    selectedDate = state.customDate,
                     onCancel = { showCalendar = false },
                     onConfirm = { date ->
-                        viewModel.customDate = date
+                        onIntent(FeedWriteIntent.SelectCustomDate(date))
                         showCalendar = false
                     }
                 )
@@ -158,25 +163,25 @@ fun ScheduleSettingsScreen(
             VisibilityOptionRow(
                 icon = Icons.Filled.Public,
                 option = PostVisibility.PUBLIC,
-                selected = viewModel.visibility,
-                onSelect = { viewModel.visibility = PostVisibility.PUBLIC }
+                selected = state.visibility,
+                onSelect = { onIntent(FeedWriteIntent.SelectVisibility(PostVisibility.PUBLIC)) }
             )
             Spacer(modifier = Modifier.height(10.dp))
             VisibilityOptionRow(
                 icon = Icons.Filled.Group,
                 option = PostVisibility.FOLLOWERS,
-                selected = viewModel.visibility,
-                onSelect = { viewModel.visibility = PostVisibility.FOLLOWERS }
+                selected = state.visibility,
+                onSelect = { onIntent(FeedWriteIntent.SelectVisibility(PostVisibility.FOLLOWERS)) }
             )
             Spacer(modifier = Modifier.height(10.dp))
             VisibilityOptionRow(
                 icon = Icons.Filled.Lock,
                 option = PostVisibility.PRIVATE,
-                selected = viewModel.visibility,
-                onSelect = { viewModel.visibility = PostVisibility.PRIVATE }
+                selected = state.visibility,
+                onSelect = { onIntent(FeedWriteIntent.SelectVisibility(PostVisibility.PRIVATE)) }
             )
 
-            if (viewModel.visibility == PostVisibility.PRIVATE) {
+            if (state.visibility == PostVisibility.PRIVATE) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier
@@ -188,7 +193,7 @@ fun ScheduleSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "지정한 팔로워 ${viewModel.selectedFollowerIds.size}명에게 공개",
+                        text = "지정한 팔로워 ${state.selectedFollowerIds.size}명에게 공개",
                         fontSize = 13.sp,
                         color = Color.Black
                     )
@@ -407,7 +412,8 @@ private fun ScheduleSettingsScreenPreview() {
     MaterialTheme {
         Surface {
             ScheduleSettingsScreen(
-                viewModel = FeedWriteViewModel(),
+                state = FeedWriteState(),
+                onIntent = {},
                 onBack = {},
                 onEditTargets = {},
                 onComplete = {}
