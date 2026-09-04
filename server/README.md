@@ -44,6 +44,12 @@ DB_PASSWORD=<프로젝트 생성 시 설정한 비번>
 |---|---|---|---|
 | GET | `/health` | — | 상태 + DB 연결 여부 |
 | GET | `/me` | Bearer | 토큰의 사용자 id / email |
+| **프로필** | | | |
+| GET | `/me/profile` | Bearer | 내 프로필 (bio·avatar·is_private·팔로워/팔로잉 수) |
+| PATCH | `/me/profile` | Bearer | 부분 수정. 핸들 중복 시 409 |
+| GET | `/users/{id}` | Bearer | 공개 프로필 (`followedByMe`·`blockedByMe` 포함) |
+| GET | `/users/{id}/followers` | Bearer | 팔로워 목록 |
+| GET | `/users/{id}/following` | Bearer | 팔로잉 목록 |
 | **내 프로필 글 (posts)** | | | 인스타식. 생전/생후(`isPosthumous`) 분류 |
 | POST | `/posts` | Bearer | 글 작성 (`publishAt` 지정 시 사후 발행 예약) |
 | GET | `/posts/{id}` | Bearer | 글 상세 (`liked` 포함) |
@@ -98,7 +104,9 @@ DB 마이그레이션 `V2__auth.sql` 는 `profiles.id` 를 `auth.users` 에 FK �
 좋아요/댓글 로직은 posts·memorial_history 가 동일 구조라 `InteractionRepo` 한 클래스로 재사용한다.
 모든 카운트(`like_count`·`comment_count`·`follower_count`)는 DB 트리거가 관리 — 코드가 직접 안 건드림.
 
-마이그레이션: V1 profiles · V2 auth · V3 feed(초안) · V4 post 상호작용 · V5 모델 정리(posts↔프로필, 사람 팔로우, 히스토리 분리) · V6 방명록 · V7 차단.
+마이그레이션: V1 profiles · V2 auth · V3 feed(초안) · V4 post 상호작용 · V5 모델 정리(posts↔프로필, 사람 팔로우, 히스토리 분리) · V6 방명록 · V7 차단 · V8 프로필 bio.
+
+가입 트리거가 만드는 임시 핸들 `user_<uuid>` 는 온보딩에서 `PATCH /me/profile` 로 바꾼다.
 
 `GET /feed` 는 양방향 차단 관계인 사용자의 글을 제외한다 (내가 차단했거나 나를 차단한 경우 모두).
 

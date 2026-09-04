@@ -48,6 +48,8 @@ object SeedRunner {
                 """.trimIndent(),
                 u.id, u.email, """{"name":"${u.name}"}""",
             )
+            // 트리거가 만든 profiles 행에 bio 채우기 (핸들/이름은 트리거가 이미 설정)
+            u.bio?.let { Db.update("update profiles set bio = ? where id = ?", it, u.id) }
         }
     }
 
