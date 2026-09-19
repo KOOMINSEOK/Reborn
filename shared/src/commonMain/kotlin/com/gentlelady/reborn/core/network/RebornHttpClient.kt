@@ -6,6 +6,7 @@ import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
@@ -13,6 +14,13 @@ import kotlinx.serialization.json.Json
 
 fun createRebornHttpClient(tokenProvider: TokenProvider): HttpClient = HttpClient {
     expectSuccess = true
+
+    // 서버가 안 떠 있거나(로컬 개발), 실기기에서 10.0.2.2가 아예 연결이 안 될 때
+    // 타임아웃이 없으면 요청이 무한정 걸려 있어 mock 폴백(runCatching)까지 도달하지 못한다.
+    install(HttpTimeout) {
+        requestTimeoutMillis = 5000
+        connectTimeoutMillis = 5000
+    }
 
     install(ContentNegotiation) {
         json(Json { ignoreUnknownKeys = true })

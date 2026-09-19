@@ -52,50 +52,51 @@ internal fun PostHeader(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            modifier = Modifier.size(36.dp),
-            shape = CircleShape,
-            color = RebornSurfaceVariant
-        ) {
-            if (hasImage(post.authorAvatarUrl, post.authorProfileUrl)) {
-                RebornImage(
-                    url = post.authorAvatarUrl,
-                    fallback = post.authorProfileUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Icon(Icons.Default.Person, null, tint = RebornWhite)
+        Box(modifier = Modifier.size(36.dp)) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                shape = CircleShape,
+                color = RebornSurfaceVariant
+            ) {
+                if (hasImage(post.authorAvatarUrl, post.authorProfileUrl)) {
+                    RebornImage(
+                        url = post.authorAvatarUrl,
+                        fallback = post.authorProfileUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(Icons.Default.Person, null, tint = RebornWhite)
+                }
+            }
+
+            if (post.isPosthumous) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(16.dp)
+                        .border(width = 1.5.dp, color = RebornWhite, shape = CircleShape)
+                        .background(color = RebornCobaltBlue, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_lock),
+                        contentDescription = "Memorial Lock",
+                        tint = RebornWhite,
+                        modifier = Modifier.size(9.dp)
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.width(10.dp))
 
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = post.authorName,
-                    color = RebornTextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-
-                if (post.isPosthumous) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .background(color = RebornSoftBlue, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.ic_lock),
-                            contentDescription = "Memorial Lock",
-                            tint = RebornCobaltBlue,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
-                }
-            }
+            Text(
+                text = post.authorName,
+                color = RebornTextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = post.postedAt,
