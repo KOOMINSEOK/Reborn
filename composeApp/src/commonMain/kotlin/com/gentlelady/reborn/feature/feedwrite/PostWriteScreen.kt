@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.designsystem.dashedBorder
+import com.gentlelady.reborn.core.platform.AudioRecorderController
+import com.gentlelady.reborn.core.platform.rememberAudioRecorder
+import com.gentlelady.reborn.core.platform.rememberCameraImagePicker
+import com.gentlelady.reborn.core.platform.rememberFileImagePicker
 import com.gentlelady.reborn.core.platform.rememberGalleryImagePicker
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornInputBorderGray
@@ -57,15 +62,15 @@ fun PostWriteScreen(
 ) {
     var caption by remember { mutableStateOf("") }
     val images = remember { mutableStateListOf<ImageBitmap>() }
-    var audioDurationSeconds by remember { mutableStateOf<Int?>(null) }
+    var hasRecording by remember { mutableStateOf(false) }
+    var recordedSeconds by remember { mutableStateOf(0) }
     var showAttachSheet by remember { mutableStateOf(false) }
     var showRecordSheet by remember { mutableStateOf(false) }
 
-    // ponytail: 카메라/파일 선택은 별도 네이티브 연동이 없어 갤러리 선택기를 임시로 재사용한다.
-    // 실제 카메라 촬영/파일 탐색기 연동은 필요해지면 추가.
-    val launchGalleryPicker = rememberGalleryImagePicker(
-        onImagePicked = { bitmap -> images.add(bitmap) }
-    )
+    val audioRecorder = rememberAudioRecorder()
+    val launchGalleryPicker = rememberGalleryImagePicker(onImagePicked = { bitmap -> images.add(bitmap) })
+    val launchCameraPicker = rememberCameraImagePicker(onImagePicked = { bitmap -> images.add(bitmap) })
+    val launchFilePicker = rememberFileImagePicker(onImagePicked = { bitmap -> images.add(bitmap) })
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -115,9 +120,19 @@ fun PostWriteScreen(
                 )
             }
 
-            audioDurationSeconds?.let { seconds ->
+            if (hasRecording) {
                 Spacer(modifier = Modifier.height(12.dp))
-                RecordedAudioChip(seconds = seconds, onRemove = { audioDurationSeconds = null })
+                RecordedAudioChip(
+                    seconds = recordedSeconds,
+                    isPlaying = audioRecorder.isPlaying,
+                    onTogglePlay = {
+                        if (audioRecorder.isPlaying) audioRecorder.stopPlayback() else audioRecorder.play()
+                    },
+                    onRemove = {
+                        audioRecorder.discard()
+                        hasRecording = false
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -207,20 +222,26 @@ fun PostWriteScreen(
             },
             onPickFromCamera = {
                 showAttachSheet = false
-                launchGalleryPicker()
+                launchCameraPicker()
             },
             onPickFile = {
                 showAttachSheet = false
-                launchGalleryPicker()
+                launchFilePicker()
             }
         )
     }
 
     if (showRecordSheet) {
         VoiceRecordSheet(
-            onDismiss = { showRecordSheet = false },
+            recorder = audioRecorder,
+            onDismiss = {
+                audioRecorder.discard()
+                showRecordSheet = false
+            },
             onFinish = { seconds ->
-                audioDurationSeconds = seconds
+                audioRecorder.stopRecording()
+                recordedSeconds = seconds
+                hasRecording = true
                 showRecordSheet = false
             }
         )
@@ -228,7 +249,12 @@ fun PostWriteScreen(
 }
 
 @Composable
-private fun RecordedAudioChip(seconds: Int, onRemove: () -> Unit) {
+private fun RecordedAudioChip(
+    seconds: Int,
+    isPlaying: Boolean,
+    onTogglePlay: () -> Unit,
+    onRemove: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -237,11 +263,16 @@ private fun RecordedAudioChip(seconds: Int, onRemove: () -> Unit) {
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier.size(32.dp).clip(CircleShape).background(RebornCobaltBlue),
-            contentAlignment = Alignment.Center
+        IconButton(
+            onClick = onTogglePlay,
+            modifier = Modifier.size(32.dp).clip(CircleShape).background(RebornCobaltBlue)
         ) {
-            Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = "재생", tint = Color.White, modifier = Modifier.size(18.dp))
+            Icon(
+                imageVector = if (isPlaying) Icons.Filled.Stop else Icons.Filled.PlayArrow,
+                contentDescription = if (isPlaying) "정지" else "재생",
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
         }
         Spacer(modifier = Modifier.width(10.dp))
         Text(text = "음성 메시지", fontSize = 13.sp, color = Color.Black, modifier = Modifier.weight(1f))
@@ -302,16 +333,18 @@ private fun AttachSourceRow(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun VoiceRecordSheet(
+    recorder: AudioRecorderController,
     onDismiss: () -> Unit,
     onFinish: (seconds: Int) -> Unit
 ) {
-    var isRecording by remember { mutableStateOf(true) }
     var elapsedSeconds by remember { mutableStateOf(0) }
 
-    // ponytail: 실제 마이크 캡처는 없고 경과 시간만 표시하는 타이머 UI다.
-    // 실제 오디오 캡처가 필요해지면 플랫폼별 recorder expect/actual을 추가한다.
-    androidx.compose.runtime.LaunchedEffect(isRecording) {
-        while (isRecording) {
+    LaunchedEffect(Unit) {
+        recorder.startRecording()
+    }
+
+    LaunchedEffect(recorder.isRecording) {
+        while (recorder.isRecording) {
             delay(1000)
             elapsedSeconds += 1
         }
@@ -331,15 +364,17 @@ private fun VoiceRecordSheet(
                     Text(text = "취소", color = RebornSlateGray)
                 }
                 IconButton(
-                    onClick = { isRecording = !isRecording },
+                    onClick = {
+                        if (recorder.isRecording) recorder.stopRecording() else recorder.startRecording()
+                    },
                     modifier = Modifier
                         .size(64.dp)
                         .clip(CircleShape)
                         .background(Color(0xFFEF4444))
                 ) {
                     Icon(
-                        imageVector = if (isRecording) Icons.Filled.Stop else Icons.Filled.Mic,
-                        contentDescription = if (isRecording) "정지" else "녹음",
+                        imageVector = if (recorder.isRecording) Icons.Filled.Stop else Icons.Filled.Mic,
+                        contentDescription = if (recorder.isRecording) "정지" else "녹음",
                         tint = Color.White
                     )
                 }
