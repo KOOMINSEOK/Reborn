@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,11 +28,20 @@ import com.gentlelady.reborn.core.theme.RebornBorderLightBlue
 @Composable
 fun HomeTopAppBar(
     // 💡 [수정] 외부에서 이동 이벤트를 처리할 수 있도록 람다 콜백 함수를 파라미터로 개설합니다.
-    onMemorialClick: () -> Unit = {}
+    onMemorialClick: () -> Unit = {},
+    onAddClick: () -> Unit = {}
 ) {
     TopAppBar(
         title = { Text("Home", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold) },
         actions = {
+            IconButton(onClick = onAddClick) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "게시글 작성",
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+
             IconButton(
                 // 💡 [수정] 기념 버튼 클릭 시 주입받은 람다 이벤트를 트리거합니다.
                 onClick = onMemorialClick,

@@ -7,22 +7,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.core.designsystem.components.SearchField
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
@@ -93,39 +89,14 @@ internal fun SearchHeader(
         IconButton(onClick = onBack) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로", tint = Color.Black)
         }
-        Surface(
-            modifier = Modifier.weight(1f).height(44.dp),
-            shape = RoundedCornerShape(22.dp),
-            color = Color.White,
-            border = BorderStroke(1.5.dp, RebornCobaltBlue)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = RebornCobaltBlue, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    if (query.isEmpty()) Text(placeholder, fontSize = 14.sp, color = RebornSlateGray)
-                    BasicTextField(
-                        value = query,
-                        onValueChange = onQueryChange,
-                        singleLine = true,
-                        textStyle = TextStyle(fontSize = 14.sp, color = Color.Black),
-                        cursorBrush = SolidColor(RebornCobaltBlue),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                if (query.isNotEmpty()) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "지우기",
-                        tint = RebornSlateGray,
-                        modifier = Modifier.size(18.dp).clickable { onQueryChange("") }
-                    )
-                }
-            }
-        }
+        SearchField(
+            query = query,
+            onQueryChange = onQueryChange,
+            placeholder = placeholder,
+            backgroundColor = Color.White,
+            border = BorderStroke(1.5.dp, RebornCobaltBlue),
+            modifier = Modifier.weight(1f)
+        )
         Spacer(Modifier.width(8.dp))
     }
 }

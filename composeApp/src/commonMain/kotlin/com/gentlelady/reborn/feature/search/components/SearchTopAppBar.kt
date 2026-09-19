@@ -4,15 +4,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.gentlelady.reborn.core.designsystem.components.SearchField
 import com.gentlelady.reborn.core.theme.RebornBackgroundGray
-import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornDeepBlue
 import com.gentlelady.reborn.core.theme.RebornUnselectedGray
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -31,22 +29,12 @@ internal fun SearchTopAppBar(
             .background(Color.White)
             .padding(16.dp)
     ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("이름 혹은 ID 검색") },
-            leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = null, tint = RebornCobaltBlue)
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(24.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = RebornBackgroundGray,
-                unfocusedContainerColor = RebornBackgroundGray,
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent
-            )
+        SearchField(
+            query = query,
+            onQueryChange = onQueryChange,
+            placeholder = "이름 혹은 ID 검색",
+            backgroundColor = RebornBackgroundGray,
+            modifier = Modifier.fillMaxWidth()
         )
 
         if (showSortChips) {
