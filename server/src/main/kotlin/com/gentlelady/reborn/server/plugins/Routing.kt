@@ -41,7 +41,9 @@ fun Application.configureRouting() {
                     ?: return@get call.respond(HttpStatusCode.Unauthorized, ErrorResponse("unauthorized"))
                 call.respond(MeResponse(userId = user.id, email = user.email))
             }
-            interactionRoutes("/posts", "/post-comments", postInteractions)
+            interactionRoutes("/posts", "/post-comments", postInteractions) { viewer, id ->
+                feed.getPost(viewer, id) != null
+            }
         }
 
         feedRoutes(feed)

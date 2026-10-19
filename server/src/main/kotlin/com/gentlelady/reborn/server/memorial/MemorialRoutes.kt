@@ -23,7 +23,9 @@ fun Route.memorialRoutes(repo: MemorialRepository, historyInteractions: Interact
         memorialEndpoints(repo)
         historyEndpoints(repo)
         guestbookEndpoints(repo)
-        interactionRoutes("/history", "/history-comments", historyInteractions)
+        interactionRoutes("/history", "/history-comments", historyInteractions) { viewer, id ->
+            repo.getHistory(viewer, id) != null
+        }
     }
 }
 
@@ -32,12 +34,16 @@ private fun Route.memorialEndpoints(repo: MemorialRepository) {
         call.respond(HttpStatusCode.Created, repo.create(call.userId(), call.receive()))
     }
     get("/memorials/{id}") {
-        val memorial = repo.get(UUID.fromString(call.parameters["id"]))
+        val memorial = repo.get(call.userId(), UUID.fromString(call.parameters["id"]))
             ?: return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
         call.respond(memorial)
     }
     post("/memorials/{id}/follow") {
-        repo.follow(call.userId(), UUID.fromString(call.parameters["id"]))
+        val memorialId = UUID.fromString(call.parameters["id"])
+        if (!repo.canView(call.userId(), memorialId)) {
+            return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
+        }
+        repo.follow(call.userId(), memorialId)
         call.respond(HttpStatusCode.NoContent)
     }
     delete("/memorials/{id}/follow") {
@@ -49,13 +55,16 @@ private fun Route.memorialEndpoints(repo: MemorialRepository) {
 private fun Route.historyEndpoints(repo: MemorialRepository) {
     post("/memorials/{id}/history") {
         val memorialId = UUID.fromString(call.parameters["id"])
-        if (!repo.exists(memorialId)) {
+        if (!repo.canView(call.userId(), memorialId)) {
             return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
         }
         call.respond(HttpStatusCode.Created, repo.createHistory(memorialId, call.userId(), call.receive()))
     }
     get("/memorials/{id}/history") {
         val memorialId = UUID.fromString(call.parameters["id"])
+        if (!repo.canView(call.userId(), memorialId)) {
+            return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
+        }
         val offset = call.request.queryParameters["offset"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
         val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, MAX_LIMIT) ?: DEFAULT_LIMIT
         val items = repo.listHistory(call.userId(), memorialId, offset, limit)
@@ -75,13 +84,16 @@ private fun Route.guestbookEndpoints(repo: MemorialRepository) {
         if (message.isEmpty()) {
             return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("empty_message"))
         }
-        if (!repo.exists(memorialId)) {
+        if (!repo.canView(call.userId(), memorialId)) {
             return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
         }
         call.respond(HttpStatusCode.Created, repo.createGuestbookEntry(memorialId, call.userId(), message))
     }
     get("/memorials/{id}/guestbook") {
         val memorialId = UUID.fromString(call.parameters["id"])
+        if (!repo.canView(call.userId(), memorialId)) {
+            return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
+        }
         val offset = call.request.queryParameters["offset"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
         val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, MAX_LIMIT) ?: DEFAULT_LIMIT
         val items = repo.listGuestbook(memorialId, offset, limit)

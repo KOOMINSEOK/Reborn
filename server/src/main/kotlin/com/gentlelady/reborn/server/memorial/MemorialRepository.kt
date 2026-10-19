@@ -19,18 +19,23 @@ class MemorialRepository {
             map = ResultSet::toMemorial,
         ) ?: error("memorial insert returned nothing")
 
-    fun get(id: UUID): MemorialResponse? =
+    /** viewerId 가 볼 수 있는 추모 페이지만 ([MEMORIAL_VISIBLE]). */
+    fun get(viewerId: UUID, id: UUID): MemorialResponse? =
         Db.queryFirst(
             """
-            select id, creator_id, name, handle, bio, visibility, profile_image_url, follower_count
-            from memorials where id = ?
-            """.trimIndent(),
-            id,
+            select m.id, m.creator_id, m.name, m.handle, m.bio, m.visibility, m.profile_image_url, m.follower_count
+            from memorials m where m.id = ?
+            """.trimIndent() + MEMORIAL_VISIBLE,
+            id, viewerId, viewerId, viewerId, viewerId,
             map = ResultSet::toMemorial,
         )
 
-    fun exists(id: UUID): Boolean =
-        Db.queryFirst("select 1 from memorials where id = ?", id) { true } ?: false
+    /** 존재하고 viewerId 가 볼 수 있는가. 못 보면 존재 여부도 숨긴다(404). */
+    fun canView(viewerId: UUID, id: UUID): Boolean =
+        Db.queryFirst(
+            "select 1 from memorials m where m.id = ?" + MEMORIAL_VISIBLE,
+            id, viewerId, viewerId, viewerId, viewerId,
+        ) { true } ?: false
 
     fun follow(followerId: UUID, memorialId: UUID): Int =
         Db.update(
@@ -49,8 +54,13 @@ class MemorialRepository {
         return getHistory(authorId, UUID.fromString(id)) ?: error("history $id vanished after insert")
     }
 
+    /** 히스토리 한 건. 소속 추모 페이지를 볼 수 없으면 null. */
     fun getHistory(viewerId: UUID, id: UUID): HistoryResponse? =
-        Db.queryFirst(HISTORY_SELECT + " where h.id = ?", viewerId, id, map = ResultSet::toHistory)
+        Db.queryFirst(
+            HISTORY_SELECT + " join memorials m on m.id = h.memorial_id where h.id = ?" + MEMORIAL_VISIBLE,
+            viewerId, id, viewerId, viewerId, viewerId, viewerId,
+            map = ResultSet::toHistory,
+        )
 
     fun listHistory(viewerId: UUID, memorialId: UUID, offset: Int, limit: Int): List<HistoryResponse> =
         Db.query(
@@ -94,6 +104,26 @@ class MemorialRepository {
     fun deleteGuestbookEntry(entryId: UUID, requesterId: UUID): Int =
         Db.update("delete from guestbook_entries where id = ? and author_id = ?", entryId, requesterId)
 }
+
+/**
+ * 추모 페이지 공개 범위 (별칭 `m`). `?` 4개 = 전부 viewerId.
+ * public = 누구나 · followers = 개설자를 팔로우하는 사람 · private = 개설자만. 개설자와 양방향 차단이면 안 보인다.
+ */
+private const val MEMORIAL_VISIBLE = """
+    and (
+        m.creator_id = ?
+        or m.visibility = 'public'
+        or (
+            m.visibility = 'followers'
+            and exists(select 1 from follows f where f.follower_id = ? and f.followee_id = m.creator_id)
+        )
+    )
+    and not exists (
+        select 1 from blocks b
+        where (b.blocker_id = ? and b.blocked_id = m.creator_id)
+           or (b.blocker_id = m.creator_id and b.blocked_id = ?)
+    )
+"""
 
 /** 첫 `?` = viewerId (liked 서브쿼리). where 절 파라미터는 그 뒤에 온다. */
 private const val HISTORY_SELECT = """

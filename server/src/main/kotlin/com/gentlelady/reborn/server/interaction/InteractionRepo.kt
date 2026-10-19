@@ -16,9 +16,6 @@ class InteractionRepo(
     private val commentTable: String,
     private val parentIdCol: String,
 ) {
-    fun parentExists(id: UUID): Boolean =
-        Db.queryFirst("select 1 from $parentTable where id = ?", id) { true } ?: false
-
     fun like(userId: UUID, parentId: UUID): LikeResponse {
         Db.update(
             "insert into $likeTable ($parentIdCol, user_id) values (?, ?) on conflict do nothing",
