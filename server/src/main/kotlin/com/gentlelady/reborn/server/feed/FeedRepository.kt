@@ -75,9 +75,15 @@ class FeedRepository {
         return getPost(authorId, UUID.fromString(id)) ?: error("post $id vanished after insert")
     }
 
-    /** viewerId 관점의 게시물 한 건 (liked 플래그 포함). 차단 관계면 안 보인다. */
+    /**
+     * viewerId 관점의 게시물 한 건 (liked 플래그 포함).
+     * 작성자 본인이 아니면: 발행된 글만, 비공개 계정이면 팔로워만, 차단 관계면 안 보인다.
+     */
     fun getPost(viewerId: UUID, id: UUID): PostResponse? =
-        Db.queryFirst(POST_SELECT + " where p.id = ?" + NOT_BLOCKED, viewerId, id, viewerId, viewerId) {
+        Db.queryFirst(
+            POST_SELECT + " where p.id = ?" + POST_VISIBLE + NOT_BLOCKED,
+            viewerId, id, viewerId, viewerId, viewerId, viewerId,
+        ) {
             it.toPost("following")
         }
 
@@ -125,6 +131,20 @@ private const val POST_SELECT = """
            exists(select 1 from post_likes pl where pl.post_id = p.id and pl.user_id = ?) as liked
     from posts p
     join profiles pr on pr.id = p.author_id
+"""
+
+/** 본인 글이거나, 발행됐고 (공개 계정 또는 내가 팔로우 중). `?` 2개 = viewerId, viewerId. */
+private const val POST_VISIBLE = """
+    and (
+        p.author_id = ?
+        or (
+            p.status = 'published'
+            and (
+                pr.is_private = false
+                or exists(select 1 from follows f where f.follower_id = ? and f.followee_id = p.author_id)
+            )
+        )
+    )
 """
 
 /** 양방향 차단 제외. `?` 2개 = viewerId, viewerId. */
