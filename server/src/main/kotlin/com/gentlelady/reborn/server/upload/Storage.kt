@@ -36,8 +36,8 @@ object Storage {
      */
     fun signUpload(path: String): String {
         val req = HttpRequest.newBuilder(URI("$supabaseUrl/storage/v1/object/upload/sign/$BUCKET/$path"))
+            // sb_secret_ 키는 JWT 가 아니라 apikey 헤더로만 보낸다 (Supabase 신규 키 규약)
             .header("apikey", secretKey)
-            .header("Authorization", "Bearer $secretKey")
             .header("Content-Type", "application/json")
             .timeout(TIMEOUT)
             .POST(HttpRequest.BodyPublishers.ofString("{}"))

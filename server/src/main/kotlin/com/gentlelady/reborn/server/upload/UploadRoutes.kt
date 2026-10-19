@@ -9,6 +9,8 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -28,10 +30,9 @@ fun Route.uploadRoutes() {
             val ext = IMAGE_EXTENSIONS[call.receive<CreateUploadRequest>().contentType]
                 ?: return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("unsupported_content_type"))
             val path = "${call.userId()}/${UUID.randomUUID()}.$ext"
-            call.respond(
-                HttpStatusCode.Created,
-                UploadResponse(uploadUrl = Storage.signUpload(path), imageUrl = Storage.publicUrl(path)),
-            )
+            // 블로킹 HTTP 호출 → IO 디스패처로 격리 (Storage 지연이 요청 처리 스레드를 잡지 않게)
+            val uploadUrl = withContext(Dispatchers.IO) { Storage.signUpload(path) }
+            call.respond(HttpStatusCode.Created, UploadResponse(uploadUrl = uploadUrl, imageUrl = Storage.publicUrl(path)))
         }
     }
 }
