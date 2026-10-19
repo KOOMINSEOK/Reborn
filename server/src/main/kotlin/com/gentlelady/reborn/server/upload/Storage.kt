@@ -8,6 +8,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.Duration
 import java.util.UUID
 
 /**
@@ -19,7 +20,7 @@ object Storage {
 
     private val supabaseUrl = Env.get("SUPABASE_URL")?.takeIf { it.isNotBlank() }?.trimEnd('/')
     private val secretKey = Env.get("SUPABASE_SECRET_KEY")?.takeIf { it.isNotBlank() }
-    private val http by lazy { HttpClient.newHttpClient() }
+    private val http by lazy { HttpClient.newBuilder().connectTimeout(TIMEOUT).build() }
 
     val configured: Boolean get() = supabaseUrl != null && secretKey != null
 
@@ -29,12 +30,16 @@ object Storage {
     fun isOwnImage(userId: UUID, url: String?): Boolean =
         url == null || (supabaseUrl != null && isOwnImageUrl(supabaseUrl, userId, url))
 
-    /** `{userId}/{uuid}.{ext}` 경로에 쓸 수 있는 서명 업로드 URL (Supabase 기본 2시간 유효). */
+    /**
+     * `{userId}/{uuid}.{ext}` 경로에 쓸 수 있는 서명 업로드 URL (Supabase 기본 2시간 유효).
+     * ponytail: 사용자별 발급 횟수 제한 없음 (파일당 10MB 는 버킷이 막음). 남용 보이면 고아 파일 정리와 함께 rate limit 추가.
+     */
     fun signUpload(path: String): String {
         val req = HttpRequest.newBuilder(URI("$supabaseUrl/storage/v1/object/upload/sign/$BUCKET/$path"))
             .header("apikey", secretKey)
             .header("Authorization", "Bearer $secretKey")
             .header("Content-Type", "application/json")
+            .timeout(TIMEOUT)
             .POST(HttpRequest.BodyPublishers.ofString("{}"))
             .build()
         val res = http.send(req, HttpResponse.BodyHandlers.ofString())
@@ -44,6 +49,8 @@ object Storage {
         return "$supabaseUrl/storage/v1$relative"
     }
 }
+
+private val TIMEOUT: Duration = Duration.ofSeconds(10)
 
 /** 확장자 → 서버가 허용하는 content type. 버킷 allowed_mime_types 와 같게 유지. */
 val IMAGE_EXTENSIONS = mapOf("image/jpeg" to "jpg", "image/png" to "png", "image/webp" to "webp")
