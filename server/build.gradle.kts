@@ -23,6 +23,7 @@ tasks.test {
     environment("SEED_DEV", "")
     environment("PUBLISH_TICKER_SECONDS", "")
     environment("INTERNAL_SECRET", "")
+    environment("SUPABASE_SECRET_KEY", "")
 }
 
 dependencies {

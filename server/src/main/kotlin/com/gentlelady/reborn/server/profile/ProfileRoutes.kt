@@ -3,6 +3,7 @@ package com.gentlelady.reborn.server.profile
 import com.gentlelady.reborn.server.plugins.ErrorResponse
 import com.gentlelady.reborn.server.plugins.SUPABASE_AUTH
 import com.gentlelady.reborn.server.plugins.userId
+import com.gentlelady.reborn.server.upload.Storage
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -27,6 +28,9 @@ fun Route.profileRoutes(repo: ProfileRepository) {
         patch("/me/profile") {
             val userId = call.userId()
             val req = call.receive<UpdateProfileRequest>()
+            if (!Storage.isOwnImage(userId, req.avatarUrl)) {
+                return@patch call.respond(HttpStatusCode.BadRequest, ErrorResponse("invalid_image_url"))
+            }
             val handle = req.handle?.trim()
             if (handle != null && (handle.isEmpty() || repo.handleTaken(handle, userId))) {
                 return@patch call.respond(HttpStatusCode.Conflict, ErrorResponse("handle_taken"))

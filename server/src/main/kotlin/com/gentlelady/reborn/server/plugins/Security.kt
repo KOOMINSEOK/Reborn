@@ -61,4 +61,5 @@ fun Application.configureSecurity() {
 private const val HISTORICAL_KEYS = 10L
 private const val CACHE_HOURS = 24L
 private const val JWKS_FETCHES_PER_MINUTE = 10L
-private const val LEEWAY_SECONDS = 5L
+// 기기·서버 시계 오차 허용 (로컬 PC 가 Supabase 보다 6초 느려 갓 발급된 토큰의 iat 가 미래로 보인 적 있음)
+private const val LEEWAY_SECONDS = 60L

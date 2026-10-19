@@ -9,6 +9,7 @@ import com.gentlelady.reborn.server.memorial.MemorialRepository
 import com.gentlelady.reborn.server.memorial.memorialRoutes
 import com.gentlelady.reborn.server.profile.ProfileRepository
 import com.gentlelady.reborn.server.profile.profileRoutes
+import com.gentlelady.reborn.server.upload.uploadRoutes
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
@@ -49,5 +50,6 @@ fun Application.configureRouting() {
         feedRoutes(feed)
         memorialRoutes(memorial, historyInteractions)
         profileRoutes(profile)
+        uploadRoutes()
     }
 }
