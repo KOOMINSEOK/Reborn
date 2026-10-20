@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.gentlelady.reborn.App
 import com.gentlelady.reborn.auth.presentation.AuthViewModel
+import com.gentlelady.reborn.auth.presentation.LoginIntent
 import com.gentlelady.reborn.feature.auth.LoginScreen
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
 import com.gentlelady.reborn.home.presentation.home.HomeViewModel
@@ -120,6 +121,10 @@ fun HomeRoute() {
         notificationSettingsState = notificationSettingsState,
         onNotificationSettingsIntent = { intent -> notificationSettingsViewModel.handleIntent(intent) },
         faqState = faqState,
-        onFaqIntent = { intent -> faqViewModel.handleIntent(intent) }
+        onFaqIntent = { intent -> faqViewModel.handleIntent(intent) },
+        onSignOut = {
+            authViewModel.handleIntent(LoginIntent.SignOut)
+            skippedLogin = false // 로그인 화면으로 (둘러보기 상태였어도)
+        }
     )
 }

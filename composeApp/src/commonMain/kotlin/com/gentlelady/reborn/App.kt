@@ -67,7 +67,9 @@ fun App(
     notificationSettingsState: NotificationSettingsState,
     onNotificationSettingsIntent: (NotificationSettingsIntent) -> Unit,
     faqState: FaqState,
-    onFaqIntent: (FaqIntent) -> Unit
+    onFaqIntent: (FaqIntent) -> Unit,
+    /** 로그아웃 (설정 화면). 저장된 세션도 지운다. */
+    onSignOut: () -> Unit = {},
 ) {
     SingletonImageLoader.setSafe { context -> newRebornImageLoader(context) }
 
@@ -109,7 +111,8 @@ fun App(
                 notificationSettingsState = notificationSettingsState,
                 onNotificationSettingsIntent = onNotificationSettingsIntent,
                 faqState = faqState,
-                onFaqIntent = onFaqIntent
+                onFaqIntent = onFaqIntent,
+                onSignOut = onSignOut
             )
 
             // 2. 탭바를 숨겨야 하는 몰입형 스와이프 화면만 최상위로 유지

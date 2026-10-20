@@ -80,7 +80,8 @@ fun MainScreen(
     notificationSettingsState: NotificationSettingsState,
     onNotificationSettingsIntent: (NotificationSettingsIntent) -> Unit,
     faqState: FaqState,
-    onFaqIntent: (FaqIntent) -> Unit
+    onFaqIntent: (FaqIntent) -> Unit,
+    onSignOut: () -> Unit = {},
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -203,7 +204,8 @@ fun MainScreen(
                 notificationSettingsState = notificationSettingsState,
                 onNotificationSettingsIntent = onNotificationSettingsIntent,
                 faqState = faqState,
-                onFaqIntent = onFaqIntent
+                onFaqIntent = onFaqIntent,
+                onSignOut = onSignOut
             )
 
             // 5. 🆕 내 서브 NavHost 내부에 memorialNavGraph 추가 (바텀바 내부에서 렌더링됨)

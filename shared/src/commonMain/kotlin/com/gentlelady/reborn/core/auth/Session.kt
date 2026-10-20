@@ -15,6 +15,8 @@ data class SessionDto(
 @Serializable
 data class SessionUserDto(val id: String)
 
+/** 기기에 저장하려고 직렬화한다 ([SessionStore] → [SessionStorage]). */
+@Serializable
 data class Session(
     val accessToken: String,
     val refreshToken: String,

@@ -2,6 +2,7 @@ package com.gentlelady.reborn.core.auth.di
 
 import com.gentlelady.reborn.auth.presentation.AuthViewModel
 import com.gentlelady.reborn.core.auth.AuthRepository
+import com.gentlelady.reborn.core.auth.SessionStorage
 import com.gentlelady.reborn.core.auth.SessionStore
 import com.gentlelady.reborn.core.auth.SessionTokenProvider
 import com.gentlelady.reborn.core.auth.SupabaseAuthApi
@@ -20,7 +21,8 @@ val authModule = module {
         }
     }
     single { SupabaseAuthApi(get(named("authHttpClient"))) }
-    single { SessionStore() }
+    // 플랫폼이 SessionStorage 를 주면(Android: 암호화 파일) 로그인 유지, 없으면 메모리에만
+    single { SessionStore(getOrNull<SessionStorage>() ?: SessionStorage.None) }
     single { AuthRepository(get(), get()) }
     single<TokenProvider> { SessionTokenProvider(get(), get()) }
     factory { AuthViewModel(get(), get()) }

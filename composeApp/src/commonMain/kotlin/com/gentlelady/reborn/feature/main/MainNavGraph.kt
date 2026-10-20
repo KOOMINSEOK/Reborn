@@ -62,7 +62,8 @@ fun NavGraphBuilder.mainNavGraph(
     notificationSettingsState: NotificationSettingsState,
     onNotificationSettingsIntent: (NotificationSettingsIntent) -> Unit,
     faqState: FaqState,
-    onFaqIntent: (FaqIntent) -> Unit
+    onFaqIntent: (FaqIntent) -> Unit,
+    onSignOut: () -> Unit = {},
 ) {
     composable("main_flow") {
         MainScreen(
@@ -100,7 +101,8 @@ fun NavGraphBuilder.mainNavGraph(
             notificationSettingsState = notificationSettingsState,
             onNotificationSettingsIntent = onNotificationSettingsIntent,
             faqState = faqState,
-            onFaqIntent = onFaqIntent
+            onFaqIntent = onFaqIntent,
+                onSignOut = onSignOut
         )
     }
 }
