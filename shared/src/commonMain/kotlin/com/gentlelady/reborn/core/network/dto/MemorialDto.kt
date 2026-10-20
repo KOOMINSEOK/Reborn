@@ -68,10 +68,12 @@ fun HistoryDto.toHistoryItem(): MemorialHistoryItem = MemorialHistoryItem(
     comments = commentCount,
 )
 
-fun GuestbookEntryDto.toGuestbookItem(): MemorialGuestBookItem = MemorialGuestBookItem(
+/** [myUserId] = 로그인한 사용자 id. 같으면 내 방명록(오른쪽 말풍선). */
+fun GuestbookEntryDto.toGuestbookItem(myUserId: String?): MemorialGuestBookItem = MemorialGuestBookItem(
     id = id,
     authorName = authorName,
     authorProfileUrl = authorAvatarUrl.toAbsoluteServerUrl(),
     message = message,
     timestamp = createdAt.take(10),
+    isMine = myUserId != null && authorId == myUserId,
 )

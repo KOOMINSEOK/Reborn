@@ -5,17 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.data.MemorialMockData
 import com.gentlelady.reborn.memorial.data.MemorialRepository
+import com.gentlelady.reborn.memorial.domain.usecase.CreateGuestbookEntryUseCase
 import com.gentlelady.reborn.memorial.domain.usecase.CreateHistoryUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 
 class MemorialViewModel(
     private val repository: MemorialRepository,
     private val createHistoryUseCase: CreateHistoryUseCase,
+    private val createGuestbookEntryUseCase: CreateGuestbookEntryUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MemorialMockData.memorialState)
@@ -42,26 +43,12 @@ class MemorialViewModel(
             is MemorialIntent.ClickHistoryImage ->
                 _state.update { it.copy(selectedHistoryIndex = intent.index) }
 
-            is MemorialIntent.UpdateGuestBookInput ->
-                _state.update { it.copy(guestBookInputText = intent.text) }
-
-            is MemorialIntent.SubmitGuestBook -> {
-                _state.update { current ->
-                    if (current.guestBookInputText.isBlank()) return@update current
-                    // ponytail: 로컬 낙관 추가만. 서버 POST /memorials/{id}/guestbook 연동은 다음 브랜치.
-                    val newItem = MemorialGuestBookItem(
-                        id = "gb_${Clock.System.now().toEpochMilliseconds()}",
-                        authorName = "나",
-                        authorProfileUrl = null,
-                        message = current.guestBookInputText,
-                        timestamp = "방금 전",
-                    )
-                    current.copy(
-                        guestBookMessages = current.guestBookMessages + newItem,
-                        guestBookInputText = "",
-                    )
-                }
+            // 전송 중엔 입력을 바꾸지 않는다 (보낸 글과 입력창이 어긋나지 않게)
+            is MemorialIntent.UpdateGuestBookInput -> _state.update {
+                if (it.isSubmittingGuestBook) it else it.copy(guestBookInputText = intent.text, guestBookError = null)
             }
+
+            is MemorialIntent.SubmitGuestBook -> submitGuestBook()
 
             is MemorialIntent.ClickAddHistory ->
                 _state.update { it.copy(isWritingHistory = true, historyWriteFormState = MemorialHistoryWriteFormState()) }
@@ -82,6 +69,29 @@ class MemorialViewModel(
                 _state.update { it.copy(onlineWreathItems = listOf(intent.item) + it.onlineWreathItems) }
 
             else -> { /* 공유/음악/더보기/헌화/화환구매 등은 UI·NavGraph 에서 처리 */ }
+        }
+    }
+
+    private fun submitGuestBook() {
+        val current = _state.value
+        if (current.guestBookInputText.isBlank() || current.isSubmittingGuestBook || current.isLoading) return
+        _state.update { it.copy(isSubmittingGuestBook = true, guestBookError = null) }
+        viewModelScope.launch {
+            val result = createGuestbookEntryUseCase(current.memorialId, current.guestBookInputText)
+            _state.update {
+                // 그 사이 다른 추모관으로 바뀌었으면 결과를 섞지 않는다
+                if (it.memorialId != current.memorialId) return@update it.copy(isSubmittingGuestBook = false)
+                when (result) {
+                    is CreateGuestbookEntryUseCase.Result.Posted -> it.copy(
+                        guestBookMessages = it.guestBookMessages + result.item,
+                        guestBookInputText = "",
+                        isSubmittingGuestBook = false,
+                    )
+                    // 실패하면 입력은 그대로 둬서 다시 보낼 수 있게
+                    is CreateGuestbookEntryUseCase.Result.Failed ->
+                        it.copy(isSubmittingGuestBook = false, guestBookError = result.message)
+                }
+            }
         }
     }
 

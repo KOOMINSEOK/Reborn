@@ -17,7 +17,9 @@ data class MemorialGuestBookItem(
     val authorName: String,
     val authorProfileUrl: String?,
     val message: String,
-    val timestamp: String
+    val timestamp: String,
+    /** 내가 쓴 방명록이면 오른쪽 말풍선 */
+    val isMine: Boolean = false,
 )
 
 data class MemorialHistoryItem(
@@ -64,6 +66,8 @@ data class MemorialState(
     val onlineWreathItems: List<MemorialWreathItem> = emptyList(),
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
     val guestBookInputText: String = "",
+    val isSubmittingGuestBook: Boolean = false,
+    val guestBookError: String? = null,
     val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그
     val historyWriteFormState: MemorialHistoryWriteFormState = MemorialHistoryWriteFormState(),
     val isLoading: Boolean = false

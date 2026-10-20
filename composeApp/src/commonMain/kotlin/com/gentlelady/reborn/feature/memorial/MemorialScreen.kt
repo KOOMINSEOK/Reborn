@@ -166,6 +166,8 @@ fun MemorialScreen(
                                 onSubmitClick = {
                                     onIntent(MemorialIntent.SubmitGuestBook)
                                 },
+                                isSubmitting = state.isSubmittingGuestBook,
+                                error = state.guestBookError,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }

@@ -17,6 +17,10 @@ data class CreateHistoryDto(
     val imageUrls: List<String>,
 )
 
+/** 서버 `POST /memorials/{id}/guestbook` 요청. */
+@Serializable
+data class CreateGuestbookDto(val message: String)
+
 /** 서버 `POST /posts` 요청. publishAt(ISO-8601) 이 있으면 예약 발행. */
 @Serializable
 data class CreatePostDto(

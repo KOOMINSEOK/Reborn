@@ -39,7 +39,9 @@ internal fun MemorialGuestBookList(
     inputText: String,
     onInputTextChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSubmitting: Boolean = false,
+    error: String? = null,
 ) {
     Box(
         modifier = modifier
@@ -75,12 +77,22 @@ internal fun MemorialGuestBookList(
         }
 
         // 2. 하단 방명록 입력 바 (내 메모리얼/타인 메모리얼 구분 없이 항상 표시)
-        GuestBookInputBottomBar(
-            inputText = inputText,
-            onInputTextChange = onInputTextChange,
-            onSubmitClick = onSubmitClick,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+            error?.let { message ->
+                Text(
+                    text = message,
+                    fontSize = 12.sp,
+                    color = RebornDangerRed,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
+            GuestBookInputBottomBar(
+                inputText = inputText,
+                onInputTextChange = onInputTextChange,
+                onSubmitClick = onSubmitClick,
+                canSubmit = inputText.isNotBlank() && !isSubmitting
+            )
+        }
     }
 }
 
@@ -133,7 +145,7 @@ private fun GuestBookMessageRow(
     item: MemorialGuestBookItem,
     modifier: Modifier = Modifier
 ) {
-    val isMine = item.authorName == "나"
+    val isMine = item.isMine
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -174,6 +186,7 @@ private fun GuestBookInputBottomBar(
     inputText: String,
     onInputTextChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
+    canSubmit: Boolean,
     modifier: Modifier = Modifier
 ) {
     // 캡슐(타원) 형태 입력창만 단독으로 표시 (바깥 사각 박스/그림자 없음)
@@ -213,7 +226,7 @@ private fun GuestBookInputBottomBar(
                     ),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { onSubmitClick() }),
+                    keyboardActions = KeyboardActions(onSend = { if (canSubmit) onSubmitClick() }),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -225,11 +238,11 @@ private fun GuestBookInputBottomBar(
                 modifier = Modifier
                     .size(28.dp)
                     .background(
-                        color = if (inputText.isNotBlank()) RebornDeepBlue else RebornUnselectedGray,
+                        color = if (canSubmit) RebornDeepBlue else RebornUnselectedGray,
                         shape = CircleShape
                     )
                     .clickable(
-                        enabled = inputText.isNotBlank(),
+                        enabled = canSubmit,
                         onClick = onSubmitClick
                     ),
                 contentAlignment = Alignment.Center
@@ -251,7 +264,7 @@ private fun GuestBookInputBottomBar(
 private fun MemorialGuestBookListOtherViewPreview() {
     val dummyMessages = listOf(
         MemorialGuestBookItem("1", "지연", null, "오늘따라 너 생각이 나니 ㅋㅋ 잘 지내지?", "오늘, 10:30 AM"),
-        MemorialGuestBookItem("2", "나", null, "보고싶어 ♥", "어제, 4:15 PM")
+        MemorialGuestBookItem("2", "나", null, "보고싶어 ♥", "어제, 4:15 PM", isMine = true)
     )
 
     MaterialTheme {
