@@ -92,11 +92,7 @@ class MemorialRepository {
      */
     fun listGuestbook(memorialId: UUID, before: GuestbookCursor?, offset: Int, limit: Int): List<GuestbookEntryResponse> =
         Db.query(
-            """
-            select g.id, g.memorial_id, g.author_id, pr.display_name as author_name,
-                   pr.avatar_url as author_avatar_url, g.message, g.created_at
-            from guestbook_entries g
-            join profiles pr on pr.id = g.author_id
+            GUESTBOOK_SELECT + """
             where g.memorial_id = ?
               and (?::timestamptz is null or (g.created_at, g.id) < (?::timestamptz, ?::uuid))
             order by g.created_at desc, g.id desc
@@ -106,10 +102,64 @@ class MemorialRepository {
             map = ResultSet::toGuestbookEntry,
         )
 
+    /** [after] 보다 최신 것 [limit] 개를 최신순으로 — 아래로 스크롤해 이후 글을 이어 읽을 때. */
+    fun listGuestbookNewer(memorialId: UUID, after: GuestbookCursor, limit: Int): List<GuestbookEntryResponse> =
+        Db.query(
+            GUESTBOOK_SELECT + """
+            where g.memorial_id = ? and (g.created_at, g.id) > (?::timestamptz, ?::uuid)
+            order by g.created_at asc, g.id asc
+            limit ?
+            """.trimIndent(),
+            memorialId, after.createdAt, after.id, limit,
+            map = ResultSet::toGuestbookEntry,
+        ).reversed()
+
+    fun getGuestbookEntry(memorialId: UUID, entryId: UUID): GuestbookEntryResponse? =
+        Db.queryFirst(
+            GUESTBOOK_SELECT + " where g.memorial_id = ? and g.id = ?",
+            memorialId, entryId,
+            map = ResultSet::toGuestbookEntry,
+        )
+
+    /** 내가 남긴 방명록 (최신순, 커서). 지금 볼 수 없는 추모 페이지(비공개 전환·차단)의 글은 뺀다. */
+    fun listMyGuestbook(viewerId: UUID, before: GuestbookCursor?, limit: Int): List<MyGuestbookEntryResponse> =
+        Db.query(
+            """
+            select g.id, g.memorial_id, m.name as memorial_name, m.profile_image_url as memorial_profile_image_url,
+                   g.message, g.created_at
+            from guestbook_entries g
+            join memorials m on m.id = g.memorial_id
+            where g.author_id = ?
+            """.trimIndent() + MEMORIAL_VISIBLE + """
+              and (?::timestamptz is null or (g.created_at, g.id) < (?::timestamptz, ?::uuid))
+            order by g.created_at desc, g.id desc
+            limit ?
+            """.trimIndent(),
+            viewerId, viewerId, viewerId, viewerId, viewerId,
+            before?.createdAt, before?.createdAt, before?.id, limit,
+        ) {
+            MyGuestbookEntryResponse(
+                id = it.getString("id"),
+                memorialId = it.getString("memorial_id"),
+                memorialName = it.getString("memorial_name"),
+                memorialProfileImageUrl = it.getString("memorial_profile_image_url"),
+                message = it.getString("message"),
+                createdAt = it.getObject("created_at", OffsetDateTime::class.java).toString(),
+            )
+        }
+
     /** 본인 방명록만 삭제. 삭제된 행 수(0 = 없음 또는 남의 글). */
     fun deleteGuestbookEntry(entryId: UUID, requesterId: UUID): Int =
         Db.update("delete from guestbook_entries where id = ? and author_id = ?", entryId, requesterId)
 }
+
+/** 방명록 + 작성자 프로필. where 절은 호출부가 붙인다. */
+private const val GUESTBOOK_SELECT = """
+    select g.id, g.memorial_id, g.author_id, pr.display_name as author_name,
+           pr.avatar_url as author_avatar_url, g.message, g.created_at
+    from guestbook_entries g
+    join profiles pr on pr.id = g.author_id
+"""
 
 /**
  * 추모 페이지 공개 범위 (별칭 `m`). `?` 4개 = 전부 viewerId.
@@ -189,7 +239,8 @@ data class GuestbookCursor(val createdAt: OffsetDateTime, val id: UUID) {
             return GuestbookCursor(createdAt, UUID.fromString(id))
         }
 
-        fun after(entry: GuestbookEntryResponse) =
-            GuestbookCursor(OffsetDateTime.parse(entry.createdAt), UUID.fromString(entry.id))
+        fun after(entry: GuestbookEntryResponse) = of(entry.createdAt, entry.id)
+
+        fun of(createdAt: String, id: String) = GuestbookCursor(OffsetDateTime.parse(createdAt), UUID.fromString(id))
     }
 }

@@ -12,10 +12,20 @@ import com.gentlelady.reborn.data.MemorialMockData
 import com.gentlelady.reborn.memorial.presentation.MemorialGuestBookItem
 import com.gentlelady.reborn.memorial.presentation.MemorialHistoryItem
 import com.gentlelady.reborn.memorial.presentation.MemorialState
+import com.gentlelady.reborn.memorial.presentation.MemorialTab
 
 interface MemorialRepository {
-    /** 프로필 + 히스토리 + 방명록을 한 번에. 어느 하나라도 실패하면 통째로 mock 폴백. */
-    suspend fun getMemorial(id: String): MemorialState
+    /**
+     * 프로필 + 히스토리 + 방명록을 한 번에. 어느 하나라도 실패하면 통째로 mock 폴백.
+     * [focusGuestBookId] 가 있으면 방명록은 그 글을 가운데로 앞뒤를 받는다 (그 글이 지워졌으면 최신 페이지).
+     */
+    suspend fun getMemorial(id: String, focusGuestBookId: String? = null): MemorialState
+
+    /** 최신 방명록 한 페이지 (화면 순서) + 이전 커서. 중간을 보다가 새 글을 남겼을 때 최신으로 돌아가기용. */
+    suspend fun latestGuestbook(memorialId: String): Pair<List<MemorialGuestBookItem>, String?>
+
+    /** [cursor] 이후(최신 쪽) 방명록 한 페이지를 화면 순서로. 두 번째 값 = 다음 최신 커서(null 이면 최신까지 받음). */
+    suspend fun loadNewerGuestbook(memorialId: String, cursor: String): Pair<List<MemorialGuestBookItem>, String?>
 
     /** 사진(JPEG)을 올리고 추억 글을 만든다. 쓰기는 mock 폴백 없음 — 실패 시 예외. */
     suspend fun createHistory(memorialId: String, caption: String, image: ByteArray): MemorialHistoryItem
@@ -38,6 +48,19 @@ class MemorialRepositoryImpl(
 
     private val myUserId: String? get() = sessionStore.current?.userId
 
+    override suspend fun latestGuestbook(memorialId: String): Pair<List<MemorialGuestBookItem>, String?> {
+        val page = api.guestbook(memorialId)
+        return page.items.map { it.toGuestbookItem(myUserId) }.reversed() to page.nextCursor
+    }
+
+    override suspend fun loadNewerGuestbook(
+        memorialId: String,
+        cursor: String,
+    ): Pair<List<MemorialGuestBookItem>, String?> {
+        val page = api.guestbookNewer(memorialId, after = cursor)
+        return page.items.map { it.toGuestbookItem(myUserId) }.reversed() to page.newerCursor
+    }
+
     override suspend fun loadOlderGuestbook(
         memorialId: String,
         cursor: String,
@@ -56,10 +79,13 @@ class MemorialRepositoryImpl(
         return api.createHistory(memorialId, CreateHistoryDto(caption = caption, imageUrls = imageUrls)).toHistoryItem()
     }
 
-    override suspend fun getMemorial(id: String): MemorialState = runCatching {
+    override suspend fun getMemorial(id: String, focusGuestBookId: String?): MemorialState = runCatching {
         val profile = api.memorial(id)
         val history = api.memorialHistory(id).items
-        val guestbookPage = api.guestbook(id)
+        val guestbookPage = focusGuestBookId
+            ?.let { focus -> runCatching { api.guestbookAround(id, focus) }.getOrNull() }
+            ?: api.guestbook(id)
+        val focusFound = focusGuestBookId != null && guestbookPage.items.any { it.id == focusGuestBookId }
         val guestbook = guestbookPage.items
         MemorialState(
             memorialId = id,
@@ -68,6 +94,9 @@ class MemorialRepositoryImpl(
             // 서버는 최신순, 화면은 채팅처럼 오래된 것이 위·새 글이 아래 → 뒤집는다
             guestBookMessages = guestbook.map { it.toGuestbookItem(myUserId) }.reversed(),
             olderGuestBookCursor = guestbookPage.nextCursor,
+            newerGuestBookCursor = guestbookPage.newerCursor,
+            guestBookFocusId = focusGuestBookId?.takeIf { focusFound },
+            selectedTab = if (focusFound) MemorialTab.GUESTBOOK else MemorialTab.HISTORY,
             // 화환은 아직 서버 엔드포인트가 없어 mock 유지.
             onlineWreathItems = MemorialMockData.memorialState.onlineWreathItems,
         )

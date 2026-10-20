@@ -70,6 +70,13 @@ data class MemorialState(
     /** 더 이전 방명록을 불러올 서버 커서. null = 더 없음 (맨 위로 스크롤하면 이어서 불러온다) */
     val olderGuestBookCursor: String? = null,
     val isLoadingOlderGuestBook: Boolean = false,
+    /** 더 최신 방명록 커서. 내 방명록에서 특정 글로 이동해 들어왔을 때만 생긴다 (맨 아래로 스크롤하면 이어서) */
+    val newerGuestBookCursor: String? = null,
+    val isLoadingNewerGuestBook: Boolean = false,
+    /** 이 방명록 위치로 스크롤하고 잠깐 강조한다 (내 방명록에서 눌러 들어왔을 때) */
+    val guestBookFocusId: String? = null,
+    /** 값이 바뀔 때마다 화면이 방명록 위치를 다시 잡는다 (포커스 글 또는 맨 아래 최신 글) */
+    val guestBookScrollToken: Int = 0,
     val guestBookError: String? = null,
     val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그
     val historyWriteFormState: MemorialHistoryWriteFormState = MemorialHistoryWriteFormState(),
@@ -77,7 +84,8 @@ data class MemorialState(
 )
 
 sealed interface MemorialIntent {
-    data class LoadMemorial(val memorialId: String) : MemorialIntent
+    /** [focusGuestBookId] 가 있으면 방명록 탭을 그 글 위치로 연다 */
+    data class LoadMemorial(val memorialId: String, val focusGuestBookId: String? = null) : MemorialIntent
     object ClickBack : MemorialIntent
     object ClickShare : MemorialIntent
     object ClickMusic : MemorialIntent
@@ -87,6 +95,8 @@ sealed interface MemorialIntent {
     object SubmitGuestBook : MemorialIntent
     /** 방명록 목록 맨 위에 닿음 → 이전 글 더 불러오기 */
     object LoadOlderGuestBook : MemorialIntent
+    /** 방명록 목록 맨 아래에 닿음(특정 글로 이동해 들어온 경우) → 이후 글 더 불러오기 */
+    object LoadNewerGuestBook : MemorialIntent
     object ClickTribute : MemorialIntent
     object ClickPurchaseWreath : MemorialIntent
     data class AddOnlineWreathItem(val item: MemorialWreathItem) : MemorialIntent

@@ -10,6 +10,7 @@ import com.gentlelady.reborn.core.network.dto.GuestbookListDto
 import com.gentlelady.reborn.core.network.dto.HistoryDto
 import com.gentlelady.reborn.core.network.dto.HistoryListDto
 import com.gentlelady.reborn.core.network.dto.MemorialProfileDto
+import com.gentlelady.reborn.core.network.dto.MyGuestbookListDto
 import com.gentlelady.reborn.core.network.dto.PostDto
 import com.gentlelady.reborn.core.network.dto.UploadDto
 import io.ktor.client.HttpClient
@@ -57,6 +58,23 @@ class RebornApi(
             cursor?.let { parameter("cursor", it) }
             parameter("limit", limit)
         }.body()
+
+    /** [entryId] 방명록을 가운데로 앞뒤 글 (최신순). 내 방명록에서 눌러 그 위치로 이동할 때. */
+    suspend fun guestbookAround(id: String, entryId: String, limit: Int = GUESTBOOK_PAGE_SIZE): GuestbookListDto =
+        client.get("memorials/$id/guestbook") {
+            parameter("around", entryId)
+            parameter("limit", limit)
+        }.body()
+
+    /** [after] 커서보다 최신 글 (최신순). 아래로 스크롤해 이후 글을 이어 읽을 때. */
+    suspend fun guestbookNewer(id: String, after: String, limit: Int = GUESTBOOK_PAGE_SIZE): GuestbookListDto =
+        client.get("memorials/$id/guestbook") {
+            parameter("after", after)
+            parameter("limit", limit)
+        }.body()
+
+    suspend fun myGuestbook(cursor: String? = null): MyGuestbookListDto =
+        client.get("me/guestbook") { cursor?.let { parameter("cursor", it) } }.body()
 
     suspend fun createUpload(contentType: String): UploadDto =
         client.post("uploads") { setBody(CreateUploadDto(contentType)) }.body()

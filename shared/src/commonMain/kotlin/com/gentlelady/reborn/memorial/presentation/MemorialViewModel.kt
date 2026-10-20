@@ -24,7 +24,7 @@ class MemorialViewModel(
 
     fun onIntent(intent: MemorialIntent) {
         when (intent) {
-            is MemorialIntent.LoadMemorial -> load(intent.memorialId)
+            is MemorialIntent.LoadMemorial -> load(intent.memorialId, intent.focusGuestBookId)
 
             is MemorialIntent.ClickBack -> {
                 _state.update { current ->
@@ -52,6 +52,8 @@ class MemorialViewModel(
 
             is MemorialIntent.LoadOlderGuestBook -> loadOlderGuestBook()
 
+            is MemorialIntent.LoadNewerGuestBook -> loadNewerGuestBook()
+
             is MemorialIntent.ClickAddHistory ->
                 _state.update { it.copy(isWritingHistory = true, historyWriteFormState = MemorialHistoryWriteFormState()) }
 
@@ -71,6 +73,27 @@ class MemorialViewModel(
                 _state.update { it.copy(onlineWreathItems = listOf(intent.item) + it.onlineWreathItems) }
 
             else -> { /* 공유/음악/더보기/헌화/화환구매 등은 UI·NavGraph 에서 처리 */ }
+        }
+    }
+
+    private fun loadNewerGuestBook() {
+        val current = _state.value
+        val cursor = current.newerGuestBookCursor ?: return
+        if (current.isLoadingNewerGuestBook || current.isLoading) return
+        _state.update { it.copy(isLoadingNewerGuestBook = true) }
+        viewModelScope.launch {
+            val page = runCatching { repository.loadNewerGuestbook(current.memorialId, cursor) }.getOrNull()
+            _state.update {
+                if (it.memorialId != current.memorialId) return@update it.copy(isLoadingNewerGuestBook = false)
+                // 실패하면 목록은 그대로, 다음에 맨 아래에 닿을 때 다시 시도
+                val (newer, nextNewer) = page ?: return@update it.copy(isLoadingNewerGuestBook = false)
+                val known = it.guestBookMessages.mapTo(HashSet()) { m -> m.id }
+                it.copy(
+                    guestBookMessages = it.guestBookMessages + newer.filter { m -> m.id !in known },
+                    newerGuestBookCursor = nextNewer,
+                    isLoadingNewerGuestBook = false,
+                )
+            }
         }
     }
 
@@ -101,14 +124,25 @@ class MemorialViewModel(
         _state.update { it.copy(isSubmittingGuestBook = true, guestBookError = null) }
         viewModelScope.launch {
             val result = createGuestbookEntryUseCase(current.memorialId, current.guestBookInputText)
+            // 이후 글이 아직 남은 중간 지점을 보고 있었다면, 새 글을 붙일 자리(최신)가 화면에 없다 → 최신 페이지를 다시 받는다
+            val latest = if (result is CreateGuestbookEntryUseCase.Result.Posted && current.newerGuestBookCursor != null) {
+                runCatching { repository.latestGuestbook(current.memorialId) }.getOrNull()
+            } else {
+                null
+            }
             _state.update {
                 // 그 사이 다른 추모관으로 바뀌었으면 결과를 섞지 않는다
                 if (it.memorialId != current.memorialId) return@update it.copy(isSubmittingGuestBook = false)
                 when (result) {
                     is CreateGuestbookEntryUseCase.Result.Posted -> it.copy(
-                        guestBookMessages = it.guestBookMessages + result.item,
+                        guestBookMessages = latest?.first
+                            ?: (it.guestBookMessages + result.item).distinctBy { m -> m.id },
+                        olderGuestBookCursor = latest?.second ?: it.olderGuestBookCursor,
+                        newerGuestBookCursor = if (latest != null) null else it.newerGuestBookCursor,
                         guestBookInputText = "",
                         isSubmittingGuestBook = false,
+                        guestBookFocusId = null,
+                        guestBookScrollToken = it.guestBookScrollToken + 1, // 맨 아래(방금 쓴 글)로
                     )
                     // 실패하면 입력은 그대로 둬서 다시 보낼 수 있게
                     is CreateGuestbookEntryUseCase.Result.Failed ->
@@ -149,11 +183,11 @@ class MemorialViewModel(
         }
     }
 
-    private fun load(id: String) {
+    private fun load(id: String, focusGuestBookId: String?) {
         viewModelScope.launch {
             // id 를 먼저 바꿔 둔다 → 로딩 중 게시가 이전 추모관으로 가지 않게
             _state.update { it.copy(memorialId = id, isLoading = true) }
-            val loaded = repository.getMemorial(id)
+            val loaded = repository.getMemorial(id, focusGuestBookId)
             _state.update {
                 // 그 사이 다른 추모관 로딩이 시작됐으면 늦게 온 결과는 버린다
                 if (it.memorialId != id) return@update it
@@ -163,6 +197,11 @@ class MemorialViewModel(
                     historyItems = loaded.historyItems,
                     guestBookMessages = loaded.guestBookMessages,
                     olderGuestBookCursor = loaded.olderGuestBookCursor,
+                    newerGuestBookCursor = loaded.newerGuestBookCursor,
+                    guestBookFocusId = loaded.guestBookFocusId,
+                    guestBookScrollToken = it.guestBookScrollToken + 1,
+                    // 특정 방명록으로 들어왔으면 방명록 탭을 연다
+                    selectedTab = if (loaded.guestBookFocusId != null) MemorialTab.GUESTBOOK else it.selectedTab,
                     onlineWreathItems = loaded.onlineWreathItems,
                     selectedHistoryIndex = it.selectedHistoryIndex?.takeIf { i -> i < loaded.historyItems.size },
                     isLoading = false,
