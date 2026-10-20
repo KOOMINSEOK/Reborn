@@ -48,18 +48,21 @@ class MyProfileViewModel(
     private var profileJob: Job? = null
     /** 아바타를 바꾸기 시작할 때마다 올린다 — 그 전에 출발한 조회 응답이 새 사진을 옛 사진으로 덮지 않게 */
     private var avatarVersion = 0
+    /** 닉네임·소개를 저장하기 시작할 때마다 올린다 — 같은 이유 */
+    private var textVersion = 0
 
     /** 서버 프로필로 이름·핸들·사진·팔로워 수를 덮는다. 피드 등 나머지는 아직 목업. 실패하면 목업 그대로. */
     private fun loadServerProfile() {
         profileJob?.cancel() // 조회는 하나만 — 늦게 온 옛 응답이 덮지 않게
         val version = avatarVersion
+        val text = textVersion
         profileJob = viewModelScope.launch {
             val profile = repository.getMyProfile() ?: return@launch
             _state.update {
                 it.copy(
                     username = profile.handle,
-                    displayName = profile.displayName,
-                    bio = profile.bio.orEmpty(),
+                    displayName = if (text == textVersion) profile.displayName else it.displayName,
+                    bio = if (text == textVersion) profile.bio.orEmpty() else it.bio,
                     avatarUrl = if (version == avatarVersion) profile.avatarUrl.toAbsoluteServerUrl() else it.avatarUrl,
                     followersCount = profile.followerCount,
                     followingCount = profile.followingCount,
@@ -70,6 +73,7 @@ class MyProfileViewModel(
 
     private fun saveText(displayName: String? = null, bio: String? = null) {
         if (_state.value.isSavingProfileText) return
+        textVersion++
         _state.update { it.copy(isSavingProfileText = true, profileTextError = null) }
         viewModelScope.launch {
             val result = updateProfileTextUseCase(displayName, bio)
@@ -79,7 +83,8 @@ class MyProfileViewModel(
                         displayName = result.displayName,
                         bio = result.bio,
                         isSavingProfileText = false,
-                        profileTextSavedToken = it.profileTextSavedToken + 1,
+                        displayNameSavedToken = it.displayNameSavedToken + if (displayName != null) 1 else 0,
+                        bioSavedToken = it.bioSavedToken + if (bio != null) 1 else 0,
                     )
                     is UpdateProfileTextUseCase.Result.Failed ->
                         it.copy(isSavingProfileText = false, profileTextError = result.message)

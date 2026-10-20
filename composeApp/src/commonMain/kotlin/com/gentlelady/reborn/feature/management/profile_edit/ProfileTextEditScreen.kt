@@ -52,11 +52,14 @@ fun ProfileTextEditScreen(
     onBackClick: () -> Unit,
 ) {
     var text by remember { mutableStateOf(initialValue) }
+    // 사용자가 직접 고쳤나 — 안 고쳤으면 늦게 도착한 서버 값을 따라간다 (옛 값을 저장해 덮어쓰지 않게)
+    var dirty by remember { mutableStateOf(false) }
+    LaunchedEffect(initialValue) { if (!dirty) text = initialValue }
     val openedToken = remember { savedToken }
     LaunchedEffect(savedToken) {
         if (savedToken != openedToken) onSaved()
     }
-    val changed = text.trim() != initialValue.trim()
+    val changed = dirty && text.trim() != initialValue.trim()
 
     Scaffold(
         containerColor = RebornWhite,
@@ -92,7 +95,10 @@ fun ProfileTextEditScreen(
                 // 한도 이하이거나 글자가 줄어드는 수정은 허용 — 기존 값이 이미 한도를 넘은 경우(예: 이메일로 만든 닉네임)도 지울 수 있게
                 onValueChange = {
                     val fits = it.length <= maxLength || it.length < text.length
-                    if (fits && (!singleLine || '\n' !in it)) text = it
+                    if (fits && (!singleLine || '\n' !in it)) {
+                        text = it
+                        dirty = true
+                    }
                 },
                 enabled = !isSaving,
                 singleLine = singleLine,

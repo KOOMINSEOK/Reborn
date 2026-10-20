@@ -10,8 +10,10 @@ data class MyProfileState(
     val bio: String = "",
     val isSavingProfileText: Boolean = false,
     val profileTextError: String? = null,
-    /** 닉네임·소개 저장에 성공할 때마다 올린다 → 편집 화면이 닫힌다 */
-    val profileTextSavedToken: Int = 0,
+    /** 닉네임 저장에 성공할 때마다 올린다 → 닉네임 편집 화면이 닫힌다 (소개와 따로 — 다른 화면을 닫지 않게) */
+    val displayNameSavedToken: Int = 0,
+    /** 한 줄 소개 저장에 성공할 때마다 올린다 → 소개 편집 화면이 닫힌다 */
+    val bioSavedToken: Int = 0,
     val profileImageUrl: DrawableResource? = null, // 목업 아바타 (서버 사진이 없을 때)
     /** 서버 아바타 URL. 있으면 [profileImageUrl] 보다 우선. */
     val avatarUrl: String? = null,

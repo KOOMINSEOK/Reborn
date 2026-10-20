@@ -125,7 +125,7 @@ fun NavGraphBuilder.managementNavGraph(
             placeholder = "닉네임을 입력해주세요",
             isSaving = myProfileState.isSavingProfileText,
             error = myProfileState.profileTextError,
-            savedToken = myProfileState.profileTextSavedToken,
+            savedToken = myProfileState.displayNameSavedToken,
             onSave = { onMyProfileIntent(MyProfileIntent.SaveDisplayName(it)) },
             onSaved = { navController.popBackStack() },
             onBackClick = { navController.popBackStack() }
@@ -141,7 +141,7 @@ fun NavGraphBuilder.managementNavGraph(
             placeholder = "나를 한 줄로 소개해보세요",
             isSaving = myProfileState.isSavingProfileText,
             error = myProfileState.profileTextError,
-            savedToken = myProfileState.profileTextSavedToken,
+            savedToken = myProfileState.bioSavedToken,
             onSave = { onMyProfileIntent(MyProfileIntent.SaveBio(it)) },
             onSaved = { navController.popBackStack() },
             onBackClick = { navController.popBackStack() }
