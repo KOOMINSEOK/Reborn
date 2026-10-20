@@ -64,17 +64,28 @@ class FeedRepository {
                 .getOrElse { throw IllegalArgumentException("publishAt must be ISO-8601") }
         }
         val status = if (publishAt != null) "scheduled" else "published"
+        val requestId = req.clientRequestId?.let(UUID::fromString) // 형식 오류 → IllegalArgumentException → 400
         val id = Db.queryFirst(
             """
-            insert into posts (author_id, caption, image_urls, is_posthumous, status, publish_at)
-            values (?, ?, ?, ?, ?, ?)
+            insert into posts (author_id, caption, image_urls, is_posthumous, status, publish_at, client_request_id)
+            values (?, ?, ?, ?, ?, ?, ?)
+            on conflict (author_id, client_request_id) where client_request_id is not null do nothing
             returning id
             """.trimIndent(),
-            authorId, req.caption, req.imageUrls.toTypedArray(), req.isPosthumous, status, publishAt,
-        ) { it.getString("id") } ?: error("post insert returned nothing")
+            authorId, req.caption, req.imageUrls.toTypedArray(), req.isPosthumous, status, publishAt, requestId,
+        ) { it.getString("id") }
+            // 충돌 = 같은 키로 이미 만든 글이 있음 (응답 유실 후 재시도) → 그 글을 돌려준다
+            ?: requestId?.let { existingPostId(authorId, it) }
+            ?: error("post insert returned nothing")
 
         return getPost(authorId, UUID.fromString(id)) ?: error("post $id vanished after insert")
     }
+
+    private fun existingPostId(authorId: UUID, clientRequestId: UUID): String? =
+        Db.queryFirst(
+            "select id from posts where author_id = ? and client_request_id = ?",
+            authorId, clientRequestId,
+        ) { it.getString("id") }
 
     /**
      * viewerId 관점의 게시물 한 건 (liked 플래그 포함).
@@ -88,17 +99,17 @@ class FeedRepository {
             it.toPost("following")
         }
 
-    /** 팔로우한 사람들의 최신 게시물. */
+    /** 내 글 + 팔로우한 사람들의 최신 게시물. (내 글이 빠지면 방금 올린 글이 홈에 안 보인다) */
     fun followingFeed(viewerId: UUID, limit: Int): List<PostResponse> =
         Db.query(
             POST_SELECT + """
             where p.status = 'published'
-              and p.author_id in (select followee_id from follows where follower_id = ?)
+              and (p.author_id = ? or p.author_id in (select followee_id from follows where follower_id = ?))
             """.trimIndent() + NOT_BLOCKED + """
             order by p.created_at desc
             limit ?
             """.trimIndent(),
-            viewerId, viewerId, viewerId, viewerId, limit,
+            viewerId, viewerId, viewerId, viewerId, viewerId, limit,
         ) { it.toPost("following") }
 
     /**

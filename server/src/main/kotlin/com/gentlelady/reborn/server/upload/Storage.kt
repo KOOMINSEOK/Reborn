@@ -1,9 +1,13 @@
 package com.gentlelady.reborn.server.upload
 
 import com.gentlelady.reborn.server.Env
+import com.gentlelady.reborn.server.plugins.Db
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.putJsonArray
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -48,6 +52,36 @@ object Storage {
         val relative = Json.parseToJsonElement(res.body()).jsonObject.getValue("url").jsonPrimitive.content
         return "$supabaseUrl/storage/v1$relative"
     }
+
+    /**
+     * 모든 URL 의 객체가 실제로 있고 업로드된 지 [ATTACH_WINDOW_HOURS] 이내인가.
+     * 정리 작업은 그보다 오래된 것만 지우므로, 붙일 수 있는 사진과 지워질 수 있는 사진이 시간상 겹치지 않는다.
+     */
+    fun areAttachable(urls: List<String>): Boolean {
+        val names = urls.map { it.removePrefix(publicUrl("")) }.distinct()
+        if (names.isEmpty()) return true
+        val found = Db.queryFirst(
+            """
+            select count(*) from storage.objects
+            where bucket_id = ? and name = any(?) and created_at > now() - make_interval(hours => ?)
+            """.trimIndent(),
+            BUCKET, names.toTypedArray(), ATTACH_WINDOW_HOURS,
+        ) { it.getInt(1) } ?: 0
+        return found == names.size
+    }
+
+    /** 버킷 객체 일괄 삭제. [paths] 는 버킷 기준 경로(`{userId}/{uuid}.jpg`). */
+    fun delete(paths: List<String>) {
+        val body = buildJsonObject { putJsonArray("prefixes") { paths.forEach { add(it) } } }.toString()
+        val req = HttpRequest.newBuilder(URI("$supabaseUrl/storage/v1/object/$BUCKET"))
+            .header("apikey", secretKey)
+            .header("Content-Type", "application/json")
+            .timeout(TIMEOUT)
+            .method("DELETE", HttpRequest.BodyPublishers.ofString(body))
+            .build()
+        val res = http.send(req, HttpResponse.BodyHandlers.ofString())
+        check(res.statusCode() == 200) { "storage delete failed: ${res.statusCode()} ${res.body()}" }
+    }
 }
 
 private val TIMEOUT: Duration = Duration.ofSeconds(10)
@@ -55,10 +89,17 @@ private val TIMEOUT: Duration = Duration.ofSeconds(10)
 /** 게시글·추억 글 한 건에 붙일 수 있는 최대 이미지 수. V10 check 제약과 같게 유지. */
 const val MAX_IMAGES = 10
 
-/** 이미지 목록 검증. 문제 있으면 에러 코드, 없으면 null. */
+/** 업로드 후 글·프로필에 붙일 수 있는 시간. 고아 정리(UploadCleanupService)는 이보다 1시간 더 지난 것만 지운다. */
+const val ATTACH_WINDOW_HOURS = 23
+
+/**
+ * 이미지 목록 검증. 문제 있으면 에러 코드, 없으면 null.
+ * image_expired = 내 업로드가 맞지만 객체가 없거나 [ATTACH_WINDOW_HOURS] 지남 → 앱은 사진을 다시 올려야 한다.
+ */
 fun imageListError(userId: UUID, urls: List<String>): String? = when {
     urls.size > MAX_IMAGES -> "too_many_images"
     urls.any { !Storage.isOwnImage(userId, it) } -> "invalid_image_url"
+    !Storage.areAttachable(urls) -> "image_expired"
     else -> null
 }
 

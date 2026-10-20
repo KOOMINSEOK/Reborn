@@ -11,6 +11,8 @@ data class CreatePostRequest(
     val isPosthumous: Boolean = false,
     /** ISO-8601. 지정하면 status=scheduled (사후 발행 예약). */
     val publishAt: String? = null,
+    /** 멱등성 키(UUID). 같은 작성자가 같은 키로 다시 보내면 새 글을 만들지 않고 기존 글을 돌려준다. */
+    val clientRequestId: String? = null,
 )
 
 @Serializable

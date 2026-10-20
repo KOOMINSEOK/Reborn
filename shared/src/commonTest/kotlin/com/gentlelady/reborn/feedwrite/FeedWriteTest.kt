@@ -2,9 +2,12 @@ package com.gentlelady.reborn.feedwrite
 
 import com.gentlelady.reborn.core.network.RebornApi
 import com.gentlelady.reborn.feedwrite.data.repository.FeedWriteRepositoryImpl
+import com.gentlelady.reborn.feedwrite.domain.repository.FeedWriteRepository
+import com.gentlelady.reborn.feedwrite.domain.usecase.CreatePostUseCase
 import com.gentlelady.reborn.feedwrite.presentation.FeedPostType
 import com.gentlelady.reborn.feedwrite.presentation.FeedWriteIntent
 import com.gentlelady.reborn.feedwrite.presentation.FeedWriteReducer
+import com.gentlelady.reborn.feedwrite.presentation.FeedWriteResult
 import com.gentlelady.reborn.feedwrite.presentation.FeedWriteState
 import com.gentlelady.reborn.feedwrite.presentation.MAX_POST_IMAGES
 import com.gentlelady.reborn.feedwrite.presentation.ScheduleOption
@@ -32,6 +35,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class FeedWriteTest {
 
@@ -72,7 +76,9 @@ class FeedWriteTest {
         val images = listOf(byteArrayOf(1), byteArrayOf(2), byteArrayOf(3))
         val at = Instant.parse("2026-10-27T00:00:00Z")
 
-        FeedWriteRepositoryImpl(api).createPost(" 안녕 ", images, isPosthumous = true, publishAt = at)
+        val repo = FeedWriteRepositoryImpl(api)
+        val uploaded = repo.uploadImages(images)
+        repo.createPost("안녕", uploaded, isPosthumous = true, publishAt = at, clientRequestId = "req-1")
 
         assertEquals(3, puts.size)
         // 업로드 URL n 에는 n 번째로 발급받은 이미지가 올라가야 하고, 글에는 사진 순서대로 imageUrl 이 들어간다
@@ -84,6 +90,58 @@ class FeedWriteTest {
             assertEquals(images[i].toList(), puts.first { it.first.endsWith("/put/$n") }.second.toList())
         }
         assertEquals("2026-10-27T00:00:00Z", body.getValue("publishAt").jsonPrimitive.content)
+        assertEquals("req-1", body.getValue("clientRequestId").jsonPrimitive.content)
+    }
+
+    @Test
+    fun retryReusesUploadedImagesAndRequestId() = runTest {
+        val repo = object : FeedWriteRepository {
+            var uploads = 0
+            var postAttempts = 0
+            val requestIds = mutableListOf<String>()
+            override suspend fun uploadImages(images: List<ByteArray>): List<String> {
+                uploads++
+                return images.indices.map { "https://img/$it.jpg" }
+            }
+            override suspend fun createPost(
+                caption: String, imageUrls: List<String>, isPosthumous: Boolean, publishAt: Instant?, clientRequestId: String,
+            ) {
+                requestIds += clientRequestId
+                if (postAttempts++ == 0) error("응답 유실")
+            }
+        }
+        val useCase = CreatePostUseCase(repo)
+        var state = FeedWriteReducer.reduce(FeedWriteState(), FeedWriteIntent.AddImage(byteArrayOf(1)))
+
+        suspend fun submit() = FeedWriteReducer.reduce(
+            state,
+            useCase(state.caption, state.images, state.uploadedImageUrls, false, null, state.requestId),
+        )
+        state = submit()
+        assertEquals(listOf("https://img/0.jpg"), state.uploadedImageUrls)
+        state = submit()
+
+        assertTrue(state.isSubmitted)
+        assertEquals(1, repo.uploads)
+        assertEquals(2, repo.requestIds.size)
+        assertEquals(repo.requestIds[0], repo.requestIds[1])
+    }
+
+    @Test
+    fun editsAreIgnoredWhileSubmittingAndRotateRequestIdOtherwise() {
+        val submitting = FeedWriteReducer.reduce(FeedWriteState(caption = "a"), FeedWriteResult.Submitting)
+        assertEquals(submitting, FeedWriteReducer.reduce(submitting, FeedWriteIntent.ChangeCaption("b")))
+        assertEquals(submitting, FeedWriteReducer.reduce(submitting, FeedWriteIntent.AddImage(byteArrayOf(1))))
+
+        val idle = FeedWriteState(caption = "a")
+        assertTrue(FeedWriteReducer.reduce(idle, FeedWriteIntent.ChangeCaption("b")).requestId != idle.requestId)
+    }
+
+    @Test
+    fun changingImagesDropsUploadedUrls() {
+        val failed = FeedWriteReducer.reduce(FeedWriteState(), FeedWriteResult.SubmitFailed("x", listOf("u")))
+        assertNull(FeedWriteReducer.reduce(failed, FeedWriteIntent.RemoveImage(0)).uploadedImageUrls)
+        assertNull(FeedWriteReducer.reduce(failed, FeedWriteIntent.AddImage(byteArrayOf(1))).uploadedImageUrls)
     }
 
     @Test
