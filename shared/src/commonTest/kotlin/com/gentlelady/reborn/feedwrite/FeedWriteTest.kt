@@ -64,10 +64,11 @@ class FeedWriteTest {
                 else -> error("unexpected ${req.method} ${req.url}")
             }
         }
-        val api = RebornApi(HttpClient(engine) {
+        val apiClient = HttpClient(engine) {
             install(ContentNegotiation) { json() }
             defaultRequest { url("http://api.test/"); contentType(ContentType.Application.Json) }
-        })
+        }
+        val api = RebornApi(apiClient, uploadClient = HttpClient(engine))
         val images = listOf(byteArrayOf(1), byteArrayOf(2), byteArrayOf(3))
         val at = Instant.parse("2026-10-27T00:00:00Z")
 

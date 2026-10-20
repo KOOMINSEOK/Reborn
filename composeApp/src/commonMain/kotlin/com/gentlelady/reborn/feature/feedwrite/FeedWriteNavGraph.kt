@@ -58,6 +58,7 @@ fun NavGraphBuilder.feedWriteNavGraph(navController: NavController, onPosted: ()
         composable("feed_write/posthumous") { entry ->
             val viewModel = feedWriteViewModel(navController, entry)
             val state by viewModel.state.collectAsState()
+            CloseWhenSubmitted(state, navController, onPosted)
 
             PostWriteScreen(
                 title = "사후 게시글 작성",
@@ -85,6 +86,7 @@ fun NavGraphBuilder.feedWriteNavGraph(navController: NavController, onPosted: ()
         composable("feed_write/target_select") { entry ->
             val viewModel = feedWriteViewModel(navController, entry)
             val state by viewModel.state.collectAsState()
+            CloseWhenSubmitted(state, navController, onPosted)
 
             TargetSelectionScreen(
                 state = state,
@@ -102,6 +104,7 @@ private fun feedWriteViewModel(navController: NavController, entry: NavBackStack
     return koinViewModel(viewModelStoreOwner = parentEntry)
 }
 
+/** 업로드 중 다른 작성 화면으로 이동해도 완료되면 닫히도록, 플로우의 모든 화면에 둔다. */
 @Composable
 private fun CloseWhenSubmitted(state: FeedWriteState, navController: NavController, onPosted: () -> Unit) {
     LaunchedEffect(state.isSubmitted) {
