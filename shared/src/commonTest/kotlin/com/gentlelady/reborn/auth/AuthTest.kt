@@ -67,6 +67,19 @@ class AuthTest {
     }
 
     @Test
+    fun tokenRefreshKeepsUserIdWhenResponseOmitsUser() = runTest {
+        val store = SessionStore().apply { current = Session("OLD", "RT", expiresAtEpochSeconds = 100, userId = "u1") }
+        val refreshed = """{"access_token":"NEW","refresh_token":"RT2","expires_in":3600}"""
+        val provider = SessionTokenProvider(
+            store,
+            authApi(MockEngine { respond(refreshed, HttpStatusCode.OK, jsonHeaders) }),
+        ) { 1_000L }
+
+        provider.accessToken()
+        assertEquals("u1", store.current?.userId)
+    }
+
+    @Test
     fun tokenProviderClearsSessionWhenRefreshFails() = runTest {
         val store = SessionStore().apply { current = Session("OLD", "RT", expiresAtEpochSeconds = 100) }
         val provider = SessionTokenProvider(

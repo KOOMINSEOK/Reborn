@@ -1,9 +1,11 @@
 package com.gentlelady.reborn.core.network
 
+import com.gentlelady.reborn.core.network.dto.CreateGuestbookDto
 import com.gentlelady.reborn.core.network.dto.CreateHistoryDto
 import com.gentlelady.reborn.core.network.dto.CreatePostDto
 import com.gentlelady.reborn.core.network.dto.CreateUploadDto
 import com.gentlelady.reborn.core.network.dto.FeedDto
+import com.gentlelady.reborn.core.network.dto.GuestbookEntryDto
 import com.gentlelady.reborn.core.network.dto.GuestbookListDto
 import com.gentlelady.reborn.core.network.dto.HistoryDto
 import com.gentlelady.reborn.core.network.dto.HistoryListDto
@@ -49,9 +51,10 @@ class RebornApi(
             parameter("limit", limit)
         }.body()
 
-    suspend fun guestbook(id: String, offset: Int = 0, limit: Int = 30): GuestbookListDto =
+    /** 최신순. [cursor] = 지난 응답의 nextCursor (스크롤로 이전 글 이어 읽기). */
+    suspend fun guestbook(id: String, cursor: String? = null, limit: Int = GUESTBOOK_PAGE_SIZE): GuestbookListDto =
         client.get("memorials/$id/guestbook") {
-            parameter("offset", offset)
+            cursor?.let { parameter("cursor", it) }
             parameter("limit", limit)
         }.body()
 
@@ -73,6 +76,10 @@ class RebornApi(
 
     suspend fun createHistory(memorialId: String, req: CreateHistoryDto): HistoryDto =
         client.post("memorials/$memorialId/history") { setBody(req) }.body()
+
+    suspend fun createGuestbookEntry(memorialId: String, req: CreateGuestbookDto): GuestbookEntryDto =
+        client.post("memorials/$memorialId/guestbook") { setBody(req) }.body()
 }
 
 private const val UPLOAD_TIMEOUT_MS = 60_000L
+const val GUESTBOOK_PAGE_SIZE = 30

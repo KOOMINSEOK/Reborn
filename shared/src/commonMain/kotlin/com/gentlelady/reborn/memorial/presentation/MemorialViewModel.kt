@@ -5,17 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.data.MemorialMockData
 import com.gentlelady.reborn.memorial.data.MemorialRepository
+import com.gentlelady.reborn.memorial.domain.usecase.CreateGuestbookEntryUseCase
 import com.gentlelady.reborn.memorial.domain.usecase.CreateHistoryUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 
 class MemorialViewModel(
     private val repository: MemorialRepository,
     private val createHistoryUseCase: CreateHistoryUseCase,
+    private val createGuestbookEntryUseCase: CreateGuestbookEntryUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MemorialMockData.memorialState)
@@ -42,26 +43,14 @@ class MemorialViewModel(
             is MemorialIntent.ClickHistoryImage ->
                 _state.update { it.copy(selectedHistoryIndex = intent.index) }
 
-            is MemorialIntent.UpdateGuestBookInput ->
-                _state.update { it.copy(guestBookInputText = intent.text) }
-
-            is MemorialIntent.SubmitGuestBook -> {
-                _state.update { current ->
-                    if (current.guestBookInputText.isBlank()) return@update current
-                    // ponytail: 로컬 낙관 추가만. 서버 POST /memorials/{id}/guestbook 연동은 다음 브랜치.
-                    val newItem = MemorialGuestBookItem(
-                        id = "gb_${Clock.System.now().toEpochMilliseconds()}",
-                        authorName = "나",
-                        authorProfileUrl = null,
-                        message = current.guestBookInputText,
-                        timestamp = "방금 전",
-                    )
-                    current.copy(
-                        guestBookMessages = current.guestBookMessages + newItem,
-                        guestBookInputText = "",
-                    )
-                }
+            // 전송 중엔 입력을 바꾸지 않는다 (보낸 글과 입력창이 어긋나지 않게)
+            is MemorialIntent.UpdateGuestBookInput -> _state.update {
+                if (it.isSubmittingGuestBook) it else it.copy(guestBookInputText = intent.text, guestBookError = null)
             }
+
+            is MemorialIntent.SubmitGuestBook -> submitGuestBook()
+
+            is MemorialIntent.LoadOlderGuestBook -> loadOlderGuestBook()
 
             is MemorialIntent.ClickAddHistory ->
                 _state.update { it.copy(isWritingHistory = true, historyWriteFormState = MemorialHistoryWriteFormState()) }
@@ -82,6 +71,50 @@ class MemorialViewModel(
                 _state.update { it.copy(onlineWreathItems = listOf(intent.item) + it.onlineWreathItems) }
 
             else -> { /* 공유/음악/더보기/헌화/화환구매 등은 UI·NavGraph 에서 처리 */ }
+        }
+    }
+
+    private fun loadOlderGuestBook() {
+        val current = _state.value
+        val cursor = current.olderGuestBookCursor ?: return
+        if (current.isLoadingOlderGuestBook || current.isLoading) return
+        _state.update { it.copy(isLoadingOlderGuestBook = true) }
+        viewModelScope.launch {
+            val page = runCatching { repository.loadOlderGuestbook(current.memorialId, cursor) }.getOrNull()
+            _state.update {
+                if (it.memorialId != current.memorialId) return@update it.copy(isLoadingOlderGuestBook = false)
+                // 실패하면 목록은 그대로, 다음에 맨 위에 닿을 때 다시 시도
+                val (older, nextCursor) = page ?: return@update it.copy(isLoadingOlderGuestBook = false)
+                val known = it.guestBookMessages.mapTo(HashSet()) { m -> m.id }
+                it.copy(
+                    guestBookMessages = older.filter { m -> m.id !in known } + it.guestBookMessages,
+                    olderGuestBookCursor = nextCursor,
+                    isLoadingOlderGuestBook = false,
+                )
+            }
+        }
+    }
+
+    private fun submitGuestBook() {
+        val current = _state.value
+        if (current.guestBookInputText.isBlank() || current.isSubmittingGuestBook || current.isLoading) return
+        _state.update { it.copy(isSubmittingGuestBook = true, guestBookError = null) }
+        viewModelScope.launch {
+            val result = createGuestbookEntryUseCase(current.memorialId, current.guestBookInputText)
+            _state.update {
+                // 그 사이 다른 추모관으로 바뀌었으면 결과를 섞지 않는다
+                if (it.memorialId != current.memorialId) return@update it.copy(isSubmittingGuestBook = false)
+                when (result) {
+                    is CreateGuestbookEntryUseCase.Result.Posted -> it.copy(
+                        guestBookMessages = it.guestBookMessages + result.item,
+                        guestBookInputText = "",
+                        isSubmittingGuestBook = false,
+                    )
+                    // 실패하면 입력은 그대로 둬서 다시 보낼 수 있게
+                    is CreateGuestbookEntryUseCase.Result.Failed ->
+                        it.copy(isSubmittingGuestBook = false, guestBookError = result.message)
+                }
+            }
         }
     }
 
@@ -121,8 +154,20 @@ class MemorialViewModel(
             // id 를 먼저 바꿔 둔다 → 로딩 중 게시가 이전 추모관으로 가지 않게
             _state.update { it.copy(memorialId = id, isLoading = true) }
             val loaded = repository.getMemorial(id)
-            // 그 사이 다른 추모관 로딩이 시작됐으면 늦게 온 결과는 버린다
-            _state.update { if (it.memorialId != id) it else loaded.copy(isLoading = false) }
+            _state.update {
+                // 그 사이 다른 추모관 로딩이 시작됐으면 늦게 온 결과는 버린다
+                if (it.memorialId != id) return@update it
+                // 서버 데이터만 갈아 끼운다 — 입력 중인 방명록·작성 폼·전송 중 상태는 보존 (재로딩이 전송을 풀지 않게)
+                it.copy(
+                    profile = loaded.profile,
+                    historyItems = loaded.historyItems,
+                    guestBookMessages = loaded.guestBookMessages,
+                    olderGuestBookCursor = loaded.olderGuestBookCursor,
+                    onlineWreathItems = loaded.onlineWreathItems,
+                    selectedHistoryIndex = it.selectedHistoryIndex?.takeIf { i -> i < loaded.historyItems.size },
+                    isLoading = false,
+                )
+            }
         }
     }
 }

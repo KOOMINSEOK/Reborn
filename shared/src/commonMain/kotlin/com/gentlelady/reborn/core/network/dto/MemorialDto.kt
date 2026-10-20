@@ -47,7 +47,12 @@ data class GuestbookEntryDto(
 )
 
 @Serializable
-data class GuestbookListDto(val items: List<GuestbookEntryDto>, val nextOffset: Int? = null)
+data class GuestbookListDto(
+    val items: List<GuestbookEntryDto>,
+    val nextOffset: Int? = null,
+    /** 더 이전 글이 있으면 다음 요청의 cursor. null = 끝. */
+    val nextCursor: String? = null,
+)
 
 fun MemorialProfileDto.toProfileData(): MemorialProfileData = MemorialProfileData(
     id = id,
@@ -68,10 +73,12 @@ fun HistoryDto.toHistoryItem(): MemorialHistoryItem = MemorialHistoryItem(
     comments = commentCount,
 )
 
-fun GuestbookEntryDto.toGuestbookItem(): MemorialGuestBookItem = MemorialGuestBookItem(
+/** [myUserId] = 로그인한 사용자 id. 같으면 내 방명록(오른쪽 말풍선). */
+fun GuestbookEntryDto.toGuestbookItem(myUserId: String?): MemorialGuestBookItem = MemorialGuestBookItem(
     id = id,
     authorName = authorName,
     authorProfileUrl = authorAvatarUrl.toAbsoluteServerUrl(),
     message = message,
     timestamp = createdAt.take(10),
+    isMine = myUserId != null && authorId == myUserId,
 )

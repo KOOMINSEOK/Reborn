@@ -9,12 +9,18 @@ data class SessionDto(
     @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String,
     @SerialName("expires_in") val expiresIn: Long,
+    val user: SessionUserDto? = null,
 )
+
+@Serializable
+data class SessionUserDto(val id: String)
 
 data class Session(
     val accessToken: String,
     val refreshToken: String,
     val expiresAtEpochSeconds: Long,
+    /** 로그인한 사용자 id (Supabase auth.users.id). 내 글/방명록 판별에 쓴다. */
+    val userId: String? = null,
 ) {
     fun isExpiringSoon(nowEpochSeconds: Long): Boolean =
         nowEpochSeconds >= expiresAtEpochSeconds - REFRESH_MARGIN_SECONDS
@@ -25,4 +31,4 @@ data class Session(
 }
 
 fun SessionDto.toSession(nowEpochSeconds: Long): Session =
-    Session(accessToken, refreshToken, expiresAtEpochSeconds = nowEpochSeconds + expiresIn)
+    Session(accessToken, refreshToken, expiresAtEpochSeconds = nowEpochSeconds + expiresIn, userId = user?.id)

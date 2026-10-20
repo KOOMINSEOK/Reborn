@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.memorial
 
+import com.gentlelady.reborn.core.auth.SessionStore
 import com.gentlelady.reborn.core.network.ImageUploader
 import com.gentlelady.reborn.core.network.RebornApi
 import com.gentlelady.reborn.memorial.data.MemorialRepositoryImpl
@@ -57,7 +58,7 @@ class MemorialHistoryWriteTest {
         }
         val api = RebornApi(apiClient, uploadClient = HttpClient(engine))
 
-        val item = MemorialRepositoryImpl(api, ImageUploader(api)).createHistory("m1", "추억", byteArrayOf(7, 8))
+        val item = MemorialRepositoryImpl(api, ImageUploader(api), SessionStore()).createHistory("m1", "추억", byteArrayOf(7, 8))
 
         assertEquals(listOf<Byte>(7, 8), putBody!!.toList())
         val urls = Json.parseToJsonElement(historyBody!!).jsonObject.getValue("imageUrls").jsonArray.map { it.jsonPrimitive.content }

@@ -16,6 +16,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.distinctUntilChanged
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,7 +48,12 @@ internal fun MemorialGuestBookList(
     inputText: String,
     onInputTextChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSubmitting: Boolean = false,
+    error: String? = null,
+    hasOlder: Boolean = false,
+    isLoadingOlder: Boolean = false,
+    onLoadOlder: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -51,10 +65,45 @@ internal fun MemorialGuestBookList(
             GuestBookEmptyState(modifier = Modifier.fillMaxSize().padding(bottom = 72.dp))
         } else {
             val listState = rememberLazyListState()
+            val latestOnLoadOlder by rememberUpdatedState(onLoadOlder)
 
-            // 새 방명록이 맨 아래에 추가될 때마다 그 위치로 자동 스크롤
-            LaunchedEffect(guestBookMessages.size) {
-                listState.animateScrollToItem(guestBookMessages.lastIndex)
+            // 사용자가 손으로 한 번이라도 끌었나 — 자동 스크롤(처음 열기·새 글)이 이전 글 불러오기를 일으키지 않게
+            var userDragged by remember { mutableStateOf(false) }
+            val isDragged by listState.interactionSource.collectIsDraggedAsState()
+            LaunchedEffect(isDragged) { if (isDragged) userDragged = true }
+
+            // 맨 아래(최신) 글이 바뀔 때만 아래로 — 처음엔 바로, 새 글은 부드럽게.
+            // 대상은 지금 목록 기준으로 계산 (layoutInfo 는 아직 이전 측정값일 수 있다)
+            var scrolledOnce by remember { mutableStateOf(false) }
+            LaunchedEffect(guestBookMessages.last().id) {
+                val last = guestBookMessages.lastIndex
+                if (scrolledOnce) listState.animateScrollToItem(last) else listState.scrollToItem(last)
+                scrolledOnce = true
+            }
+
+            // 이전 글이 위에 붙으면 보던 글(직전의 맨 위 글)로 되돌려 둔다 → 읽던 위치 유지,
+            // 그리고 다시 위로 스크롤해야 다음 페이지를 부른다.
+            var prevFirstId by remember { mutableStateOf<String?>(null) }
+            LaunchedEffect(guestBookMessages.first().id) {
+                val prev = prevFirstId
+                prevFirstId = guestBookMessages.first().id
+                if (prev == null) return@LaunchedEffect
+                val index = guestBookMessages.indexOfFirst { it.id == prev }
+                if (index > 0) listState.scrollToItem(index)
+            }
+
+            // 손으로 스크롤해서 정말 맨 위(첫 글이 다 보임)에 닿으면 이전 글 불러오기.
+            // 불러오는 중엔 안 부르고, 실패하면 사용자가 내렸다 다시 올려야 재시도 (자동 재요청 루프 방지)
+            val latestIsLoadingOlder by rememberUpdatedState(isLoadingOlder)
+            LaunchedEffect(listState, hasOlder) {
+                if (!hasOlder) return@LaunchedEffect
+                snapshotFlow {
+                    userDragged && !latestIsLoadingOlder &&
+                        listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+                }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { latestOnLoadOlder() }
             }
 
             LazyColumn(
@@ -68,19 +117,38 @@ internal fun MemorialGuestBookList(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(guestBookMessages) { item ->
+                items(guestBookMessages, key = { it.id }) { item ->
                     GuestBookMessageRow(item = item)
                 }
+            }
+
+            // 로딩 표시는 목록 항목이 아니라 위에 겹쳐 그린다 — 항목으로 넣으면 인덱스가 흔들려 재요청을 부른다
+            if (isLoadingOlder) {
+                CircularProgressIndicator(
+                    color = RebornDeepBlue,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(20.dp)
+                )
             }
         }
 
         // 2. 하단 방명록 입력 바 (내 메모리얼/타인 메모리얼 구분 없이 항상 표시)
-        GuestBookInputBottomBar(
-            inputText = inputText,
-            onInputTextChange = onInputTextChange,
-            onSubmitClick = onSubmitClick,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+            error?.let { message ->
+                Text(
+                    text = message,
+                    fontSize = 12.sp,
+                    color = RebornDangerRed,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
+            GuestBookInputBottomBar(
+                inputText = inputText,
+                onInputTextChange = onInputTextChange,
+                onSubmitClick = onSubmitClick,
+                canSubmit = inputText.isNotBlank() && !isSubmitting
+            )
+        }
     }
 }
 
@@ -133,7 +201,7 @@ private fun GuestBookMessageRow(
     item: MemorialGuestBookItem,
     modifier: Modifier = Modifier
 ) {
-    val isMine = item.authorName == "나"
+    val isMine = item.isMine
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -174,6 +242,7 @@ private fun GuestBookInputBottomBar(
     inputText: String,
     onInputTextChange: (String) -> Unit,
     onSubmitClick: () -> Unit,
+    canSubmit: Boolean,
     modifier: Modifier = Modifier
 ) {
     // 캡슐(타원) 형태 입력창만 단독으로 표시 (바깥 사각 박스/그림자 없음)
@@ -213,7 +282,7 @@ private fun GuestBookInputBottomBar(
                     ),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { onSubmitClick() }),
+                    keyboardActions = KeyboardActions(onSend = { if (canSubmit) onSubmitClick() }),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -225,11 +294,11 @@ private fun GuestBookInputBottomBar(
                 modifier = Modifier
                     .size(28.dp)
                     .background(
-                        color = if (inputText.isNotBlank()) RebornDeepBlue else RebornUnselectedGray,
+                        color = if (canSubmit) RebornDeepBlue else RebornUnselectedGray,
                         shape = CircleShape
                     )
                     .clickable(
-                        enabled = inputText.isNotBlank(),
+                        enabled = canSubmit,
                         onClick = onSubmitClick
                     ),
                 contentAlignment = Alignment.Center
@@ -251,7 +320,7 @@ private fun GuestBookInputBottomBar(
 private fun MemorialGuestBookListOtherViewPreview() {
     val dummyMessages = listOf(
         MemorialGuestBookItem("1", "지연", null, "오늘따라 너 생각이 나니 ㅋㅋ 잘 지내지?", "오늘, 10:30 AM"),
-        MemorialGuestBookItem("2", "나", null, "보고싶어 ♥", "어제, 4:15 PM")
+        MemorialGuestBookItem("2", "나", null, "보고싶어 ♥", "어제, 4:15 PM", isMine = true)
     )
 
     MaterialTheme {

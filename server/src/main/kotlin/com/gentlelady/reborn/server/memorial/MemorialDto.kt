@@ -62,4 +62,9 @@ data class GuestbookEntryResponse(
 )
 
 @Serializable
-data class GuestbookListResponse(val items: List<GuestbookEntryResponse>, val nextOffset: Int? = null)
+data class GuestbookListResponse(
+    val items: List<GuestbookEntryResponse>,
+    val nextOffset: Int? = null,
+    /** 더 이전 글이 있으면 다음 요청의 ?cursor= 값. 마지막 글의 (작성 시각, id) — 그 글이 지워져도 유효. */
+    val nextCursor: String? = null,
+)
