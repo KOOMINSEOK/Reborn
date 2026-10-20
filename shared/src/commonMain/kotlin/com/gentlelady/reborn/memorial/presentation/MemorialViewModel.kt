@@ -84,7 +84,10 @@ class MemorialViewModel(
         viewModelScope.launch {
             val page = runCatching { repository.loadNewerGuestbook(current.memorialId, cursor) }.getOrNull()
             _state.update {
-                if (it.memorialId != current.memorialId) return@update it.copy(isLoadingNewerGuestBook = false)
+                // 그 사이 다른 추모관이 됐거나 목록이 통째로 바뀌었으면(최신으로 교체 등) 이 응답은 버린다
+                if (it.memorialId != current.memorialId || it.guestBookWindow != current.guestBookWindow) {
+                    return@update it.copy(isLoadingNewerGuestBook = false)
+                }
                 // 실패하면 목록은 그대로, 다음에 맨 아래에 닿을 때 다시 시도
                 val (newer, nextNewer) = page ?: return@update it.copy(isLoadingNewerGuestBook = false)
                 val known = it.guestBookMessages.mapTo(HashSet()) { m -> m.id }
@@ -105,7 +108,9 @@ class MemorialViewModel(
         viewModelScope.launch {
             val page = runCatching { repository.loadOlderGuestbook(current.memorialId, cursor) }.getOrNull()
             _state.update {
-                if (it.memorialId != current.memorialId) return@update it.copy(isLoadingOlderGuestBook = false)
+                if (it.memorialId != current.memorialId || it.guestBookWindow != current.guestBookWindow) {
+                    return@update it.copy(isLoadingOlderGuestBook = false)
+                }
                 // 실패하면 목록은 그대로, 다음에 맨 위에 닿을 때 다시 시도
                 val (older, nextCursor) = page ?: return@update it.copy(isLoadingOlderGuestBook = false)
                 val known = it.guestBookMessages.mapTo(HashSet()) { m -> m.id }
@@ -143,6 +148,8 @@ class MemorialViewModel(
                         isSubmittingGuestBook = false,
                         guestBookFocusId = null,
                         guestBookScrollToken = it.guestBookScrollToken + 1, // 맨 아래(방금 쓴 글)로
+                        // 최신 페이지로 통째로 바꿨으면 진행 중이던 페이지 응답은 무효
+                        guestBookWindow = if (latest != null) it.guestBookWindow + 1 else it.guestBookWindow,
                     )
                     // 실패하면 입력은 그대로 둬서 다시 보낼 수 있게
                     is CreateGuestbookEntryUseCase.Result.Failed ->
@@ -200,6 +207,7 @@ class MemorialViewModel(
                     newerGuestBookCursor = loaded.newerGuestBookCursor,
                     guestBookFocusId = loaded.guestBookFocusId,
                     guestBookScrollToken = it.guestBookScrollToken + 1,
+                    guestBookWindow = it.guestBookWindow + 1,
                     // 특정 방명록으로 들어왔으면 방명록 탭을 연다
                     selectedTab = if (loaded.guestBookFocusId != null) MemorialTab.GUESTBOOK else it.selectedTab,
                     onlineWreathItems = loaded.onlineWreathItems,

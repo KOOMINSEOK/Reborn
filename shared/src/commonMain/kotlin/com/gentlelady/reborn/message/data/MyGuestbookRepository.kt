@@ -1,6 +1,7 @@
 package com.gentlelady.reborn.message.data
 
 import com.gentlelady.reborn.core.network.RebornApi
+import com.gentlelady.reborn.core.network.dto.MyGuestbookEntryDto
 import com.gentlelady.reborn.core.network.dto.toAbsoluteServerUrl
 import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.message.presentation.GuestBookItem
@@ -14,9 +15,16 @@ class MyGuestbookRepositoryImpl(
     private val api: RebornApi,
 ) : MyGuestbookRepository {
 
-    // ponytail: 최신 30개만. 메시지 탭에서도 더 보기가 필요해지면 nextCursor 로 이어 받는다.
+    // ponytail: 끝까지 한 번에 이어 받는다 (최대 MAX_MY_GUESTBOOKS). 수백 개를 넘게 쓰는 사용자가 생기면 화면 무한 스크롤로.
     override suspend fun getMyGuestbooks(): List<GuestBookItem> = runCatching {
-        api.myGuestbook().items.map {
+        val all = mutableListOf<MyGuestbookEntryDto>()
+        var cursor: String? = null
+        do {
+            val page = api.myGuestbook(cursor)
+            all += page.items
+            cursor = page.nextCursor
+        } while (cursor != null && all.size < MAX_MY_GUESTBOOKS)
+        all.map {
             GuestBookItem(
                 id = it.id,
                 deceasedName = it.memorialName,
@@ -28,3 +36,5 @@ class MyGuestbookRepositoryImpl(
         }
     }.getOrElse { MockDataSource.messageGuestBooks }
 }
+
+private const val MAX_MY_GUESTBOOKS = 500

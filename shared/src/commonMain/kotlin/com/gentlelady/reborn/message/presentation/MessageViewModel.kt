@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel // 🔔 androidx.lifecycle 버전 ViewModel 
 import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.message.data.MyGuestbookRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,9 +32,12 @@ class MessageViewModel(
         loadMyGuestBooks()
     }
 
-    /** 내가 남긴 방명록을 서버에서 (방명록 탭을 열 때마다 새로 — 다른 화면에서 쓴 글 반영) */
+    private var myGuestBooksJob: Job? = null
+
+    /** 내가 남긴 방명록을 서버에서 (방명록 탭을 열 때마다 새로 — 다른 화면에서 쓴 글 반영). 늦게 온 옛 응답이 덮지 않게 이전 요청은 취소 */
     private fun loadMyGuestBooks() {
-        viewModelScope.launch {
+        myGuestBooksJob?.cancel()
+        myGuestBooksJob = viewModelScope.launch {
             val books = myGuestbookRepository.getMyGuestbooks()
             _state.update { it.copy(guestBooks = books) }
         }

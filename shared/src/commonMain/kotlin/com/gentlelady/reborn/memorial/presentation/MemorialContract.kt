@@ -77,6 +77,8 @@ data class MemorialState(
     val guestBookFocusId: String? = null,
     /** 값이 바뀔 때마다 화면이 방명록 위치를 다시 잡는다 (포커스 글 또는 맨 아래 최신 글) */
     val guestBookScrollToken: Int = 0,
+    /** 방명록 목록을 통째로 바꿀 때마다 올린다. 그 전에 출발한 이전/이후 페이지 응답은 버린다 (순서·커서 꼬임 방지) */
+    val guestBookWindow: Int = 0,
     val guestBookError: String? = null,
     val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그
     val historyWriteFormState: MemorialHistoryWriteFormState = MemorialHistoryWriteFormState(),

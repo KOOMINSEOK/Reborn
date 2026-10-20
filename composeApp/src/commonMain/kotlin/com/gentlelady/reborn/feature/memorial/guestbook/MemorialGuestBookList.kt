@@ -117,10 +117,11 @@ internal fun MemorialGuestBookList(
             val latestIsLoadingNewer by rememberUpdatedState(isLoadingNewer)
             LaunchedEffect(listState, hasNewer) {
                 if (!hasNewer) return@LaunchedEffect
-                snapshotFlow { userDragged && !latestIsLoadingNewer && !listState.canScrollForward }
+                // 경계(맨 아래) 변화만 본다 — 로딩 상태를 조건에 넣으면 실패 직후 다시 true 가 되어 자동 재요청 루프가 된다
+                snapshotFlow { userDragged && !listState.canScrollForward }
                     .distinctUntilChanged()
                     .filter { it }
-                    .collect { latestOnLoadNewer() }
+                    .collect { if (!latestIsLoadingNewer) latestOnLoadNewer() }
             }
 
             // 손으로 스크롤해서 정말 맨 위(첫 글이 다 보임)에 닿으면 이전 글 불러오기.
@@ -128,15 +129,17 @@ internal fun MemorialGuestBookList(
             val latestIsLoadingOlder by rememberUpdatedState(isLoadingOlder)
             LaunchedEffect(listState, hasOlder) {
                 if (!hasOlder) return@LaunchedEffect
+                // 경계(맨 위) 변화만 본다 — 실패하면 사용자가 벗어났다 다시 닿아야 재시도
                 snapshotFlow {
-                    userDragged && !latestIsLoadingOlder &&
-                        listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+                    userDragged && listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
                 }
                     .distinctUntilChanged()
                     .filter { it }
                     .collect {
-                        expectingOlder = true
-                        latestOnLoadOlder()
+                        if (!latestIsLoadingOlder) {
+                            expectingOlder = true
+                            latestOnLoadOlder()
+                        }
                     }
             }
 
