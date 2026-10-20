@@ -28,6 +28,8 @@ class MemorialViewModel(
             is MemorialIntent.ClickBack -> {
                 _state.update { current ->
                     when {
+                        // 게시 중엔 작성 화면을 못 닫는다 (닫았다 다시 열면 완료 결과가 새 초안을 덮어쓴다)
+                        current.isWritingHistory && current.historyWriteFormState.isPosting -> current
                         current.isWritingHistory -> current.copy(isWritingHistory = false)
                         current.selectedHistoryIndex != null -> current.copy(selectedHistoryIndex = null)
                         else -> current
@@ -73,7 +75,8 @@ class MemorialViewModel(
 
             is MemorialIntent.ClickPostHistory -> postHistory()
 
-            is MemorialIntent.ClickCloseHistoryWrite -> _state.update { it.copy(isWritingHistory = false) }
+            is MemorialIntent.ClickCloseHistoryWrite ->
+                _state.update { if (it.historyWriteFormState.isPosting) it else it.copy(isWritingHistory = false) }
 
             is MemorialIntent.AddOnlineWreathItem ->
                 _state.update { it.copy(onlineWreathItems = listOf(intent.item) + it.onlineWreathItems) }
@@ -92,11 +95,14 @@ class MemorialViewModel(
         val current = _state.value
         val form = current.historyWriteFormState
         val image = form.image ?: return
-        if (form.isPosting) return
+        // 불러오는 중이면 memorialId 가 아직 화면의 추모관과 다를 수 있다
+        if (form.isPosting || current.isLoading) return
         _state.update { it.copy(historyWriteFormState = form.copy(isPosting = true, error = null)) }
         viewModelScope.launch {
             when (val result = createHistoryUseCase(current.memorialId, form.caption, image)) {
                 is CreateHistoryUseCase.Result.Posted -> _state.update {
+                    // 그 사이 다른 추모관으로 바뀌었으면 결과를 섞지 않는다 (글은 원래 추모관에 저장돼 있다)
+                    if (it.memorialId != current.memorialId) return@update it
                     it.copy(
                         historyItems = listOf(result.item) + it.historyItems,
                         isWritingHistory = false,
@@ -112,9 +118,11 @@ class MemorialViewModel(
 
     private fun load(id: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            // id 를 먼저 바꿔 둔다 → 로딩 중 게시가 이전 추모관으로 가지 않게
+            _state.update { it.copy(memorialId = id, isLoading = true) }
             val loaded = repository.getMemorial(id)
-            _state.update { loaded.copy(isLoading = false) }
+            // 그 사이 다른 추모관 로딩이 시작됐으면 늦게 온 결과는 버린다
+            _state.update { if (it.memorialId != id) it else loaded.copy(isLoading = false) }
         }
     }
 }
