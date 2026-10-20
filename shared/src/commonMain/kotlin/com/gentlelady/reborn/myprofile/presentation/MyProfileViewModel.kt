@@ -6,6 +6,7 @@ import com.gentlelady.reborn.core.network.dto.toAbsoluteServerUrl
 import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.myprofile.data.MyProfileRepository
 import com.gentlelady.reborn.myprofile.domain.usecase.UpdateAvatarUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,15 +40,21 @@ class MyProfileViewModel(
         }
     }
 
+    private var profileJob: Job? = null
+    /** 아바타를 바꾸기 시작할 때마다 올린다 — 그 전에 출발한 조회 응답이 새 사진을 옛 사진으로 덮지 않게 */
+    private var avatarVersion = 0
+
     /** 서버 프로필로 이름·핸들·사진·팔로워 수를 덮는다. 피드 등 나머지는 아직 목업. 실패하면 목업 그대로. */
     private fun loadServerProfile() {
-        viewModelScope.launch {
+        profileJob?.cancel() // 조회는 하나만 — 늦게 온 옛 응답이 덮지 않게
+        val version = avatarVersion
+        profileJob = viewModelScope.launch {
             val profile = repository.getMyProfile() ?: return@launch
             _state.update {
                 it.copy(
                     username = profile.handle,
                     displayName = profile.displayName,
-                    avatarUrl = profile.avatarUrl.toAbsoluteServerUrl(),
+                    avatarUrl = if (version == avatarVersion) profile.avatarUrl.toAbsoluteServerUrl() else it.avatarUrl,
                     followersCount = profile.followerCount,
                     followingCount = profile.followingCount,
                 )
@@ -57,6 +64,7 @@ class MyProfileViewModel(
 
     private fun changeAvatar(jpeg: ByteArray) {
         if (_state.value.isUpdatingAvatar) return
+        avatarVersion++
         _state.update { it.copy(isUpdatingAvatar = true, avatarError = null) }
         viewModelScope.launch {
             val result = updateAvatarUseCase(jpeg)
@@ -77,6 +85,9 @@ class MyProfileViewModel(
                 username = MockDataSource.myProfileUsername,
                 displayName = MockDataSource.myProfileDisplayName,
                 profileImageUrl = MockDataSource.myProfileImage,
+                // 서버에서 받은 사진은 비운다 — 다른 계정으로 바뀌었는데 이전 사람 사진이 남지 않게 (서버 조회가 다시 채움)
+                avatarUrl = null,
+                avatarError = null,
                 backgroundImageUrl = MockDataSource.myProfileBgImage,
                 posthumousFeedCount = MockDataSource.posthumousFeedCount,
                 followersCount = MockDataSource.followersCount,
