@@ -14,8 +14,7 @@ fun PostDto.toHomePost(): HomePost = HomePost(
     id = id,
     authorName = authorName,
     authorAvatarUrl = authorAvatarUrl.toAbsoluteServerUrl(),
-    // ponytail: UI 가 아직 단일 이미지 — 첫 장만. 캐러셀 붙일 때 HomePost 를 목록으로.
-    imageUrl = imageUrls.firstOrNull().toAbsoluteServerUrl(),
+    imageUrls = imageUrls.mapNotNull { it.toAbsoluteServerUrl() },
     caption = caption,
     isPosthumous = isPosthumous,
     isLocked = isPosthumous,

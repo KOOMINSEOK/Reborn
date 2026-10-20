@@ -38,10 +38,12 @@ import com.gentlelady.reborn.core.theme.RebornUnselectedGray
 import com.gentlelady.reborn.ic_image_add
 import com.gentlelady.reborn.memorial.presentation.MemorialHistoryWriteFormState
 import com.gentlelady.reborn.memorial.presentation.MemorialIntent
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.decodeToImageBitmap
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
 fun MemorialHistoryWriteScreen(
     formState: MemorialHistoryWriteFormState,
@@ -49,7 +51,8 @@ fun MemorialHistoryWriteScreen(
     modifier: Modifier = Modifier
 ) {
     val launchGalleryPicker = rememberGalleryImagePicker(
-        onImagePicked = { bitmap -> onIntent(MemorialIntent.UpdateHistoryWriteImage(bitmap)) }
+        // 추억 글 작성은 아직 서버 미연동(로컬 표시만) → 받은 JPEG 를 바로 비트맵으로 풀어 기존 흐름 유지
+        onImagePicked = { jpeg -> onIntent(MemorialIntent.UpdateHistoryWriteImage(jpeg.decodeToImageBitmap())) }
     )
 
     Scaffold(

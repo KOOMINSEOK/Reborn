@@ -135,7 +135,7 @@ fun MemorialScreen(
                             ImageGridAlbum(
                                 images = state.historyItems.mapNotNull { item ->
                                     val bitmap = item.imageBitmap
-                                    val url = item.imageUrl
+                                    val url = item.imageUrls.firstOrNull()
                                     val res = item.imageRes
                                     when {
                                         bitmap != null -> GridImageSource.Bitmap(bitmap)

@@ -135,7 +135,10 @@ fun MainScreen(
             }
 
             // 6-1. 🆕 "+" 버튼으로 진입하는 게시글 작성 플로우
-            feedWriteNavGraph(navController = navController)
+            feedWriteNavGraph(
+                navController = navController,
+                onPosted = { onHomeIntent(HomeIntent.LoadFeed) }
+            )
 
             // 2. 검색 화면 그래프
             searchNavGraph(

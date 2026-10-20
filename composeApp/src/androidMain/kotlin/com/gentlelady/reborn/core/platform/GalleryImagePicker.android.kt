@@ -7,12 +7,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-actual fun rememberGalleryImagePicker(onImagePicked: (ImageBitmap) -> Unit): () -> Unit {
+actual fun rememberGalleryImagePicker(onImagePicked: (ByteArray) -> Unit): () -> Unit {
     val context = LocalContext.current
     val latestOnImagePicked by rememberUpdatedState(onImagePicked)
 
@@ -22,7 +20,7 @@ actual fun rememberGalleryImagePicker(onImagePicked: (ImageBitmap) -> Unit): () 
         if (uri != null) {
             context.contentResolver.openInputStream(uri)?.use { stream ->
                 BitmapFactory.decodeStream(stream)?.let { bitmap ->
-                    latestOnImagePicked(bitmap.asImageBitmap())
+                    latestOnImagePicked(bitmap.toJpeg())
                 }
             }
         }

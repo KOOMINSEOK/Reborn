@@ -1,11 +1,10 @@
 package com.gentlelady.reborn.feature.feedwrite
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -23,7 +22,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -31,11 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.gentlelady.reborn.core.designsystem.dashedBorder
 import com.gentlelady.reborn.core.platform.AudioRecorderController
 import com.gentlelady.reborn.core.platform.rememberAudioRecorder
@@ -43,34 +41,43 @@ import com.gentlelady.reborn.core.platform.rememberCameraImagePicker
 import com.gentlelady.reborn.core.platform.rememberFileImagePicker
 import com.gentlelady.reborn.core.platform.rememberGalleryImagePicker
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
+import com.gentlelady.reborn.core.theme.RebornDangerRed
 import com.gentlelady.reborn.core.theme.RebornInputBorderGray
 import com.gentlelady.reborn.core.theme.RebornLightBlueBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
+import com.gentlelady.reborn.feedwrite.presentation.FeedWriteIntent
+import com.gentlelady.reborn.feedwrite.presentation.FeedWriteState
+import com.gentlelady.reborn.feedwrite.presentation.MAX_POST_IMAGES
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /**
  * 생전/사후 게시글 작성 화면. 제목만 다르고 본문 UI는 동일하다.
+ * 본문·사진은 [FeedWriteState] 가 들고 있고, 이 화면은 그리기와 인텐트 전달만 한다.
+ * ponytail: 음성 녹음은 아직 서버 업로드 대상이 아니라 화면 로컬 상태로만 둔다.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostWriteScreen(
     title: String,
+    state: FeedWriteState,
+    onIntent: (FeedWriteIntent) -> Unit,
     onClose: () -> Unit,
-    onSubmit: () -> Unit,
+    onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var caption by remember { mutableStateOf("") }
-    val images = remember { mutableStateListOf<ImageBitmap>() }
+    val caption = state.caption
+    val images = state.images
     var hasRecording by remember { mutableStateOf(false) }
     var recordedSeconds by remember { mutableStateOf(0) }
     var showAttachSheet by remember { mutableStateOf(false) }
     var showRecordSheet by remember { mutableStateOf(false) }
 
     val audioRecorder = rememberAudioRecorder()
-    val launchGalleryPicker = rememberGalleryImagePicker(onImagePicked = { bitmap -> images.add(bitmap) })
-    val launchCameraPicker = rememberCameraImagePicker(onImagePicked = { bitmap -> images.add(bitmap) })
-    val launchFilePicker = rememberFileImagePicker(onImagePicked = { bitmap -> images.add(bitmap) })
+    val addImage: (ByteArray) -> Unit = { jpeg -> onIntent(FeedWriteIntent.AddImage(jpeg)) }
+    val launchGalleryPicker = rememberGalleryImagePicker(onImagePicked = addImage)
+    val launchCameraPicker = rememberCameraImagePicker(onImagePicked = addImage)
+    val launchFilePicker = rememberFileImagePicker(onImagePicked = addImage)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -86,8 +93,16 @@ fun PostWriteScreen(
                     Text(text = title, fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 },
                 actions = {
-                    TextButton(onClick = onSubmit) {
-                        Text(text = "다음", color = RebornCobaltBlue, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    if (state.isSubmitting) {
+                        CircularProgressIndicator(
+                            color = RebornCobaltBlue,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.padding(end = 16.dp).size(20.dp)
+                        )
+                    } else {
+                        TextButton(onClick = onNext) {
+                            Text(text = "다음", color = RebornCobaltBlue, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
@@ -114,10 +129,14 @@ fun PostWriteScreen(
                 }
                 BasicTextField(
                     value = caption,
-                    onValueChange = { caption = it },
+                    onValueChange = { onIntent(FeedWriteIntent.ChangeCaption(it)) },
                     textStyle = TextStyle(fontSize = 16.sp, color = Color.Black, lineHeight = 24.sp),
                     modifier = Modifier.fillMaxSize()
                 )
+            }
+
+            state.submitError?.let { message ->
+                Text(text = message, fontSize = 13.sp, color = RebornDangerRed)
             }
 
             if (hasRecording) {
@@ -160,16 +179,16 @@ fun PostWriteScreen(
                 }
             } else {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(images) { image ->
+                    itemsIndexed(images) { index, image ->
                         Box(modifier = Modifier.size(84.dp).clip(RoundedCornerShape(12.dp))) {
-                            Image(
-                                bitmap = image,
+                            AsyncImage(
+                                model = image,
                                 contentDescription = "첨부 사진",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
                             IconButton(
-                                onClick = { images.remove(image) },
+                                onClick = { onIntent(FeedWriteIntent.RemoveImage(index)) },
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .padding(4.dp)
@@ -185,7 +204,7 @@ fun PostWriteScreen(
                             }
                         }
                     }
-                    item {
+                    if (images.size < MAX_POST_IMAGES) item {
                         Box(
                             modifier = Modifier
                                 .size(84.dp)
@@ -397,7 +416,13 @@ private fun formatDuration(totalSeconds: Int): String {
 private fun PostWriteScreenPreview() {
     MaterialTheme {
         Surface {
-            PostWriteScreen(title = "생전 게시글 작성", onClose = {}, onSubmit = {})
+            PostWriteScreen(
+                title = "생전 게시글 작성",
+                state = FeedWriteState(),
+                onIntent = {},
+                onClose = {},
+                onNext = {}
+            )
         }
     }
 }

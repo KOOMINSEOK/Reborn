@@ -9,7 +9,8 @@ data class HomePost(
     val authorProfileUrl: DrawableResource? = null,
     val authorAvatarUrl: String? = null,
     val contentImageUrl: DrawableResource? = null,
-    val imageUrl: String? = null,
+    /** 서버 이미지 URL 들(순서 = 표시 순서). 2장 이상이면 캐러셀. */
+    val imageUrls: List<String> = emptyList(),
     val caption: String,
     val isPosthumous: Boolean = false,
     val isLocked: Boolean = false,

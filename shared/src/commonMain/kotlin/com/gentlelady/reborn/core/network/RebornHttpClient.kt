@@ -8,9 +8,12 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.http.ContentType
+import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+
+private val apiHost = Url(ApiConfig.BASE_URL).host
 
 fun createRebornHttpClient(tokenProvider: TokenProvider): HttpClient = HttpClient {
     expectSuccess = true
@@ -28,6 +31,8 @@ fun createRebornHttpClient(tokenProvider: TokenProvider): HttpClient = HttpClien
 
     install(Auth) {
         bearer {
+            // 우리 서버에만 토큰을 붙인다. Storage 서명 URL(PUT) 에는 사용자 토큰이 새면 안 됨.
+            sendWithoutRequest { it.url.host == apiHost }
             loadTokens {
                 tokenProvider.accessToken()?.let { BearerTokens(it, refreshToken = "") }
             }
