@@ -3,7 +3,7 @@ package com.gentlelady.reborn.server.profile
 import com.gentlelady.reborn.server.plugins.ErrorResponse
 import com.gentlelady.reborn.server.plugins.SUPABASE_AUTH
 import com.gentlelady.reborn.server.plugins.userId
-import com.gentlelady.reborn.server.upload.Storage
+import com.gentlelady.reborn.server.upload.imageListError
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -28,8 +28,10 @@ fun Route.profileRoutes(repo: ProfileRepository) {
         patch("/me/profile") {
             val userId = call.userId()
             val req = call.receive<UpdateProfileRequest>()
-            if (!Storage.isOwnImage(userId, req.avatarUrl)) {
-                return@patch call.respond(HttpStatusCode.BadRequest, ErrorResponse("invalid_image_url"))
+            // 지금 아바타 그대로 다시 보내는 건 허용 (붙일 수 있는 시간이 지났어도)
+            val newAvatar = req.avatarUrl?.takeIf { it != repo.getMy(userId)?.avatarUrl }
+            imageListError(userId, listOfNotNull(newAvatar))?.let {
+                return@patch call.respond(HttpStatusCode.BadRequest, ErrorResponse(it))
             }
             val handle = req.handle?.trim()
             if (handle != null && (handle.isEmpty() || repo.handleTaken(handle, userId))) {

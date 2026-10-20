@@ -5,7 +5,6 @@ import com.gentlelady.reborn.server.interaction.interactionRoutes
 import com.gentlelady.reborn.server.plugins.ErrorResponse
 import com.gentlelady.reborn.server.plugins.SUPABASE_AUTH
 import com.gentlelady.reborn.server.plugins.userId
-import com.gentlelady.reborn.server.upload.Storage
 import com.gentlelady.reborn.server.upload.imageListError
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
@@ -34,8 +33,8 @@ fun Route.memorialRoutes(repo: MemorialRepository, historyInteractions: Interact
 private fun Route.memorialEndpoints(repo: MemorialRepository) {
     post("/memorials") {
         val req = call.receive<CreateMemorialRequest>()
-        if (!Storage.isOwnImage(call.userId(), req.profileImageUrl)) {
-            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("invalid_image_url"))
+        imageListError(call.userId(), listOfNotNull(req.profileImageUrl))?.let {
+            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse(it))
         }
         call.respond(HttpStatusCode.Created, repo.create(call.userId(), req))
     }

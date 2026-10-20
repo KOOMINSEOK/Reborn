@@ -128,6 +128,16 @@ class FeedWriteTest {
     }
 
     @Test
+    fun editsAreIgnoredWhileSubmittingAndRotateRequestIdOtherwise() {
+        val submitting = FeedWriteReducer.reduce(FeedWriteState(caption = "a"), FeedWriteResult.Submitting)
+        assertEquals(submitting, FeedWriteReducer.reduce(submitting, FeedWriteIntent.ChangeCaption("b")))
+        assertEquals(submitting, FeedWriteReducer.reduce(submitting, FeedWriteIntent.AddImage(byteArrayOf(1))))
+
+        val idle = FeedWriteState(caption = "a")
+        assertTrue(FeedWriteReducer.reduce(idle, FeedWriteIntent.ChangeCaption("b")).requestId != idle.requestId)
+    }
+
+    @Test
     fun changingImagesDropsUploadedUrls() {
         val failed = FeedWriteReducer.reduce(FeedWriteState(), FeedWriteResult.SubmitFailed("x", listOf("u")))
         assertNull(FeedWriteReducer.reduce(failed, FeedWriteIntent.RemoveImage(0)).uploadedImageUrls)

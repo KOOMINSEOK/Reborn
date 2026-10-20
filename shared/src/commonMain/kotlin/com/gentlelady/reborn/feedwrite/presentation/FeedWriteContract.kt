@@ -51,7 +51,10 @@ data class FeedWriteState(
     // ponytail: 공개 범위·대상 팔로워는 서버 posts 에 아직 없음 → 화면에서만 고르고 전송하지 않는다.
     val visibility: PostVisibility = PostVisibility.FOLLOWERS,
     val selectedFollowerIds: Set<String> = emptySet(),
-    /** 이 작성 플로우의 멱등성 키. 재시도해도 바뀌지 않는다. */
+    /**
+     * 멱등성 키. 같은 내용으로 재시도하면 그대로, 내용(본문·사진)을 고치면 새로 만든다 → 고친 내용이 옛 글로 덮이지 않는다.
+     * ponytail: 응답만 유실된 뒤 내용을 고쳐 재시도하면 글이 두 개 생길 수 있다 (수정이 조용히 사라지는 것보단 낫다).
+     */
     val requestId: String = newRequestId(),
     /** 지난 시도에서 다 올라간 사진 URL. 글 작성만 실패했을 때 재시도에서 재사용하고, 사진을 바꾸면 버린다. */
     val uploadedImageUrls: List<String>? = null,
@@ -62,7 +65,7 @@ data class FeedWriteState(
 )
 
 @OptIn(ExperimentalUuidApi::class)
-private fun newRequestId(): String = Uuid.random().toString()
+internal fun newRequestId(): String = Uuid.random().toString()
 
 /** 사후 게시글의 공개(발행) 시각. 생전 게시글은 즉시 발행이라 null. */
 fun FeedWriteState.publishAt(type: FeedPostType, now: Instant, zone: TimeZone): Instant? {

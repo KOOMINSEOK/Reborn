@@ -1,6 +1,7 @@
 package com.gentlelady.reborn.feedwrite.domain.usecase
 
 import com.gentlelady.reborn.feedwrite.domain.repository.FeedWriteRepository
+import com.gentlelady.reborn.feedwrite.domain.repository.ImagesExpiredException
 import com.gentlelady.reborn.feedwrite.presentation.FeedWriteResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Instant
@@ -35,6 +36,9 @@ class CreatePostUseCase(
             FeedWriteResult.Submitted
         } catch (e: CancellationException) {
             throw e
+        } catch (e: ImagesExpiredException) {
+            // 올려 둔 사진을 서버가 더는 안 받음 → 캐시를 버려 다음 시도에서 다시 올린다
+            FeedWriteResult.SubmitFailed(SUBMIT_FAILED_MESSAGE, uploadedImageUrls = null)
         } catch (e: Exception) {
             FeedWriteResult.SubmitFailed(SUBMIT_FAILED_MESSAGE, uploadedImageUrls = imageUrls)
         }

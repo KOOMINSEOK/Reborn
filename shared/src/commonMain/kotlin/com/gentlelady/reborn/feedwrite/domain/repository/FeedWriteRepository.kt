@@ -18,3 +18,6 @@ interface FeedWriteRepository {
         clientRequestId: String,
     )
 }
+
+/** 서버가 사진을 더 이상 붙일 수 없다고 함(오래됐거나 정리됨). 사진을 다시 올려야 한다. */
+class ImagesExpiredException : Exception("images expired")

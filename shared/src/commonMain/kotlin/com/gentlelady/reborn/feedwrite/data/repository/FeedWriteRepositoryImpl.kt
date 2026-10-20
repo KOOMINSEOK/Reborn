@@ -3,6 +3,10 @@ package com.gentlelady.reborn.feedwrite.data.repository
 import com.gentlelady.reborn.core.network.RebornApi
 import com.gentlelady.reborn.core.network.dto.CreatePostDto
 import com.gentlelady.reborn.feedwrite.domain.repository.FeedWriteRepository
+import com.gentlelady.reborn.feedwrite.domain.repository.ImagesExpiredException
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -34,14 +38,21 @@ class FeedWriteRepositoryImpl(
         publishAt: Instant?,
         clientRequestId: String,
     ) {
-        api.createPost(
-            CreatePostDto(
-                caption = caption,
-                imageUrls = imageUrls,
-                isPosthumous = isPosthumous,
-                publishAt = publishAt?.toString(),
-                clientRequestId = clientRequestId,
+        try {
+            api.createPost(
+                CreatePostDto(
+                    caption = caption,
+                    imageUrls = imageUrls,
+                    isPosthumous = isPosthumous,
+                    publishAt = publishAt?.toString(),
+                    clientRequestId = clientRequestId,
+                )
             )
-        )
+        } catch (e: ClientRequestException) {
+            if (e.response.status == HttpStatusCode.BadRequest && "image_expired" in e.response.bodyAsText()) {
+                throw ImagesExpiredException()
+            }
+            throw e
+        }
     }
 }
