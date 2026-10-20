@@ -6,7 +6,11 @@ import com.gentlelady.reborn.myprofile.domain.model.MyProfileFeedItem // 💡 �
 data class MyProfileState(
     val username: String = "",
     val displayName: String = "",
-    val profileImageUrl: DrawableResource? = null,
+    val profileImageUrl: DrawableResource? = null, // 목업 아바타 (서버 사진이 없을 때)
+    /** 서버 아바타 URL. 있으면 [profileImageUrl] 보다 우선. */
+    val avatarUrl: String? = null,
+    val isUpdatingAvatar: Boolean = false,
+    val avatarError: String? = null,
     val backgroundImageUrl: DrawableResource? = null,
     val posthumousFeedCount: Int = 0,
     val followersCount: Int = 0,
@@ -23,4 +27,6 @@ sealed interface MyProfileIntent {
     object ClickToggleMemorialMode : MyProfileIntent
     object ClickViewAllFeeds : MyProfileIntent
     data class ClickManagementMenu(val menuId: String) : MyProfileIntent
+    /** 갤러리에서 고른 사진(업로드용 JPEG)으로 프로필 사진 바꾸기 */
+    data class ChangeAvatar(val jpeg: ByteArray) : MyProfileIntent
 }

@@ -45,6 +45,7 @@ import com.gentlelady.reborn.management.security.change_password.presentation.Ch
 import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordState
 import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementIntent
 import com.gentlelady.reborn.management.security.device_management.presentation.DeviceManagementState
+import com.gentlelady.reborn.myprofile.presentation.MyProfileIntent
 import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 
 /**
@@ -54,6 +55,7 @@ import com.gentlelady.reborn.myprofile.presentation.MyProfileState
 fun NavGraphBuilder.managementNavGraph(
     navController: NavController,
     myProfileState: MyProfileState,
+    onMyProfileIntent: (MyProfileIntent) -> Unit,
     scheduledFeedState: ScheduledFeedState,
     onScheduledFeedIntent: (ScheduledFeedIntent) -> Unit,
     paymentHistoryState: PaymentHistoryState,
@@ -100,7 +102,7 @@ fun NavGraphBuilder.managementNavGraph(
             profileState = myProfileState,
             onBackClick = { navController.popBackStack() },
             onClickNickname = { /* TODO: 닉네임 편집 화면 */ },
-            onClickProfilePhoto = { /* TODO: 프로필 사진 편집 화면 */ },
+            onProfilePhotoPicked = { jpeg -> onMyProfileIntent(MyProfileIntent.ChangeAvatar(jpeg)) },
             onClickBio = { /* TODO: 한 줄 소개 편집 화면 */ }
         )
     }

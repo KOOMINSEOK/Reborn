@@ -183,6 +183,7 @@ fun MainScreen(
             managementNavGraph(
                 navController = navController,
                 myProfileState = myProfileState,
+                onMyProfileIntent = onMyProfileIntent,
                 scheduledFeedState = scheduledFeedState,
                 onScheduledFeedIntent = onScheduledFeedIntent,
                 paymentHistoryState = paymentHistoryState,

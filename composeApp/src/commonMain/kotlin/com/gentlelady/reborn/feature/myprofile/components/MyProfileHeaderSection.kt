@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
+import com.gentlelady.reborn.core.designsystem.components.RebornImage
+import com.gentlelady.reborn.core.designsystem.components.hasImage
 import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_lock
 import com.gentlelady.reborn.ic_camera
@@ -63,9 +65,10 @@ internal fun MyProfileHeaderSection(
             Box(
                 modifier = Modifier.size(88.dp)
             ) {
-                state.profileImageUrl?.let { profileRes ->
-                    Image(
-                        painter = painterResource(profileRes),
+                if (hasImage(state.avatarUrl, state.profileImageUrl)) {
+                    RebornImage(
+                        url = state.avatarUrl,
+                        fallback = state.profileImageUrl,
                         contentDescription = "Profile Image",
                         modifier = Modifier
                             .size(80.dp)
@@ -74,7 +77,7 @@ internal fun MyProfileHeaderSection(
                             .align(Alignment.TopStart),
                         contentScale = ContentScale.Crop
                     )
-                } ?: Box(
+                } else Box(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(20.dp))
