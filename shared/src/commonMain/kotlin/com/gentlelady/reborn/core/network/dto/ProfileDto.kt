@@ -1,0 +1,24 @@
+package com.gentlelady.reborn.core.network.dto
+
+import kotlinx.serialization.Serializable
+
+/** 서버 `GET|PATCH /me/profile` 응답. 서버 MyProfileResponse 와 1:1. */
+@Serializable
+data class MyProfileDto(
+    val id: String,
+    val handle: String,
+    val displayName: String,
+    val bio: String? = null,
+    val avatarUrl: String? = null,
+    val isPrivate: Boolean = false,
+    val followerCount: Int = 0,
+    val followingCount: Int = 0,
+)
+
+/** 서버 `PATCH /me/profile` 요청. null 인 필드는 안 바꾼다. */
+@Serializable
+data class UpdateProfileDto(
+    val displayName: String? = null,
+    val bio: String? = null,
+    val avatarUrl: String? = null,
+)

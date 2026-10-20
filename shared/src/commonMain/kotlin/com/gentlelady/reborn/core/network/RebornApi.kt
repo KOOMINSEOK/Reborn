@@ -11,6 +11,8 @@ import com.gentlelady.reborn.core.network.dto.HistoryDto
 import com.gentlelady.reborn.core.network.dto.HistoryListDto
 import com.gentlelady.reborn.core.network.dto.MemorialProfileDto
 import com.gentlelady.reborn.core.network.dto.MyGuestbookListDto
+import com.gentlelady.reborn.core.network.dto.MyProfileDto
+import com.gentlelady.reborn.core.network.dto.UpdateProfileDto
 import com.gentlelady.reborn.core.network.dto.PostDto
 import com.gentlelady.reborn.core.network.dto.UploadDto
 import io.ktor.client.HttpClient
@@ -18,6 +20,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -75,6 +78,11 @@ class RebornApi(
 
     suspend fun myGuestbook(cursor: String? = null): MyGuestbookListDto =
         client.get("me/guestbook") { cursor?.let { parameter("cursor", it) } }.body()
+
+    suspend fun myProfile(): MyProfileDto = client.get("me/profile").body()
+
+    suspend fun updateMyProfile(req: UpdateProfileDto): MyProfileDto =
+        client.patch("me/profile") { setBody(req) }.body()
 
     suspend fun createUpload(contentType: String): UploadDto =
         client.post("uploads") { setBody(CreateUploadDto(contentType)) }.body()

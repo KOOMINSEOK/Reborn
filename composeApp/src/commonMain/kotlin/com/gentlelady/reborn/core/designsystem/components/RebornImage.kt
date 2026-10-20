@@ -10,6 +10,7 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * 서버 URL(`url`) 이면 Coil 로, 없으면 로컬 리소스(`fallback`) 로 그린다.
+ * URL 로딩이 실패해도(삭제·만료·오프라인) `fallback` 이 있으면 그걸 보여준다.
  * 둘 다 null 이면 아무것도 그리지 않는다 — 호출부가 플레이스홀더를 담당.
  */
 @Composable
@@ -26,6 +27,7 @@ fun RebornImage(
             contentDescription = contentDescription,
             modifier = modifier,
             contentScale = contentScale,
+            error = fallback?.let { painterResource(it) },
         )
         fallback != null -> Image(
             painter = painterResource(fallback),

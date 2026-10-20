@@ -85,9 +85,10 @@ fun HomeRoute() {
         myProfileViewModel.handleIntent(MyProfileIntent.LoadProfile)
     }
 
-    // 로그인 상태가 바뀌면 피드를 다시 불러온다 (mock ↔ 서버 데이터 전환).
+    // 로그인 상태가 바뀌면 피드·내 프로필을 다시 불러온다 (mock ↔ 서버 데이터 전환, 다른 계정 사진이 남지 않게).
     LaunchedEffect(loginState.loggedIn) {
         homeViewModel.handleIntent(HomeIntent.LoadFeed)
+        myProfileViewModel.handleIntent(MyProfileIntent.LoadProfile)
     }
 
     // 4. composeApp의 공통 진입점인 App() 호출 및 완벽한 최상위 데이터 파이프라인 완결

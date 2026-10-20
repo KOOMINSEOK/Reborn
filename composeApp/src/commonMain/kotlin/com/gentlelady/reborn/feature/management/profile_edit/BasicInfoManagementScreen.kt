@@ -1,11 +1,12 @@
 package com.gentlelady.reborn.feature.management.profile_edit
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -22,12 +23,17 @@ import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.designsystem.components.GroupedOptionList
 import com.gentlelady.reborn.core.designsystem.components.OptionListItem
 import com.gentlelady.reborn.core.designsystem.components.RebornBackTopAppBar
+import com.gentlelady.reborn.core.designsystem.components.RebornImage
+import com.gentlelady.reborn.core.designsystem.components.hasImage
+import com.gentlelady.reborn.core.platform.rememberGalleryImagePicker
+import com.gentlelady.reborn.core.theme.RebornBlack
+import com.gentlelady.reborn.core.theme.RebornDangerRed
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornMyBubbleBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.core.theme.RebornUnselectedGray
+import com.gentlelady.reborn.core.theme.RebornWhite
 import com.gentlelady.reborn.myprofile.presentation.MyProfileState
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -35,9 +41,13 @@ fun BasicInfoManagementScreen(
     profileState: MyProfileState,
     onBackClick: () -> Unit,
     onClickNickname: () -> Unit,
-    onClickProfilePhoto: () -> Unit,
+    /** 갤러리에서 고른 사진(업로드용 JPEG) */
+    onProfilePhotoPicked: (ByteArray) -> Unit,
     onClickBio: () -> Unit
 ) {
+    val launchGalleryPicker = rememberGalleryImagePicker(onImagePicked = onProfilePhotoPicked)
+    val onClickProfilePhoto = { if (!profileState.isUpdatingAvatar) launchGalleryPicker() }
+
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -54,17 +64,18 @@ fun BasicInfoManagementScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(modifier = Modifier.size(112.dp)) {
-                    profileState.profileImageUrl?.let { profileRes ->
-                        Image(
-                            painter = painterResource(profileRes),
+                Box(modifier = Modifier.size(112.dp).clip(CircleShape).clickable(onClick = onClickProfilePhoto)) {
+                    if (hasImage(profileState.avatarUrl, profileState.profileImageUrl)) {
+                        RebornImage(
+                            url = profileState.avatarUrl,
+                            fallback = profileState.profileImageUrl,
                             contentDescription = "Profile Image",
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
-                    } ?: Box(
+                    } else Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape)
@@ -78,6 +89,19 @@ fun BasicInfoManagementScreen(
                             modifier = Modifier.size(36.dp)
                         )
                     }
+                    if (profileState.isUpdatingAvatar) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(RebornBlack.copy(alpha = 0.35f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = RebornWhite, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
+                        }
+                    }
+                }
+
+                profileState.avatarError?.let { message ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = message, color = RebornDangerRed, fontSize = 12.sp)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -128,7 +152,7 @@ private fun BasicInfoManagementScreenPreview() {
             profileState = MyProfileState(username = "hong_gild", displayName = "홍길동"),
             onBackClick = {},
             onClickNickname = {},
-            onClickProfilePhoto = {},
+            onProfilePhotoPicked = {},
             onClickBio = {}
         )
     }
