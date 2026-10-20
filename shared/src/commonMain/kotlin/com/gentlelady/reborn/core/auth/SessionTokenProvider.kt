@@ -22,6 +22,8 @@ class SessionTokenProvider(
         if (!session.isExpiringSoon(clock())) return session.accessToken
 
         val refreshed = runCatching { api.refresh(session.refreshToken).toSession(clock()) }.getOrNull()
+            // 갱신 응답에 user 가 빠져도 로그인한 사람은 그대로 → 기존 userId 유지
+            ?.let { if (it.userId == null) it.copy(userId = session.userId) else it }
         store.current = refreshed
         refreshed?.accessToken
     }

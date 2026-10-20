@@ -131,8 +131,19 @@ class MemorialViewModel(
             // id 를 먼저 바꿔 둔다 → 로딩 중 게시가 이전 추모관으로 가지 않게
             _state.update { it.copy(memorialId = id, isLoading = true) }
             val loaded = repository.getMemorial(id)
-            // 그 사이 다른 추모관 로딩이 시작됐으면 늦게 온 결과는 버린다
-            _state.update { if (it.memorialId != id) it else loaded.copy(isLoading = false) }
+            _state.update {
+                // 그 사이 다른 추모관 로딩이 시작됐으면 늦게 온 결과는 버린다
+                if (it.memorialId != id) return@update it
+                // 서버 데이터만 갈아 끼운다 — 입력 중인 방명록·작성 폼·전송 중 상태는 보존 (재로딩이 전송을 풀지 않게)
+                it.copy(
+                    profile = loaded.profile,
+                    historyItems = loaded.historyItems,
+                    guestBookMessages = loaded.guestBookMessages,
+                    onlineWreathItems = loaded.onlineWreathItems,
+                    selectedHistoryIndex = it.selectedHistoryIndex?.takeIf { i -> i < loaded.historyItems.size },
+                    isLoading = false,
+                )
+            }
         }
     }
 }

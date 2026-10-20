@@ -51,6 +51,7 @@ class MemorialRepositoryImpl(
             profile = profile.toProfileData(),
             historyItems = history.map { it.toHistoryItem() },
             // 서버는 최신순, 화면은 채팅처럼 오래된 것이 위·새 글이 아래 → 뒤집는다
+            // ponytail: 최신 30개만. "이전 글 더 보기" 붙일 때 nextOffset 보존 + 다음 페이지를 뒤집어 앞에 붙인다.
             guestBookMessages = guestbook.map { it.toGuestbookItem(myUserId) }.reversed(),
             // 화환은 아직 서버 엔드포인트가 없어 mock 유지.
             onlineWreathItems = MemorialMockData.memorialState.onlineWreathItems,
