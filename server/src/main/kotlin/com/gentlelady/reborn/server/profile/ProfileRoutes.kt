@@ -33,11 +33,15 @@ fun Route.profileRoutes(repo: ProfileRepository) {
             imageListError(userId, listOfNotNull(newAvatar))?.let {
                 return@patch call.respond(HttpStatusCode.BadRequest, ErrorResponse(it))
             }
+            profileTextError(req)?.let {
+                return@patch call.respond(HttpStatusCode.BadRequest, ErrorResponse(it))
+            }
             val handle = req.handle?.trim()
             if (handle != null && (handle.isEmpty() || repo.handleTaken(handle, userId))) {
                 return@patch call.respond(HttpStatusCode.Conflict, ErrorResponse("handle_taken"))
             }
-            repo.updateMy(userId, req.copy(handle = handle))?.let { call.respond(it) }
+            val cleaned = req.copy(handle = handle, displayName = req.displayName?.trim(), bio = req.bio?.trim())
+            repo.updateMy(userId, cleaned)?.let { call.respond(it) }
                 ?: call.respond(HttpStatusCode.NotFound, ErrorResponse("profile_not_found"))
         }
 
@@ -70,3 +74,18 @@ private suspend fun RoutingContext.respondUserList(items: List<UserSummaryRespon
     val next = if (items.size == page.limit) page.offset + page.limit else null
     call.respond(UserListResponse(items, next))
 }
+
+/** 닉네임·한 줄 소개 길이 검사 (앞뒤 공백 제외). 문제 있으면 에러 코드. 앱도 같은 한도로 막지만 서버가 최종. */
+internal fun profileTextError(req: UpdateProfileRequest): String? {
+    val name = req.displayName?.trim()
+    val bio = req.bio?.trim()
+    return when {
+        name != null && name.isEmpty() -> "empty_display_name"
+        name != null && name.length > MAX_DISPLAY_NAME -> "display_name_too_long"
+        bio != null && bio.length > MAX_BIO -> "bio_too_long"
+        else -> null
+    }
+}
+
+const val MAX_DISPLAY_NAME = 20
+const val MAX_BIO = 100

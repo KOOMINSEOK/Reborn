@@ -144,11 +144,11 @@ internal fun MyProfileHeaderSection(
             }
         }
 
-        // 3. 이름 + 유저네임 텍스트 영역
+        // 3. 이름 + 유저네임 텍스트 영역 (+ 한 줄 소개가 있으면 그 아래)
         Row(
             modifier = Modifier
                 .padding(horizontal = 24.dp)
-                .padding(top = 12.dp, bottom = 20.dp)
+                .padding(top = 12.dp, bottom = if (state.bio.isBlank()) 20.dp else 6.dp)
         ) {
             Text(
                 text = state.displayName,
@@ -162,6 +162,14 @@ internal fun MyProfileHeaderSection(
                 color = Color.Black,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
+            )
+        }
+        if (state.bio.isNotBlank()) {
+            Text(
+                text = state.bio,
+                color = RebornSlateGray,
+                fontSize = 13.sp,
+                modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 20.dp)
             )
         }
     }
