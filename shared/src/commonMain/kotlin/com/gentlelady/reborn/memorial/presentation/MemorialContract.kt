@@ -67,6 +67,9 @@ data class MemorialState(
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
     val guestBookInputText: String = "",
     val isSubmittingGuestBook: Boolean = false,
+    /** 서버에 더 이전 방명록이 남아 있나 (맨 위로 스크롤하면 이어서 불러온다) */
+    val hasOlderGuestBook: Boolean = false,
+    val isLoadingOlderGuestBook: Boolean = false,
     val guestBookError: String? = null,
     val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그
     val historyWriteFormState: MemorialHistoryWriteFormState = MemorialHistoryWriteFormState(),
@@ -82,6 +85,8 @@ sealed interface MemorialIntent {
     data class SelectTab(val tab: MemorialTab) : MemorialIntent
     data class UpdateGuestBookInput(val text: String) : MemorialIntent
     object SubmitGuestBook : MemorialIntent
+    /** 방명록 목록 맨 위에 닿음 → 이전 글 더 불러오기 */
+    object LoadOlderGuestBook : MemorialIntent
     object ClickTribute : MemorialIntent
     object ClickPurchaseWreath : MemorialIntent
     data class AddOnlineWreathItem(val item: MemorialWreathItem) : MemorialIntent

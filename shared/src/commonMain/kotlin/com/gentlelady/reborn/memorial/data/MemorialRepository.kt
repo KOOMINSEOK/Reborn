@@ -1,6 +1,7 @@
 package com.gentlelady.reborn.memorial.data
 
 import com.gentlelady.reborn.core.auth.SessionStore
+import com.gentlelady.reborn.core.network.GUESTBOOK_PAGE_SIZE
 import com.gentlelady.reborn.core.network.ImageUploader
 import com.gentlelady.reborn.core.network.RebornApi
 import com.gentlelady.reborn.core.network.dto.CreateGuestbookDto
@@ -20,6 +21,12 @@ interface MemorialRepository {
     /** 사진(JPEG)을 올리고 추억 글을 만든다. 쓰기는 mock 폴백 없음 — 실패 시 예외. */
     suspend fun createHistory(memorialId: String, caption: String, image: ByteArray): MemorialHistoryItem
 
+    /**
+     * [beforeId] 보다 이전 방명록 한 페이지를 화면 순서(오래된 것 → 최신)로. 두 번째 값 = 더 이전 글이 남았나.
+     * 읽기지만 mock 폴백 없음 — 실패 시 예외 (이미 보이는 목록을 mock 으로 바꾸면 안 되므로).
+     */
+    suspend fun loadOlderGuestbook(memorialId: String, beforeId: String): Pair<List<MemorialGuestBookItem>, Boolean>
+
     /** 방명록을 남긴다. 쓰기는 mock 폴백 없음 — 실패 시 예외. */
     suspend fun createGuestbookEntry(memorialId: String, message: String): MemorialGuestBookItem
 }
@@ -31,6 +38,14 @@ class MemorialRepositoryImpl(
 ) : MemorialRepository {
 
     private val myUserId: String? get() = sessionStore.current?.userId
+
+    override suspend fun loadOlderGuestbook(
+        memorialId: String,
+        beforeId: String,
+    ): Pair<List<MemorialGuestBookItem>, Boolean> {
+        val page = api.guestbook(memorialId, before = beforeId).items
+        return page.map { it.toGuestbookItem(myUserId) }.reversed() to (page.size == GUESTBOOK_PAGE_SIZE)
+    }
 
     // ponytail: 멱등성 키 없음 — 응답 유실 후 재전송하면 같은 방명록이 하나 더 생길 수 있다.
     override suspend fun createGuestbookEntry(memorialId: String, message: String): MemorialGuestBookItem =
@@ -51,8 +66,8 @@ class MemorialRepositoryImpl(
             profile = profile.toProfileData(),
             historyItems = history.map { it.toHistoryItem() },
             // 서버는 최신순, 화면은 채팅처럼 오래된 것이 위·새 글이 아래 → 뒤집는다
-            // ponytail: 최신 30개만. "이전 글 더 보기" 붙일 때 nextOffset 보존 + 다음 페이지를 뒤집어 앞에 붙인다.
             guestBookMessages = guestbook.map { it.toGuestbookItem(myUserId) }.reversed(),
+            hasOlderGuestBook = guestbook.size == GUESTBOOK_PAGE_SIZE,
             // 화환은 아직 서버 엔드포인트가 없어 mock 유지.
             onlineWreathItems = MemorialMockData.memorialState.onlineWreathItems,
         )

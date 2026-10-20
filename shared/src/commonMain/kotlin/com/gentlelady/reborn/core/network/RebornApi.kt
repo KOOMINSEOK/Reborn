@@ -51,9 +51,10 @@ class RebornApi(
             parameter("limit", limit)
         }.body()
 
-    suspend fun guestbook(id: String, offset: Int = 0, limit: Int = 30): GuestbookListDto =
+    /** 최신순. [before] = 이 방명록 id 보다 이전 것만 (스크롤로 이전 글 이어 읽기). */
+    suspend fun guestbook(id: String, before: String? = null, limit: Int = GUESTBOOK_PAGE_SIZE): GuestbookListDto =
         client.get("memorials/$id/guestbook") {
-            parameter("offset", offset)
+            before?.let { parameter("before", it) }
             parameter("limit", limit)
         }.body()
 
@@ -81,3 +82,4 @@ class RebornApi(
 }
 
 private const val UPLOAD_TIMEOUT_MS = 60_000L
+const val GUESTBOOK_PAGE_SIZE = 30

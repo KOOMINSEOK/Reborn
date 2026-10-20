@@ -50,6 +50,8 @@ class MemorialViewModel(
 
             is MemorialIntent.SubmitGuestBook -> submitGuestBook()
 
+            is MemorialIntent.LoadOlderGuestBook -> loadOlderGuestBook()
+
             is MemorialIntent.ClickAddHistory ->
                 _state.update { it.copy(isWritingHistory = true, historyWriteFormState = MemorialHistoryWriteFormState()) }
 
@@ -69,6 +71,27 @@ class MemorialViewModel(
                 _state.update { it.copy(onlineWreathItems = listOf(intent.item) + it.onlineWreathItems) }
 
             else -> { /* 공유/음악/더보기/헌화/화환구매 등은 UI·NavGraph 에서 처리 */ }
+        }
+    }
+
+    private fun loadOlderGuestBook() {
+        val current = _state.value
+        val oldest = current.guestBookMessages.firstOrNull() ?: return
+        if (!current.hasOlderGuestBook || current.isLoadingOlderGuestBook || current.isLoading) return
+        _state.update { it.copy(isLoadingOlderGuestBook = true) }
+        viewModelScope.launch {
+            val page = runCatching { repository.loadOlderGuestbook(current.memorialId, oldest.id) }.getOrNull()
+            _state.update {
+                if (it.memorialId != current.memorialId) return@update it.copy(isLoadingOlderGuestBook = false)
+                // 실패하면 목록은 그대로, 다음에 맨 위에 닿을 때 다시 시도
+                val (older, hasMore) = page ?: return@update it.copy(isLoadingOlderGuestBook = false)
+                val known = it.guestBookMessages.mapTo(HashSet()) { m -> m.id }
+                it.copy(
+                    guestBookMessages = older.filter { m -> m.id !in known } + it.guestBookMessages,
+                    hasOlderGuestBook = hasMore,
+                    isLoadingOlderGuestBook = false,
+                )
+            }
         }
     }
 
@@ -139,6 +162,7 @@ class MemorialViewModel(
                     profile = loaded.profile,
                     historyItems = loaded.historyItems,
                     guestBookMessages = loaded.guestBookMessages,
+                    hasOlderGuestBook = loaded.hasOlderGuestBook,
                     onlineWreathItems = loaded.onlineWreathItems,
                     selectedHistoryIndex = it.selectedHistoryIndex?.takeIf { i -> i < loaded.historyItems.size },
                     isLoading = false,

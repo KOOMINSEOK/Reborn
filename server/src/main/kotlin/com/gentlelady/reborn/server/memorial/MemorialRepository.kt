@@ -86,7 +86,11 @@ class MemorialRepository {
             map = ResultSet::toGuestbookEntry,
         ) ?: error("guestbook insert returned nothing")
 
-    fun listGuestbook(memorialId: UUID, offset: Int, limit: Int): List<GuestbookEntryResponse> =
+    /**
+     * 최신순. [before] 를 주면 그 방명록보다 이전 것만 (커서) — 스크롤로 이전 글을 이어 읽을 때.
+     * offset 과 달리 그 사이 새 글이 생겨도 겹치거나 건너뛰지 않는다. 같은 시각은 id 로 순서를 고정.
+     */
+    fun listGuestbook(memorialId: UUID, before: UUID?, offset: Int, limit: Int): List<GuestbookEntryResponse> =
         Db.query(
             """
             select g.id, g.memorial_id, g.author_id, pr.display_name as author_name,
@@ -94,10 +98,11 @@ class MemorialRepository {
             from guestbook_entries g
             join profiles pr on pr.id = g.author_id
             where g.memorial_id = ?
-            order by g.created_at desc
+              and (?::uuid is null or (g.created_at, g.id) < (select c.created_at, c.id from guestbook_entries c where c.id = ?))
+            order by g.created_at desc, g.id desc
             limit ? offset ?
             """.trimIndent(),
-            memorialId, limit, offset,
+            memorialId, before, before, limit, offset,
             map = ResultSet::toGuestbookEntry,
         )
 

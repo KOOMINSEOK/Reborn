@@ -174,9 +174,10 @@ object MemorialMockData {
 
     // 2. 방명록 샘플 데이터 (시안 1 기반)
     val guestBookMessages = listOf(
-        MemorialGuestBookItem("1", "지연", null, "오늘따라 너 생각이 나니 ㅋㅋ 잘 지내지? 길동아 어제 헤어졌다. 너랑 술 한잔 하고 싶네", "오늘, 10:30 AM"),
+        // 화면 순서: 오래된 것이 위, 최신이 아래 (서버 응답도 이 순서로 뒤집어 쓴다)
+        MemorialGuestBookItem("3", "현우", null, "오늘 김첨지랑 같이 우리 예전에 갔던 올림픽 공원 갔어. 생각나서 찍었던 사진도 봤는데 ㅋㅋㅋ 길동아 거긴 날씨가 어떠냐?", "10월 24일, 9:00 AM"),
         MemorialGuestBookItem("2", "나", null, "보고싶어 ♥", "어제, 4:15 PM", isMine = true),
-        MemorialGuestBookItem("3", "현우", null, "오늘 김첨지랑 같이 우리 예전에 갔던 올림픽 공원 갔어. 생각나서 찍었던 사진도 봤는데 ㅋㅋㅋ 길동아 거긴 날씨가 어떠냐?", "10월 24일, 9:00 AM")
+        MemorialGuestBookItem("1", "지연", null, "오늘따라 너 생각이 나니 ㅋㅋ 잘 지내지? 길동아 어제 헤어졌다. 너랑 술 한잔 하고 싶네", "오늘, 10:30 AM")
     )
 
     // 추모 페이지(고인: 홍길동) — 타인이 개설한 페이지를 보는 시점. 편집 개념 없음.

@@ -105,7 +105,9 @@ private fun Route.guestbookEndpoints(repo: MemorialRepository) {
         }
         val offset = call.request.queryParameters["offset"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
         val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, MAX_LIMIT) ?: DEFAULT_LIMIT
-        val items = repo.listGuestbook(memorialId, offset, limit)
+        // before = 이 방명록 id 보다 이전 것만 (형식 오류는 400)
+        val before = call.request.queryParameters["before"]?.let(UUID::fromString)
+        val items = repo.listGuestbook(memorialId, before, if (before != null) 0 else offset, limit)
         call.respond(GuestbookListResponse(items, if (items.size == limit) offset + limit else null))
     }
     delete("/guestbook/{id}") {

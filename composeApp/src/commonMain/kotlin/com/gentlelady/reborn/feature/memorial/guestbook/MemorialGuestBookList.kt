@@ -16,6 +16,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.distinctUntilChanged
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +51,9 @@ internal fun MemorialGuestBookList(
     modifier: Modifier = Modifier,
     isSubmitting: Boolean = false,
     error: String? = null,
+    hasOlder: Boolean = false,
+    isLoadingOlder: Boolean = false,
+    onLoadOlder: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -53,10 +65,40 @@ internal fun MemorialGuestBookList(
             GuestBookEmptyState(modifier = Modifier.fillMaxSize().padding(bottom = 72.dp))
         } else {
             val listState = rememberLazyListState()
+            val latestOnLoadOlder by rememberUpdatedState(onLoadOlder)
 
-            // 새 방명록이 맨 아래에 추가될 때마다 그 위치로 자동 스크롤
-            LaunchedEffect(guestBookMessages.size) {
-                listState.animateScrollToItem(guestBookMessages.lastIndex)
+            // 사용자가 손으로 한 번이라도 끌었나 — 자동 스크롤(처음 열기·새 글)이 이전 글 불러오기를 일으키지 않게
+            var userDragged by remember { mutableStateOf(false) }
+            val isDragged by listState.interactionSource.collectIsDraggedAsState()
+            LaunchedEffect(isDragged) { if (isDragged) userDragged = true }
+
+            // 맨 아래(최신) 글이 바뀔 때만 아래로 — 처음엔 바로, 새 글은 부드럽게.
+            // 이전 글이 위에 붙을 땐 마지막 글이 그대로라 안 움직이고, 보던 위치는 key 로 고정된다.
+            var scrolledOnce by remember { mutableStateOf(false) }
+            LaunchedEffect(guestBookMessages.last().id) {
+                val last = (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
+                if (scrolledOnce) listState.animateScrollToItem(last) else listState.scrollToItem(last)
+                scrolledOnce = true
+            }
+
+            // 이전 글이 위에 붙으면 보던 글(직전의 맨 위 글)로 되돌려 둔다 → 읽던 위치 유지,
+            // 그리고 다시 위로 스크롤해야 다음 페이지를 부른다.
+            var prevFirstId by remember { mutableStateOf<String?>(null) }
+            LaunchedEffect(guestBookMessages.first().id) {
+                val prev = prevFirstId
+                prevFirstId = guestBookMessages.first().id
+                if (prev == null) return@LaunchedEffect
+                val index = guestBookMessages.indexOfFirst { it.id == prev }
+                if (index > 0) listState.scrollToItem(index)
+            }
+
+            // 손으로 스크롤해서 맨 위에 닿으면 이전 글 불러오기
+            LaunchedEffect(listState, hasOlder) {
+                if (!hasOlder) return@LaunchedEffect
+                snapshotFlow { userDragged && listState.firstVisibleItemIndex == 0 }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { latestOnLoadOlder() }
             }
 
             LazyColumn(
@@ -70,7 +112,18 @@ internal fun MemorialGuestBookList(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(guestBookMessages) { item ->
+                if (isLoadingOlder) {
+                    item(key = "loading_older") {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(
+                                color = RebornDeepBlue,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+                items(guestBookMessages, key = { it.id }) { item ->
                     GuestBookMessageRow(item = item)
                 }
             }
