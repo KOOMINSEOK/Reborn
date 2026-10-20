@@ -78,7 +78,8 @@ fun NavGraphBuilder.managementNavGraph(
     notificationSettingsState: NotificationSettingsState,
     onNotificationSettingsIntent: (NotificationSettingsIntent) -> Unit,
     faqState: FaqState,
-    onFaqIntent: (FaqIntent) -> Unit
+    onFaqIntent: (FaqIntent) -> Unit,
+    onSignOut: () -> Unit = {}
 ) {
     composable("management/scheduled_feed") {
         ScheduledFeedScreen(
@@ -262,7 +263,8 @@ fun NavGraphBuilder.managementNavGraph(
             onBackClick = { navController.popBackStack() },
             onClickNotificationSettings = { navController.navigate("management/app_settings/notifications") },
             onClickCustomerSupport = { navController.navigate("management/app_settings/support") },
-            onClickTerms = { navController.navigate("management/app_settings/terms") }
+            onClickTerms = { navController.navigate("management/app_settings/terms") },
+            onSignOut = onSignOut
         )
     }
 
