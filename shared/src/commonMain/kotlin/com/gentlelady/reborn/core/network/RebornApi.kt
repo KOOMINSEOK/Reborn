@@ -1,17 +1,33 @@
 package com.gentlelady.reborn.core.network
 
+import com.gentlelady.reborn.core.network.dto.CreatePostDto
+import com.gentlelady.reborn.core.network.dto.CreateUploadDto
 import com.gentlelady.reborn.core.network.dto.FeedDto
 import com.gentlelady.reborn.core.network.dto.GuestbookListDto
 import com.gentlelady.reborn.core.network.dto.HistoryListDto
 import com.gentlelady.reborn.core.network.dto.MemorialProfileDto
 import com.gentlelady.reborn.core.network.dto.PostDto
+import com.gentlelady.reborn.core.network.dto.UploadDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 
-/** Reborn 서버 REST 엔드포인트. 호출 실패 시 예외를 던지며, 폴백은 레포지토리 책임. */
-class RebornApi(private val client: HttpClient) {
+/**
+ * Reborn 서버 REST 엔드포인트. 호출 실패 시 예외를 던지며, 폴백은 레포지토리 책임.
+ * [uploadClient] 는 Auth 플러그인이 없는 클라이언트 — 외부 Storage 서명 URL 에 사용자 토큰이 절대 붙지 않게
+ * (Bearer 플러그인은 401 challenge 를 받으면 호스트와 상관없이 토큰을 붙여 재시도한다).
+ */
+class RebornApi(
+    private val client: HttpClient,
+    private val uploadClient: HttpClient,
+) {
 
     suspend fun feed(offset: Int = 0, limit: Int = 20): FeedDto =
         client.get("feed") {
@@ -36,4 +52,22 @@ class RebornApi(private val client: HttpClient) {
             parameter("offset", offset)
             parameter("limit", limit)
         }.body()
+
+    suspend fun createUpload(contentType: String): UploadDto =
+        client.post("uploads") { setBody(CreateUploadDto(contentType)) }.body()
+
+    /** 서버가 발급한 Supabase Storage 서명 URL 로 이미지 바이트를 직접 올린다 (서버를 거치지 않음). */
+    suspend fun uploadImage(uploadUrl: String, jpeg: ByteArray) {
+        uploadClient.put(uploadUrl) {
+            contentType(ContentType.Image.JPEG)
+            setBody(jpeg)
+            // 기본 5초는 모바일 망에서 수 MB 사진에 부족하다
+            timeout { requestTimeoutMillis = UPLOAD_TIMEOUT_MS }
+        }
+    }
+
+    suspend fun createPost(req: CreatePostDto): PostDto =
+        client.post("posts") { setBody(req) }.body()
 }
+
+private const val UPLOAD_TIMEOUT_MS = 60_000L

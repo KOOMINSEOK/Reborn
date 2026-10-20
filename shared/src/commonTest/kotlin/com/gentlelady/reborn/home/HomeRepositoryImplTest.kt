@@ -21,6 +21,7 @@ class HomeRepositoryImplTest {
         HttpClient(handler) {
             install(ContentNegotiation) { json() }
         },
+        uploadClient = HttpClient(handler),
     )
 
     @Test

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.designsystem.components.RebornImage
+import com.gentlelady.reborn.core.designsystem.components.RebornImagePager
 import com.gentlelady.reborn.core.designsystem.components.hasImage
 import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.home.domain.model.HomePost
@@ -152,9 +153,11 @@ internal fun PostImageArea(
             .padding(top = 4.dp)
             .background(RebornDividerGray)
     ) {
-        if (hasImage(post.imageUrl, post.contentImageUrl)) {
+        if (post.imageUrls.isNotEmpty()) {
+            RebornImagePager(urls = post.imageUrls, modifier = Modifier.fillMaxSize())
+        } else if (hasImage(null, post.contentImageUrl)) {
             RebornImage(
-                url = post.imageUrl,
+                url = null,
                 fallback = post.contentImageUrl,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize()

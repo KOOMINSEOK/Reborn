@@ -21,7 +21,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.gentlelady.reborn.Res
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
@@ -49,7 +48,7 @@ fun ContentCard(
     authorProfileRes: DrawableResource? = null,
     authorProfileUrl: String? = null,
     imageRes: DrawableResource? = null,
-    imageUrl: String? = null,
+    imageUrls: List<String> = emptyList(),
     imageBitmap: ImageBitmap? = null,
     showMoreIcon: Boolean = true,
     headerBadge: (@Composable () -> Unit)? = null,
@@ -74,7 +73,10 @@ fun ContentCard(
 
         when {
             imageBitmap != null -> ContentCardImage(imageBitmap = imageBitmap)
-            !imageUrl.isNullOrBlank() -> ContentCardImage(imageUrl = imageUrl)
+            imageUrls.isNotEmpty() -> RebornImagePager(
+                urls = imageUrls,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(250.dp)
+            )
             imageRes != null -> ContentCardImage(imageRes = imageRes)
         }
 
@@ -130,26 +132,6 @@ private fun ContentCardHeader(
         if (showMoreIcon) {
             Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = RebornUnselectedGray)
         }
-    }
-}
-
-@Composable
-private fun ContentCardImage(
-    imageUrl: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(250.dp)
-            .padding(top = 8.dp)
-    ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = null,
-            modifier = Modifier.fillMaxWidth().height(250.dp),
-            contentScale = ContentScale.Crop
-        )
     }
 }
 

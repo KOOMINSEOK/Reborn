@@ -26,7 +26,7 @@ data class MemorialHistoryItem(
     val authorName: String,
     val date: String,
     val caption: String,
-    val imageUrl: String? = null, // 서버 이미지 URL
+    val imageUrls: List<String> = emptyList(), // 서버 이미지 URL 들 (순서 = 표시 순서)
     val imageRes: DrawableResource? = null, // 앱 번들 목업 이미지 (프리뷰/목데이터용)
     val imageBitmap: ImageBitmap? = null, // 갤러리에서 직접 등록한 이미지 (우선 적용)
     val authorProfileRes: DrawableResource? = null,

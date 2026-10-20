@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
+import com.gentlelady.reborn.core.theme.RebornDangerRed
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornLightBlueBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
@@ -74,16 +75,32 @@ fun ScheduleSettingsScreen(
         },
         bottomBar = {
             Surface(color = Color.White) {
-                Button(
-                    onClick = onComplete,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = RebornCobaltBlue),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .height(52.dp)
-                ) {
-                    Text(text = "업로드 예약 완료하기", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Column {
+                    state.submitError?.let { message ->
+                        Text(
+                            text = message,
+                            fontSize = 13.sp,
+                            color = RebornDangerRed,
+                            modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)
+                        )
+                    }
+                    Button(
+                        onClick = onComplete,
+                        enabled = !state.isSubmitting,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = RebornCobaltBlue),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .height(52.dp)
+                    ) {
+                        Text(
+                            text = if (state.isSubmitting) "업로드 중…" else "업로드 예약 완료하기",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }

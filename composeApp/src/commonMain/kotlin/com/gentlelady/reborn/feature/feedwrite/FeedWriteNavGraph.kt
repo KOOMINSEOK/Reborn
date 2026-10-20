@@ -1,6 +1,7 @@
 package com.gentlelady.reborn.feature.feedwrite
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -12,15 +13,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import com.gentlelady.reborn.feedwrite.presentation.FeedPostType
+import com.gentlelady.reborn.feedwrite.presentation.FeedWriteIntent
+import com.gentlelady.reborn.feedwrite.presentation.FeedWriteState
 import com.gentlelady.reborn.feedwrite.presentation.FeedWriteViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * "+" 버튼으로 진입하는 게시글 작성 플로우.
  * entry(바텀시트) → living(생전 게시글 작성) 또는 posthumous(사후 게시글 작성) → schedule(예약 설정) → target_select(대상 선택).
- * "feed_write" 그래프 하나로 묶어, 예약 설정/대상 선택 화면이 FeedWriteViewModel을 공유하도록 한다.
+ * "feed_write" 그래프 하나로 묶어, 작성/예약 설정/대상 선택 화면이 FeedWriteViewModel을 공유하도록 한다.
+ * 업로드가 끝나면 [onPosted](홈 피드 새로고침) 후 홈으로 돌아간다.
  */
-fun NavGraphBuilder.feedWriteNavGraph(navController: NavController) {
+fun NavGraphBuilder.feedWriteNavGraph(navController: NavController, onPosted: () -> Unit) {
     navigation(startDestination = "feed_write/entry", route = "feed_write") {
         dialog(
             route = "feed_write/entry",
@@ -37,38 +41,52 @@ fun NavGraphBuilder.feedWriteNavGraph(navController: NavController) {
             )
         }
 
-        composable("feed_write/living") {
+        composable("feed_write/living") { entry ->
+            val viewModel = feedWriteViewModel(navController, entry)
+            val state by viewModel.state.collectAsState()
+            CloseWhenSubmitted(state, navController, onPosted)
+
             PostWriteScreen(
                 title = "생전 게시글 작성",
+                state = state,
+                onIntent = viewModel::onIntent,
                 onClose = { navController.popBackStack("home", inclusive = false) },
-                onSubmit = { navController.popBackStack("home", inclusive = false) }
+                onNext = { viewModel.onIntent(FeedWriteIntent.Submit(FeedPostType.LIVING)) }
             )
         }
 
-        composable("feed_write/posthumous") {
+        composable("feed_write/posthumous") { entry ->
+            val viewModel = feedWriteViewModel(navController, entry)
+            val state by viewModel.state.collectAsState()
+            CloseWhenSubmitted(state, navController, onPosted)
+
             PostWriteScreen(
                 title = "사후 게시글 작성",
+                state = state,
+                onIntent = viewModel::onIntent,
                 onClose = { navController.popBackStack("home", inclusive = false) },
-                onSubmit = { navController.navigate("feed_write/schedule") }
+                onNext = { navController.navigate("feed_write/schedule") }
             )
         }
 
         composable("feed_write/schedule") { entry ->
             val viewModel = feedWriteViewModel(navController, entry)
             val state by viewModel.state.collectAsState()
+            CloseWhenSubmitted(state, navController, onPosted)
 
             ScheduleSettingsScreen(
                 state = state,
                 onIntent = viewModel::onIntent,
                 onBack = { navController.popBackStack() },
                 onEditTargets = { navController.navigate("feed_write/target_select") },
-                onComplete = { navController.popBackStack("home", inclusive = false) }
+                onComplete = { viewModel.onIntent(FeedWriteIntent.Submit(FeedPostType.POSTHUMOUS)) }
             )
         }
 
         composable("feed_write/target_select") { entry ->
             val viewModel = feedWriteViewModel(navController, entry)
             val state by viewModel.state.collectAsState()
+            CloseWhenSubmitted(state, navController, onPosted)
 
             TargetSelectionScreen(
                 state = state,
@@ -84,4 +102,15 @@ fun NavGraphBuilder.feedWriteNavGraph(navController: NavController) {
 private fun feedWriteViewModel(navController: NavController, entry: NavBackStackEntry): FeedWriteViewModel {
     val parentEntry = remember(entry) { navController.getBackStackEntry("feed_write") }
     return koinViewModel(viewModelStoreOwner = parentEntry)
+}
+
+/** 업로드 중 다른 작성 화면으로 이동해도 완료되면 닫히도록, 플로우의 모든 화면에 둔다. */
+@Composable
+private fun CloseWhenSubmitted(state: FeedWriteState, navController: NavController, onPosted: () -> Unit) {
+    LaunchedEffect(state.isSubmitted) {
+        if (state.isSubmitted) {
+            onPosted()
+            navController.popBackStack("home", inclusive = false)
+        }
+    }
 }

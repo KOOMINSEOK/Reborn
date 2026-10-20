@@ -63,8 +63,7 @@ fun HistoryDto.toHistoryItem(): MemorialHistoryItem = MemorialHistoryItem(
     authorName = authorName,
     date = createdAt.take(10),
     caption = caption,
-    // ponytail: UI 가 아직 단일 이미지 — 첫 장만. 캐러셀 붙일 때 MemorialHistoryItem 을 목록으로.
-    imageUrl = imageUrls.firstOrNull().toAbsoluteServerUrl(),
+    imageUrls = imageUrls.mapNotNull { it.toAbsoluteServerUrl() },
     likes = likeCount,
     comments = commentCount,
 )

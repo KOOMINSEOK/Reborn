@@ -43,3 +43,9 @@ fun createRebornHttpClient(tokenProvider: TokenProvider): HttpClient = HttpClien
         contentType(ContentType.Application.Json)
     }
 }
+
+/** Storage 서명 URL 업로드 전용. 인증·기본 URL 없음 (토큰 유출 방지). 큰 파일이라 타임아웃은 요청마다 지정. */
+fun createUploadHttpClient(): HttpClient = HttpClient {
+    expectSuccess = true
+    install(HttpTimeout)
+}
