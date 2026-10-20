@@ -6,6 +6,7 @@ import com.gentlelady.reborn.server.plugins.ErrorResponse
 import com.gentlelady.reborn.server.plugins.SUPABASE_AUTH
 import com.gentlelady.reborn.server.plugins.userId
 import com.gentlelady.reborn.server.upload.Storage
+import com.gentlelady.reborn.server.upload.imageListError
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -64,8 +65,8 @@ private fun Route.historyEndpoints(repo: MemorialRepository) {
             return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
         }
         val req = call.receive<CreateHistoryRequest>()
-        if (!Storage.isOwnImage(call.userId(), req.imageUrl)) {
-            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("invalid_image_url"))
+        imageListError(call.userId(), req.imageUrls)?.let {
+            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse(it))
         }
         call.respond(HttpStatusCode.Created, repo.createHistory(memorialId, call.userId(), req))
     }

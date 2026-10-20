@@ -1,6 +1,7 @@
 package com.gentlelady.reborn.server.memorial
 
 import com.gentlelady.reborn.server.plugins.Db
+import com.gentlelady.reborn.server.plugins.getStringList
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -48,8 +49,8 @@ class MemorialRepository {
 
     fun createHistory(memorialId: UUID, authorId: UUID, req: CreateHistoryRequest): HistoryResponse {
         val id = Db.queryFirst(
-            "insert into memorial_history (memorial_id, author_id, caption, image_url) values (?, ?, ?, ?) returning id",
-            memorialId, authorId, req.caption, req.imageUrl,
+            "insert into memorial_history (memorial_id, author_id, caption, image_urls) values (?, ?, ?, ?) returning id",
+            memorialId, authorId, req.caption, req.imageUrls.toTypedArray(),
         ) { it.getString("id") } ?: error("history insert returned nothing")
         return getHistory(authorId, UUID.fromString(id)) ?: error("history $id vanished after insert")
     }
@@ -128,7 +129,7 @@ private const val MEMORIAL_VISIBLE = """
 /** 첫 `?` = viewerId (liked 서브쿼리). where 절 파라미터는 그 뒤에 온다. */
 private const val HISTORY_SELECT = """
     select h.id, h.memorial_id, h.author_id, pr.display_name as author_name, pr.avatar_url as author_avatar_url,
-           h.caption, h.image_url, h.like_count, h.comment_count, h.created_at,
+           h.caption, h.image_urls, h.like_count, h.comment_count, h.created_at,
            exists(select 1 from history_likes hl where hl.history_id = h.id and hl.user_id = ?) as liked
     from memorial_history h
     join profiles pr on pr.id = h.author_id
@@ -162,7 +163,7 @@ private fun ResultSet.toHistory() = HistoryResponse(
     authorName = getString("author_name"),
     authorAvatarUrl = getString("author_avatar_url"),
     caption = getString("caption"),
-    imageUrl = getString("image_url"),
+    imageUrls = getStringList("image_urls"),
     likeCount = getInt("like_count"),
     commentCount = getInt("comment_count"),
     liked = getBoolean("liked"),

@@ -25,7 +25,7 @@ data class HistoryDto(
     val authorName: String,
     val authorAvatarUrl: String? = null,
     val caption: String,
-    val imageUrl: String? = null,
+    val imageUrls: List<String> = emptyList(),
     val likeCount: Int,
     val commentCount: Int,
     val liked: Boolean = false,
@@ -63,7 +63,8 @@ fun HistoryDto.toHistoryItem(): MemorialHistoryItem = MemorialHistoryItem(
     authorName = authorName,
     date = createdAt.take(10),
     caption = caption,
-    imageUrl = imageUrl.toAbsoluteServerUrl(),
+    // ponytail: UI 가 아직 단일 이미지 — 첫 장만. 캐러셀 붙일 때 MemorialHistoryItem 을 목록으로.
+    imageUrl = imageUrls.firstOrNull().toAbsoluteServerUrl(),
     likes = likeCount,
     comments = commentCount,
 )

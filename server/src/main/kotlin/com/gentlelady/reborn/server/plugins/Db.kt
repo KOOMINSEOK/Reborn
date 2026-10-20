@@ -63,3 +63,7 @@ object Db {
             }
         }
 }
+
+/** Postgres `text[]` 컬럼 → List<String>. (쓰기는 Array<String> 을 그대로 바인딩하면 드라이버가 text[] 로 보낸다) */
+fun ResultSet.getStringList(column: String): List<String> =
+    (getArray(column)?.array as? Array<*>)?.map { it as String }.orEmpty()

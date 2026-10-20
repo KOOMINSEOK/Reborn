@@ -52,6 +52,16 @@ object Storage {
 
 private val TIMEOUT: Duration = Duration.ofSeconds(10)
 
+/** 게시글·추억 글 한 건에 붙일 수 있는 최대 이미지 수. V10 check 제약과 같게 유지. */
+const val MAX_IMAGES = 10
+
+/** 이미지 목록 검증. 문제 있으면 에러 코드, 없으면 null. */
+fun imageListError(userId: UUID, urls: List<String>): String? = when {
+    urls.size > MAX_IMAGES -> "too_many_images"
+    urls.any { !Storage.isOwnImage(userId, it) } -> "invalid_image_url"
+    else -> null
+}
+
 /** 확장자 → 서버가 허용하는 content type. 버킷 allowed_mime_types 와 같게 유지. */
 val IMAGE_EXTENSIONS = mapOf("image/jpeg" to "jpg", "image/png" to "png", "image/webp" to "webp")
 

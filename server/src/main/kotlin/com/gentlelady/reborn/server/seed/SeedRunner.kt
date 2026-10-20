@@ -57,12 +57,12 @@ object SeedRunner {
         SeedData.posts.forEach { p ->
             Db.update(
                 """
-                insert into posts (id, author_id, caption, image_url, is_posthumous, status, created_at)
+                insert into posts (id, author_id, caption, image_urls, is_posthumous, status, created_at)
                 values (?, ?, ?, ?, ?, 'published', ?)
                 on conflict (id) do nothing
                 """.trimIndent(),
                 p.id, SeedData.userIdByName.getValue(p.authorName), p.caption,
-                IMG_PREFIX + p.image, p.posthumous, daysAgo(p.daysAgo),
+                arrayOf(IMG_PREFIX + p.image), p.posthumous, daysAgo(p.daysAgo),
             )
         }
         SeedData.scheduledPosts.forEach { s ->
@@ -91,12 +91,12 @@ object SeedRunner {
         SeedData.history.forEach { h ->
             Db.update(
                 """
-                insert into memorial_history (id, memorial_id, author_id, caption, image_url, created_at)
+                insert into memorial_history (id, memorial_id, author_id, caption, image_urls, created_at)
                 values (?, ?, ?, ?, ?, ?)
                 on conflict (id) do nothing
                 """.trimIndent(),
                 h.id, SeedData.memorialId, SeedData.userIdByName.getValue(h.authorName),
-                h.caption, IMG_PREFIX + h.image, daysAgo(h.daysAgo),
+                h.caption, arrayOf(IMG_PREFIX + h.image), daysAgo(h.daysAgo),
             )
         }
     }

@@ -26,7 +26,7 @@ data class MemorialResponse(
 @Serializable
 data class CreateHistoryRequest(
     val caption: String = "",
-    val imageUrl: String? = null,
+    val imageUrls: List<String> = emptyList(),
 )
 
 @Serializable
@@ -37,7 +37,7 @@ data class HistoryResponse(
     val authorName: String,
     val authorAvatarUrl: String? = null,
     val caption: String,
-    val imageUrl: String? = null,
+    val imageUrls: List<String> = emptyList(),
     val likeCount: Int,
     val commentCount: Int,
     val liked: Boolean = false,

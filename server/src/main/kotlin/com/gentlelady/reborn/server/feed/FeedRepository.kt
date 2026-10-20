@@ -1,6 +1,7 @@
 package com.gentlelady.reborn.server.feed
 
 import com.gentlelady.reborn.server.plugins.Db
+import com.gentlelady.reborn.server.plugins.getStringList
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -65,11 +66,11 @@ class FeedRepository {
         val status = if (publishAt != null) "scheduled" else "published"
         val id = Db.queryFirst(
             """
-            insert into posts (author_id, caption, image_url, is_posthumous, status, publish_at)
+            insert into posts (author_id, caption, image_urls, is_posthumous, status, publish_at)
             values (?, ?, ?, ?, ?, ?)
             returning id
             """.trimIndent(),
-            authorId, req.caption, req.imageUrl, req.isPosthumous, status, publishAt,
+            authorId, req.caption, req.imageUrls.toTypedArray(), req.isPosthumous, status, publishAt,
         ) { it.getString("id") } ?: error("post insert returned nothing")
 
         return getPost(authorId, UUID.fromString(id)) ?: error("post $id vanished after insert")
@@ -126,7 +127,7 @@ class FeedRepository {
 private const val POST_SELECT = """
     select p.id, p.author_id, pr.display_name as author_name, pr.handle as author_handle,
            pr.avatar_url as author_avatar_url,
-           p.caption, p.image_url, p.is_posthumous, p.status,
+           p.caption, p.image_urls, p.is_posthumous, p.status,
            p.like_count, p.comment_count, p.created_at,
            exists(select 1 from post_likes pl where pl.post_id = p.id and pl.user_id = ?) as liked
     from posts p
@@ -163,7 +164,7 @@ private fun ResultSet.toPost(source: String) = PostResponse(
     authorHandle = getString("author_handle"),
     authorAvatarUrl = getString("author_avatar_url"),
     caption = getString("caption"),
-    imageUrl = getString("image_url"),
+    imageUrls = getStringList("image_urls"),
     isPosthumous = getBoolean("is_posthumous"),
     status = getString("status"),
     likeCount = getInt("like_count"),
