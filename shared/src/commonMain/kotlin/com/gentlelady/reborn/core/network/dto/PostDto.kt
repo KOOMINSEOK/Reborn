@@ -11,7 +11,7 @@ data class PostDto(
     val authorHandle: String,
     val authorAvatarUrl: String? = null,
     val caption: String,
-    val imageUrl: String? = null,
+    val imageUrls: List<String> = emptyList(),
     val isPosthumous: Boolean,
     val status: String,
     val likeCount: Int,

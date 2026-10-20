@@ -36,6 +36,14 @@ class StorageTest {
     }
 
     @Test
+    fun imageListErrorChecksCountBeforeOwnership() {
+        // 테스트 환경은 SUPABASE_URL 미설정 → 어떤 URL 도 내 이미지로 인정되지 않는다
+        assertEquals(null, imageListError(me, emptyList()))
+        assertEquals("invalid_image_url", imageListError(me, listOf(url(me, "$file.jpg"))))
+        assertEquals("too_many_images", imageListError(me, List(MAX_IMAGES + 1) { url(me, "$file.jpg") }))
+    }
+
+    @Test
     fun uploadEndpointRequiresAuth() = testApplication {
         application { module() }
         assertEquals(HttpStatusCode.Unauthorized, client.post("/uploads").status)

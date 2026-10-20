@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CreatePostRequest(
     val caption: String = "",
-    val imageUrl: String? = null,
+    /** POST /uploads 로 받은 imageUrl 들. 순서 = 표시 순서, 최대 10장. */
+    val imageUrls: List<String> = emptyList(),
     /** false=생전, true=생후. */
     val isPosthumous: Boolean = false,
     /** ISO-8601. 지정하면 status=scheduled (사후 발행 예약). */
@@ -20,7 +21,7 @@ data class PostResponse(
     val authorHandle: String,
     val authorAvatarUrl: String? = null,
     val caption: String,
-    val imageUrl: String? = null,
+    val imageUrls: List<String> = emptyList(),
     val isPosthumous: Boolean,
     val status: String,
     val likeCount: Int,

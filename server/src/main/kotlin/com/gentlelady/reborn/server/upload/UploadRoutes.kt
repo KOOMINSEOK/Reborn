@@ -17,7 +17,7 @@ import java.util.UUID
 @Serializable
 data class CreateUploadRequest(val contentType: String)
 
-/** [uploadUrl] 에 이미지 바이트를 PUT 한 뒤, [imageUrl] 을 글/프로필의 이미지 필드로 보낸다. */
+/** [uploadUrl] 에 이미지 바이트를 PUT 한 뒤, [imageUrl] 을 글의 imageUrls 나 프로필 이미지 필드로 보낸다. 여러 장이면 장마다 호출. */
 @Serializable
 data class UploadResponse(val uploadUrl: String, val imageUrl: String)
 
