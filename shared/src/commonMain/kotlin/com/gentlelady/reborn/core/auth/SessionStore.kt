@@ -39,6 +39,16 @@ class SessionStore(
             if (value == null) storage.clear() else storage.write(json.encodeToString(Session.serializer(), value))
         }
 
+    /**
+     * 지금 세션이 아직 [expected] 일 때만 [new] 로 바꾼다. 토큰 갱신용 — 갱신하는 사이 로그아웃·다른 계정 로그인이
+     * 끼어들었으면 늦게 끝난 갱신 결과가 세션을 되살리거나(파일에 다시 저장) 새 계정을 덮지 않게.
+     */
+    fun replaceIf(expected: Session, new: Session?): Boolean {
+        if (!_session.compareAndSet(expected, new)) return false
+        if (new == null) storage.clear() else storage.write(json.encodeToString(Session.serializer(), new))
+        return true
+    }
+
     // 깨졌거나 못 읽는 값(앱 재설치로 암호화 키가 바뀜 등)은 버리고 로그인 화면부터
     private fun restore(): Session? = storage.read()?.let { raw ->
         runCatching { json.decodeFromString(Session.serializer(), raw) }

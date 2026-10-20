@@ -92,6 +92,35 @@ class AuthTest {
     }
 
     @Test
+    fun tokenProviderKeepsSessionOnServerError() = runTest {
+        val old = Session("OLD", "RT", expiresAtEpochSeconds = 100)
+        val store = SessionStore().apply { current = old }
+        val provider = SessionTokenProvider(
+            store,
+            authApi(MockEngine { respond("down", HttpStatusCode.ServiceUnavailable, jsonHeaders) }),
+        ) { 1_000L }
+
+        assertNull(provider.accessToken())
+        assertEquals(old, store.current) // 일시 장애로 로그아웃시키지 않음
+    }
+
+    @Test
+    fun refreshFinishingAfterLogoutDoesNotRestoreSession() = runTest {
+        val store = SessionStore().apply { current = Session("OLD", "RT", expiresAtEpochSeconds = 100) }
+        val refreshed = """{"access_token":"NEW","refresh_token":"RT2","expires_in":3600}"""
+        val provider = SessionTokenProvider(
+            store,
+            authApi(MockEngine {
+                store.current = null // 갱신 응답이 오기 전에 로그아웃
+                respond(refreshed, HttpStatusCode.OK, jsonHeaders)
+            }),
+        ) { 1_000L }
+
+        assertNull(provider.accessToken())
+        assertNull(store.current)
+    }
+
+    @Test
     fun tokenProviderReturnsNullWhenLoggedOut() = runTest {
         val provider = SessionTokenProvider(
             SessionStore(),
