@@ -7,6 +7,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.gentlelady.reborn.core.designsystem.comments.CommentSheet
+import com.gentlelady.reborn.core.network.InteractionTarget
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gentlelady.reborn.home.domain.model.HomePost
@@ -27,6 +33,8 @@ fun HomeScreen(
     onIntent: (HomeIntent) -> Unit = {},
     onAddClick: () -> Unit = {}
 ) {
+    var commentPostId by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         containerColor = RebornBackground, // 하드코딩 제거: 시맨틱 테마 컬러 적용
         contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
@@ -39,10 +47,25 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            items(state.posts) { post ->
-                PostItem(post = post)
+            items(state.posts, key = { it.id }) { post ->
+                PostItem(
+                    post = post,
+                    onLikeClick = { onIntent(HomeIntent.ToggleLike(post.id)) },
+                    onCommentClick = { commentPostId = post.id }
+                )
             }
         }
+    }
+
+    commentPostId?.let { postId ->
+        CommentSheet(
+            target = InteractionTarget.POST,
+            parentId = postId,
+            onDismiss = { delta ->
+                commentPostId = null
+                if (delta != 0) onIntent(HomeIntent.CommentCountChanged(postId, delta))
+            }
+        )
     }
 }
 

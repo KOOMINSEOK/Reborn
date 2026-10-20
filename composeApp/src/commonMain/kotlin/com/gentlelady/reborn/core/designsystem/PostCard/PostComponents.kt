@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +39,7 @@ import com.gentlelady.reborn.home.domain.model.HomePost
 import com.gentlelady.reborn.ic_bookmark
 import com.gentlelady.reborn.ic_comment
 import com.gentlelady.reborn.ic_like
+import com.gentlelady.reborn.ic_like_filled
 import com.gentlelady.reborn.ic_lock
 import com.gentlelady.reborn.ic_share
 import org.jetbrains.compose.resources.DrawableResource
@@ -176,22 +178,27 @@ internal fun PostImageArea(
 @Composable
 internal fun PostActionRow(
     post: HomePost,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLikeClick: () -> Unit = {},
+    onCommentClick: () -> Unit = {}
 ) {
     Row(
         modifier = modifier.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ActionItem(
-            iconRes = Res.drawable.ic_like,
+            iconRes = if (post.liked) Res.drawable.ic_like_filled else Res.drawable.ic_like,
             count = post.likes.toString(),
-            contentDescription = "Like"
+            contentDescription = if (post.liked) "좋아요 취소" else "좋아요",
+            tint = if (post.liked) RebornDangerRed else RebornActionIconDark,
+            onClick = onLikeClick
         )
         Spacer(modifier = Modifier.width(16.dp))
         ActionItem(
             iconRes = Res.drawable.ic_comment,
             count = post.comments.toString(),
-            contentDescription = "Comment"
+            contentDescription = "댓글",
+            onClick = onCommentClick
         )
         Spacer(modifier = Modifier.width(16.dp))
         Icon(
@@ -214,13 +221,18 @@ internal fun PostActionRow(
 private fun ActionItem(
     iconRes: DrawableResource,
     count: String,
-    contentDescription: String
+    contentDescription: String,
+    tint: Color = RebornActionIconDark,
+    onClick: () -> Unit = {}
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
-            tint = RebornActionIconDark,
+            tint = tint,
             modifier = Modifier.size(24.dp)
         )
         Text(text = " $count", fontSize = 14.sp, color = RebornSlateGray)

@@ -4,6 +4,7 @@ import com.gentlelady.reborn.core.auth.di.authModule
 import com.gentlelady.reborn.core.network.di.networkModule
 import com.gentlelady.reborn.feedwrite.di.feedWriteModule
 import com.gentlelady.reborn.home.di.homeModule
+import com.gentlelady.reborn.interaction.di.interactionModule
 import com.gentlelady.reborn.memorial.di.memorialModule
 import com.gentlelady.reborn.onboarding.di.onboardingModule
 import com.gentlelady.reborn.management.app_settings.domain.di.appSettingsModule
@@ -30,6 +31,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
             networkModule,
             todoModule,
             homeModule,
+            interactionModule,
             memorialModule,
             feedWriteModule,
             searchModule,

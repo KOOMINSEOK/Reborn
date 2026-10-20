@@ -1,5 +1,8 @@
 package com.gentlelady.reborn.core.network
 
+import com.gentlelady.reborn.core.network.dto.CommentDto
+import com.gentlelady.reborn.core.network.dto.CommentListDto
+import com.gentlelady.reborn.core.network.dto.CreateCommentDto
 import com.gentlelady.reborn.core.network.dto.CreateGuestbookDto
 import com.gentlelady.reborn.core.network.dto.CreateHistoryDto
 import com.gentlelady.reborn.core.network.dto.CreatePostDto
@@ -9,6 +12,7 @@ import com.gentlelady.reborn.core.network.dto.GuestbookEntryDto
 import com.gentlelady.reborn.core.network.dto.GuestbookListDto
 import com.gentlelady.reborn.core.network.dto.HistoryDto
 import com.gentlelady.reborn.core.network.dto.HistoryListDto
+import com.gentlelady.reborn.core.network.dto.LikeDto
 import com.gentlelady.reborn.core.network.dto.MemorialProfileDto
 import com.gentlelady.reborn.core.network.dto.MyGuestbookListDto
 import com.gentlelady.reborn.core.network.dto.MyProfileDto
@@ -18,6 +22,7 @@ import com.gentlelady.reborn.core.network.dto.UploadDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
@@ -105,6 +110,29 @@ class RebornApi(
 
     suspend fun createGuestbookEntry(memorialId: String, req: CreateGuestbookDto): GuestbookEntryDto =
         client.post("memorials/$memorialId/guestbook") { setBody(req) }.body()
+
+    /** 좋아요 켜기(POST)/끄기(DELETE). 둘 다 멱등 — 같은 요청을 여러 번 보내도 결과는 같다. */
+    suspend fun setLike(target: InteractionTarget, id: String, liked: Boolean): LikeDto {
+        val path = "${target.parentPath}/$id/like"
+        return (if (liked) client.post(path) else client.delete(path)).body()
+    }
+
+    /** 오래된 순. [offset] = 지난 응답의 nextOffset. */
+    suspend fun comments(target: InteractionTarget, id: String, offset: Int = 0): CommentListDto =
+        client.get("${target.parentPath}/$id/comments") { parameter("offset", offset) }.body()
+
+    suspend fun addComment(target: InteractionTarget, id: String, body: String): CommentDto =
+        client.post("${target.parentPath}/$id/comments") { setBody(CreateCommentDto(body)) }.body()
+
+    suspend fun deleteComment(target: InteractionTarget, commentId: String) {
+        client.delete("${target.commentPath}/$commentId")
+    }
+}
+
+/** 좋아요·댓글이 달리는 곳. 서버 경로가 다르다. */
+enum class InteractionTarget(val parentPath: String, val commentPath: String) {
+    POST("posts", "post-comments"),
+    HISTORY("history", "history-comments"),
 }
 
 private const val UPLOAD_TIMEOUT_MS = 60_000L

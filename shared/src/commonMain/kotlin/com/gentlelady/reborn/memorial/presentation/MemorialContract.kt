@@ -31,6 +31,7 @@ data class MemorialHistoryItem(
     val imageRes: DrawableResource? = null, // 앱 번들 목업 이미지 (프리뷰/목데이터용)
     val authorProfileRes: DrawableResource? = null,
     val likes: Int = 0,
+    val liked: Boolean = false,
     val comments: Int = 0
 )
 
@@ -103,6 +104,9 @@ sealed interface MemorialIntent {
     object ClickPurchaseWreath : MemorialIntent
     data class AddOnlineWreathItem(val item: MemorialWreathItem) : MemorialIntent
     data class ClickHistoryImage(val index: Int) : MemorialIntent
+    data class ToggleHistoryLike(val historyId: String) : MemorialIntent
+    /** 댓글 시트를 닫을 때 — 그동안 남기고 지운 만큼 댓글 수를 고친다 */
+    data class HistoryCommentCountChanged(val historyId: String, val delta: Int) : MemorialIntent
 
     // 히스토리 작성 화면 전용 인텐트
     object ClickAddHistory : MemorialIntent

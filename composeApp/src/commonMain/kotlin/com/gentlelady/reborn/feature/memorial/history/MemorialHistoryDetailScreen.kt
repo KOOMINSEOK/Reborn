@@ -10,7 +10,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import com.gentlelady.reborn.core.designsystem.comments.CommentSheet
+import com.gentlelady.reborn.core.network.InteractionTarget
+import com.gentlelady.reborn.core.theme.RebornDangerRed
+import com.gentlelady.reborn.ic_like_filled
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +51,18 @@ fun MemorialHistoryDetailScreen(
     onIntent: (MemorialIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showComments by remember { mutableStateOf(false) }
+    if (showComments) {
+        CommentSheet(
+            target = InteractionTarget.HISTORY,
+            parentId = item.id,
+            onDismiss = { delta ->
+                showComments = false
+                if (delta != 0) onIntent(MemorialIntent.HistoryCommentCountChanged(item.id, delta))
+            }
+        )
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.White,
@@ -119,9 +141,20 @@ fun MemorialHistoryDetailScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CountAction(iconRes = Res.drawable.ic_like, label = item.likes.toString(), contentDescription = "좋아요")
+                    CountAction(
+                        iconRes = if (item.liked) Res.drawable.ic_like_filled else Res.drawable.ic_like,
+                        label = item.likes.toString(),
+                        contentDescription = if (item.liked) "좋아요 취소" else "좋아요",
+                        tint = if (item.liked) RebornDangerRed else RebornSlateGray,
+                        onClick = { onIntent(MemorialIntent.ToggleHistoryLike(item.id)) }
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
-                    CountAction(iconRes = Res.drawable.ic_comment, label = item.comments.toString(), contentDescription = "댓글")
+                    CountAction(
+                        iconRes = Res.drawable.ic_comment,
+                        label = item.comments.toString(),
+                        contentDescription = "댓글",
+                        onClick = { showComments = true }
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
                     CountAction(iconRes = Res.drawable.ic_share, label = "공유", contentDescription = "공유")
                     Spacer(modifier = Modifier.weight(1f))
@@ -136,13 +169,18 @@ fun MemorialHistoryDetailScreen(
 private fun CountAction(
     iconRes: DrawableResource,
     label: String,
-    contentDescription: String
+    contentDescription: String,
+    tint: Color = RebornSlateGray,
+    onClick: () -> Unit = {}
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
-            tint = RebornSlateGray,
+            tint = tint,
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))

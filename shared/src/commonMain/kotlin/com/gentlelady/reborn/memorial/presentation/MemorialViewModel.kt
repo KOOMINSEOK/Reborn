@@ -3,7 +3,9 @@ package com.gentlelady.reborn.memorial.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gentlelady.reborn.core.network.InteractionTarget
 import com.gentlelady.reborn.data.MemorialMockData
+import com.gentlelady.reborn.interaction.presentation.LikeSync
 import com.gentlelady.reborn.memorial.data.MemorialRepository
 import com.gentlelady.reborn.memorial.domain.usecase.CreateGuestbookEntryUseCase
 import com.gentlelady.reborn.memorial.domain.usecase.CreateHistoryUseCase
@@ -17,6 +19,7 @@ class MemorialViewModel(
     private val repository: MemorialRepository,
     private val createHistoryUseCase: CreateHistoryUseCase,
     private val createGuestbookEntryUseCase: CreateGuestbookEntryUseCase,
+    private val likeSync: LikeSync,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MemorialMockData.memorialState)
@@ -39,6 +42,12 @@ class MemorialViewModel(
             }
 
             is MemorialIntent.SelectTab -> _state.update { it.copy(selectedTab = intent.tab) }
+
+            is MemorialIntent.ToggleHistoryLike -> toggleHistoryLike(intent.historyId)
+
+            is MemorialIntent.HistoryCommentCountChanged -> updateHistory(intent.historyId) {
+                it.copy(comments = (it.comments + intent.delta).coerceAtLeast(0))
+            }
 
             is MemorialIntent.ClickHistoryImage ->
                 _state.update { it.copy(selectedHistoryIndex = intent.index) }
@@ -75,6 +84,16 @@ class MemorialViewModel(
             else -> { /* 공유/음악/더보기/헌화/화환구매 등은 UI·NavGraph 에서 처리 */ }
         }
     }
+
+    private fun toggleHistoryLike(historyId: String) {
+        val item = _state.value.historyItems.firstOrNull { it.id == historyId } ?: return
+        likeSync.toggle(viewModelScope, InteractionTarget.HISTORY, historyId, item.liked, item.likes) { liked, likes ->
+            updateHistory(historyId) { it.copy(liked = liked, likes = likes) }
+        }
+    }
+
+    private fun updateHistory(id: String, change: (MemorialHistoryItem) -> MemorialHistoryItem) =
+        _state.update { s -> s.copy(historyItems = s.historyItems.map { if (it.id == id) change(it) else it }) }
 
     private fun loadNewerGuestBook() {
         val current = _state.value
