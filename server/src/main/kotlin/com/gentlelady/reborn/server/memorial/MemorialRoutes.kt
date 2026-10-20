@@ -5,6 +5,7 @@ import com.gentlelady.reborn.server.interaction.interactionRoutes
 import com.gentlelady.reborn.server.plugins.ErrorResponse
 import com.gentlelady.reborn.server.plugins.SUPABASE_AUTH
 import com.gentlelady.reborn.server.plugins.userId
+import com.gentlelady.reborn.server.upload.Storage
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -31,7 +32,11 @@ fun Route.memorialRoutes(repo: MemorialRepository, historyInteractions: Interact
 
 private fun Route.memorialEndpoints(repo: MemorialRepository) {
     post("/memorials") {
-        call.respond(HttpStatusCode.Created, repo.create(call.userId(), call.receive()))
+        val req = call.receive<CreateMemorialRequest>()
+        if (!Storage.isOwnImage(call.userId(), req.profileImageUrl)) {
+            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("invalid_image_url"))
+        }
+        call.respond(HttpStatusCode.Created, repo.create(call.userId(), req))
     }
     get("/memorials/{id}") {
         val memorial = repo.get(call.userId(), UUID.fromString(call.parameters["id"]))
@@ -58,7 +63,11 @@ private fun Route.historyEndpoints(repo: MemorialRepository) {
         if (!repo.canView(call.userId(), memorialId)) {
             return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
         }
-        call.respond(HttpStatusCode.Created, repo.createHistory(memorialId, call.userId(), call.receive()))
+        val req = call.receive<CreateHistoryRequest>()
+        if (!Storage.isOwnImage(call.userId(), req.imageUrl)) {
+            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("invalid_image_url"))
+        }
+        call.respond(HttpStatusCode.Created, repo.createHistory(memorialId, call.userId(), req))
     }
     get("/memorials/{id}/history") {
         val memorialId = UUID.fromString(call.parameters["id"])
