@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.management.security.change_password
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -56,7 +57,9 @@ fun ChangePasswordScreen(
             Text(
                 text = "${profileState.displayName} @${profileState.username}",
                 color = RebornSlateGray,
-                fontSize = 13.sp
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(

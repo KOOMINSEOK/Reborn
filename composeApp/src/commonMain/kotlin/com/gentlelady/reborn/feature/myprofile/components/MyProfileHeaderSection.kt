@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.myprofile.components
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -145,7 +146,8 @@ internal fun MyProfileHeaderSection(
         }
 
         // 3. 이름 + 유저네임 텍스트 영역 (+ 한 줄 소개가 있으면 그 아래)
-        Row(
+        // 닉네임·핸들은 길이가 제각각이라 줄을 나누고 각각 한 줄 말줄임 — 어떤 길이여도 레이아웃이 깨지지 않게
+        Column(
             modifier = Modifier
                 .padding(horizontal = 24.dp)
                 .padding(top = 12.dp, bottom = if (state.bio.isBlank()) 20.dp else 6.dp)
@@ -154,14 +156,16 @@ internal fun MyProfileHeaderSection(
                 text = state.displayName,
                 color = Color.Black,
                 fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "@${state.username}",
-                color = Color.Black,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
+                color = RebornSlateGray,
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
         if (state.bio.isNotBlank()) {
@@ -169,6 +173,8 @@ internal fun MyProfileHeaderSection(
                 text = state.bio,
                 color = RebornSlateGray,
                 fontSize = 13.sp,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 20.dp)
             )
         }

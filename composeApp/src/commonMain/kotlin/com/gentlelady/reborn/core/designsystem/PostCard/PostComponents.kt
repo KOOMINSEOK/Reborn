@@ -91,12 +91,14 @@ internal fun PostHeader(
         }
         Spacer(modifier = Modifier.width(10.dp))
 
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = post.authorName,
                 color = RebornTextPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
+                fontSize = 15.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -106,7 +108,6 @@ internal fun PostHeader(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
         Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = RebornUnselectedGray)
     }
 }

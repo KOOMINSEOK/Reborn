@@ -72,7 +72,10 @@ fun RebornChatRow(
                     fontSize = 15.sp,
                     // 시안 규칙: 안읽은 스레드는 bold text, 읽은 스레드는 일반 폰트
                     fontWeight = if (isUnread && !isMemorialMode) FontWeight.Bold else FontWeight.Medium,
-                    color = Color.Black
+                    color = Color.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
 
                 if (isMemorialMode) {
