@@ -105,10 +105,17 @@ private fun Route.guestbookEndpoints(repo: MemorialRepository) {
         }
         val offset = call.request.queryParameters["offset"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
         val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, MAX_LIMIT) ?: DEFAULT_LIMIT
-        // before = 이 방명록 id 보다 이전 것만 (형식 오류는 400)
-        val before = call.request.queryParameters["before"]?.let(UUID::fromString)
-        val items = repo.listGuestbook(memorialId, before, if (before != null) 0 else offset, limit)
-        call.respond(GuestbookListResponse(items, if (items.size == limit) offset + limit else null))
+        // cursor = 지난 응답의 nextCursor. 그보다 이전 글만 (형식 오류는 400)
+        val cursor = call.request.queryParameters["cursor"]?.let(GuestbookCursor::parse)
+        val items = repo.listGuestbook(memorialId, cursor, if (cursor != null) 0 else offset, limit)
+        val full = items.size == limit
+        call.respond(
+            GuestbookListResponse(
+                items = items,
+                nextOffset = if (full) offset + limit else null,
+                nextCursor = if (full) GuestbookCursor.after(items.last()).toString() else null,
+            )
+        )
     }
     delete("/guestbook/{id}") {
         val removed = repo.deleteGuestbookEntry(UUID.fromString(call.parameters["id"]), call.userId())

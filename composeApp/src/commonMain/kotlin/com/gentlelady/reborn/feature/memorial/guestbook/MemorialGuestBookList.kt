@@ -73,10 +73,10 @@ internal fun MemorialGuestBookList(
             LaunchedEffect(isDragged) { if (isDragged) userDragged = true }
 
             // 맨 아래(최신) 글이 바뀔 때만 아래로 — 처음엔 바로, 새 글은 부드럽게.
-            // 이전 글이 위에 붙을 땐 마지막 글이 그대로라 안 움직이고, 보던 위치는 key 로 고정된다.
+            // 대상은 지금 목록 기준으로 계산 (layoutInfo 는 아직 이전 측정값일 수 있다)
             var scrolledOnce by remember { mutableStateOf(false) }
             LaunchedEffect(guestBookMessages.last().id) {
-                val last = (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
+                val last = guestBookMessages.lastIndex
                 if (scrolledOnce) listState.animateScrollToItem(last) else listState.scrollToItem(last)
                 scrolledOnce = true
             }
@@ -92,10 +92,15 @@ internal fun MemorialGuestBookList(
                 if (index > 0) listState.scrollToItem(index)
             }
 
-            // 손으로 스크롤해서 맨 위에 닿으면 이전 글 불러오기
+            // 손으로 스크롤해서 정말 맨 위(첫 글이 다 보임)에 닿으면 이전 글 불러오기.
+            // 불러오는 중엔 안 부르고, 실패하면 사용자가 내렸다 다시 올려야 재시도 (자동 재요청 루프 방지)
+            val latestIsLoadingOlder by rememberUpdatedState(isLoadingOlder)
             LaunchedEffect(listState, hasOlder) {
                 if (!hasOlder) return@LaunchedEffect
-                snapshotFlow { userDragged && listState.firstVisibleItemIndex == 0 }
+                snapshotFlow {
+                    userDragged && !latestIsLoadingOlder &&
+                        listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+                }
                     .distinctUntilChanged()
                     .filter { it }
                     .collect { latestOnLoadOlder() }
@@ -112,20 +117,18 @@ internal fun MemorialGuestBookList(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                if (isLoadingOlder) {
-                    item(key = "loading_older") {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                color = RebornDeepBlue,
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
                 items(guestBookMessages, key = { it.id }) { item ->
                     GuestBookMessageRow(item = item)
                 }
+            }
+
+            // 로딩 표시는 목록 항목이 아니라 위에 겹쳐 그린다 — 항목으로 넣으면 인덱스가 흔들려 재요청을 부른다
+            if (isLoadingOlder) {
+                CircularProgressIndicator(
+                    color = RebornDeepBlue,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(20.dp)
+                )
             }
         }
 

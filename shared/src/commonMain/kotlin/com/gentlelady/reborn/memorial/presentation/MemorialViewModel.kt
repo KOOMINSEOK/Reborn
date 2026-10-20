@@ -76,19 +76,19 @@ class MemorialViewModel(
 
     private fun loadOlderGuestBook() {
         val current = _state.value
-        val oldest = current.guestBookMessages.firstOrNull() ?: return
-        if (!current.hasOlderGuestBook || current.isLoadingOlderGuestBook || current.isLoading) return
+        val cursor = current.olderGuestBookCursor ?: return
+        if (current.isLoadingOlderGuestBook || current.isLoading) return
         _state.update { it.copy(isLoadingOlderGuestBook = true) }
         viewModelScope.launch {
-            val page = runCatching { repository.loadOlderGuestbook(current.memorialId, oldest.id) }.getOrNull()
+            val page = runCatching { repository.loadOlderGuestbook(current.memorialId, cursor) }.getOrNull()
             _state.update {
                 if (it.memorialId != current.memorialId) return@update it.copy(isLoadingOlderGuestBook = false)
                 // 실패하면 목록은 그대로, 다음에 맨 위에 닿을 때 다시 시도
-                val (older, hasMore) = page ?: return@update it.copy(isLoadingOlderGuestBook = false)
+                val (older, nextCursor) = page ?: return@update it.copy(isLoadingOlderGuestBook = false)
                 val known = it.guestBookMessages.mapTo(HashSet()) { m -> m.id }
                 it.copy(
                     guestBookMessages = older.filter { m -> m.id !in known } + it.guestBookMessages,
-                    hasOlderGuestBook = hasMore,
+                    olderGuestBookCursor = nextCursor,
                     isLoadingOlderGuestBook = false,
                 )
             }
@@ -162,7 +162,7 @@ class MemorialViewModel(
                     profile = loaded.profile,
                     historyItems = loaded.historyItems,
                     guestBookMessages = loaded.guestBookMessages,
-                    hasOlderGuestBook = loaded.hasOlderGuestBook,
+                    olderGuestBookCursor = loaded.olderGuestBookCursor,
                     onlineWreathItems = loaded.onlineWreathItems,
                     selectedHistoryIndex = it.selectedHistoryIndex?.takeIf { i -> i < loaded.historyItems.size },
                     isLoading = false,

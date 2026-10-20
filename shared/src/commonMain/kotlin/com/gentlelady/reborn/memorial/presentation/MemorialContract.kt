@@ -67,8 +67,8 @@ data class MemorialState(
     val guestBookMessages: List<MemorialGuestBookItem> = emptyList(),
     val guestBookInputText: String = "",
     val isSubmittingGuestBook: Boolean = false,
-    /** 서버에 더 이전 방명록이 남아 있나 (맨 위로 스크롤하면 이어서 불러온다) */
-    val hasOlderGuestBook: Boolean = false,
+    /** 더 이전 방명록을 불러올 서버 커서. null = 더 없음 (맨 위로 스크롤하면 이어서 불러온다) */
+    val olderGuestBookCursor: String? = null,
     val isLoadingOlderGuestBook: Boolean = false,
     val guestBookError: String? = null,
     val isWritingHistory: Boolean = false, // 히스토리 작성 화면 전환 플래그

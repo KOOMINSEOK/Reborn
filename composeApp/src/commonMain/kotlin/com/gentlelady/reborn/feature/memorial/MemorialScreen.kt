@@ -168,7 +168,7 @@ fun MemorialScreen(
                                 },
                                 isSubmitting = state.isSubmittingGuestBook,
                                 error = state.guestBookError,
-                                hasOlder = state.hasOlderGuestBook,
+                                hasOlder = state.olderGuestBookCursor != null,
                                 isLoadingOlder = state.isLoadingOlderGuestBook,
                                 onLoadOlder = { onIntent(MemorialIntent.LoadOlderGuestBook) },
                                 modifier = Modifier.fillMaxSize()

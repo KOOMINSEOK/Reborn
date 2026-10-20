@@ -47,7 +47,12 @@ data class GuestbookEntryDto(
 )
 
 @Serializable
-data class GuestbookListDto(val items: List<GuestbookEntryDto>, val nextOffset: Int? = null)
+data class GuestbookListDto(
+    val items: List<GuestbookEntryDto>,
+    val nextOffset: Int? = null,
+    /** 더 이전 글이 있으면 다음 요청의 cursor. null = 끝. */
+    val nextCursor: String? = null,
+)
 
 fun MemorialProfileDto.toProfileData(): MemorialProfileData = MemorialProfileData(
     id = id,

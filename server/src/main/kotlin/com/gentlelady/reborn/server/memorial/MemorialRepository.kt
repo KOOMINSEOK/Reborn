@@ -87,10 +87,10 @@ class MemorialRepository {
         ) ?: error("guestbook insert returned nothing")
 
     /**
-     * 최신순. [before] 를 주면 그 방명록보다 이전 것만 (커서) — 스크롤로 이전 글을 이어 읽을 때.
-     * offset 과 달리 그 사이 새 글이 생겨도 겹치거나 건너뛰지 않는다. 같은 시각은 id 로 순서를 고정.
+     * 최신순. [before] 를 주면 그 (작성 시각, id) 보다 이전 것만 — 스크롤로 이전 글을 이어 읽을 때.
+     * offset 과 달리 그 사이 새 글이 생겨도 겹치거나 건너뛰지 않고, 기준 글이 지워져도 이어진다.
      */
-    fun listGuestbook(memorialId: UUID, before: UUID?, offset: Int, limit: Int): List<GuestbookEntryResponse> =
+    fun listGuestbook(memorialId: UUID, before: GuestbookCursor?, offset: Int, limit: Int): List<GuestbookEntryResponse> =
         Db.query(
             """
             select g.id, g.memorial_id, g.author_id, pr.display_name as author_name,
@@ -98,11 +98,11 @@ class MemorialRepository {
             from guestbook_entries g
             join profiles pr on pr.id = g.author_id
             where g.memorial_id = ?
-              and (?::uuid is null or (g.created_at, g.id) < (select c.created_at, c.id from guestbook_entries c where c.id = ?))
+              and (?::timestamptz is null or (g.created_at, g.id) < (?::timestamptz, ?::uuid))
             order by g.created_at desc, g.id desc
             limit ? offset ?
             """.trimIndent(),
-            memorialId, before, before, limit, offset,
+            memorialId, before?.createdAt, before?.createdAt, before?.id, limit, offset,
             map = ResultSet::toGuestbookEntry,
         )
 
@@ -174,3 +174,22 @@ private fun ResultSet.toHistory() = HistoryResponse(
     liked = getBoolean("liked"),
     createdAt = getObject("created_at", OffsetDateTime::class.java).toString(),
 )
+
+/** 방명록 커서 = 마지막으로 받은 글의 (작성 시각, id). 문자열 형식 `{ISO-8601}_{uuid}`. */
+data class GuestbookCursor(val createdAt: OffsetDateTime, val id: UUID) {
+    override fun toString() = "${createdAt}_$id"
+
+    companion object {
+        /** 형식이 틀리면 IllegalArgumentException(→ 400). */
+        fun parse(raw: String): GuestbookCursor {
+            val at = raw.substringBeforeLast('_', missingDelimiterValue = "")
+            val id = raw.substringAfterLast('_')
+            val createdAt = runCatching { OffsetDateTime.parse(at) }
+                .getOrElse { throw IllegalArgumentException("bad cursor") }
+            return GuestbookCursor(createdAt, UUID.fromString(id))
+        }
+
+        fun after(entry: GuestbookEntryResponse) =
+            GuestbookCursor(OffsetDateTime.parse(entry.createdAt), UUID.fromString(entry.id))
+    }
+}

@@ -43,12 +43,12 @@ class MemorialGuestbookTest {
                     headers = json,
                 )
                 path.endsWith("/memorials/m1/history") -> respond("""{"items":[]}""", headers = json)
-                // 이전 페이지 (before=g1): 최신순으로 g0b, g0a
-                path.endsWith("/memorials/m1/guestbook") && req.url.parameters["before"] == "g1" ->
-                    respond("""{"items":[${entry("g0b", "other")},${entry("g0a", "other")}]}""", headers = json)
+                // 이전 페이지 (cursor=c1): 최신순으로 g0b, g0a, 다음 커서 c2
+                path.endsWith("/memorials/m1/guestbook") && req.url.parameters["cursor"] == "c1" ->
+                    respond("""{"items":[${entry("g0b", "other")},${entry("g0a", "other")}],"nextCursor":"c2"}""", headers = json)
                 // 서버는 최신순
                 path.endsWith("/memorials/m1/guestbook") ->
-                    respond("""{"items":[${entry("g2", "other")},${entry("g1", me)}]}""", headers = json)
+                    respond("""{"items":[${entry("g2", "other")},${entry("g1", me)}],"nextCursor":"c1"}""", headers = json)
                 else -> error("unexpected ${req.method} ${req.url}")
             }
         }
@@ -65,16 +65,18 @@ class MemorialGuestbookTest {
 
     @Test
     fun loadsGuestbookOldestFirstAndMarksMyEntries() = runTest {
-        val messages = repo().first.getMemorial("m1").guestBookMessages
+        val state = repo().first.getMemorial("m1")
+        val messages = state.guestBookMessages
+        assertEquals("c1", state.olderGuestBookCursor)
         assertEquals(listOf("g1", "g2"), messages.map { it.id })
         assertEquals(listOf(true, false), messages.map { it.isMine })
     }
 
     @Test
-    fun loadsOlderPageBeforeOldestInScreenOrder() = runTest {
-        val (older, hasMore) = repo().first.loadOlderGuestbook("m1", beforeId = "g1")
+    fun loadsOlderPageByCursorInScreenOrder() = runTest {
+        val (older, next) = repo().first.loadOlderGuestbook("m1", cursor = "c1")
         assertEquals(listOf("g0a", "g0b"), older.map { it.id })
-        assertEquals(false, hasMore) // 30개 미만이면 더 없음
+        assertEquals("c2", next)
     }
 
     @Test
