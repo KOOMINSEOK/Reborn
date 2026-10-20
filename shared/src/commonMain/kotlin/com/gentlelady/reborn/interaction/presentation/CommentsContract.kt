@@ -14,10 +14,13 @@ data class CommentsState(
     val loadFailed: Boolean = false,
     val input: String = "",
     val isSending: Boolean = false,
+    /** 지우는 중인 댓글 (삭제 버튼을 막는다) */
+    val deletingIds: Set<String> = emptySet(),
     val error: String? = null,
-    /** 이번에 열고 나서 늘어난(+)/줄어든(-) 댓글 수 — 닫을 때 글의 댓글 수에 더한다 */
-    val countDelta: Int = 0,
 )
+
+/** 서버에 반영된 댓글 수 변화. 시트를 닫은 뒤에 끝나도 글의 댓글 수를 고칠 수 있게 따로 흘린다. */
+data class CommentCountChange(val target: InteractionTarget, val parentId: String, val delta: Int)
 
 sealed interface CommentsIntent {
     data class Open(val target: InteractionTarget, val parentId: String) : CommentsIntent
@@ -32,11 +35,15 @@ sealed interface CommentsResult {
     data class PageLoaded(val comments: List<Comment>, val nextOffset: Int?, val append: Boolean) : CommentsResult
     object LoadFailed : CommentsResult
     object LoadingMore : CommentsResult
+    /** 받던 다음 페이지를 버림 (그 사이 삭제로 offset 이 밀림) — 스크롤이 다시 부른다 */
+    object LoadMoreDropped : CommentsResult
     data class InputChanged(val text: String) : CommentsResult
     object Sending : CommentsResult
     data class Sent(val comment: Comment) : CommentsResult
+    data class SendFailed(val message: String) : CommentsResult
+    data class Deleting(val commentId: String) : CommentsResult
     data class Deleted(val commentId: String) : CommentsResult
-    data class Failed(val message: String) : CommentsResult
+    data class DeleteFailed(val commentId: String, val message: String) : CommentsResult
 }
 
 object CommentsReducer {
@@ -52,6 +59,7 @@ object CommentsReducer {
         )
         is CommentsResult.LoadFailed -> state.copy(isLoading = false, isLoadingMore = false, loadFailed = state.comments.isEmpty())
         is CommentsResult.LoadingMore -> state.copy(isLoadingMore = true)
+        is CommentsResult.LoadMoreDropped -> state.copy(isLoadingMore = false)
         is CommentsResult.InputChanged -> state.copy(input = result.text, error = null)
         is CommentsResult.Sending -> state.copy(isSending = true, error = null)
         is CommentsResult.Sent -> state.copy(
@@ -60,13 +68,15 @@ object CommentsReducer {
             comments = if (state.nextOffset == null) state.comments + result.comment else state.comments,
             input = "",
             isSending = false,
-            countDelta = state.countDelta + 1,
         )
+        is CommentsResult.SendFailed -> state.copy(isSending = false, error = result.message)
+        is CommentsResult.Deleting -> state.copy(deletingIds = state.deletingIds + result.commentId, error = null)
         is CommentsResult.Deleted -> state.copy(
             comments = state.comments.filterNot { it.id == result.commentId },
+            // 앞에서 하나 빠지면 서버의 다음 페이지가 하나 당겨진다
             nextOffset = state.nextOffset?.minus(1),
-            countDelta = state.countDelta - 1,
+            deletingIds = state.deletingIds - result.commentId,
         )
-        is CommentsResult.Failed -> state.copy(isSending = false, error = result.message)
+        is CommentsResult.DeleteFailed -> state.copy(deletingIds = state.deletingIds - result.commentId, error = result.message)
     }
 }

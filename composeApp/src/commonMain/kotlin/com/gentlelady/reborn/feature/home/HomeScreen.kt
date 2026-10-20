@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.gentlelady.reborn.core.designsystem.comments.CommentCountEffect
 import com.gentlelady.reborn.core.designsystem.comments.CommentSheet
 import com.gentlelady.reborn.core.network.InteractionTarget
 import androidx.compose.ui.Modifier
@@ -34,6 +35,9 @@ fun HomeScreen(
     onAddClick: () -> Unit = {}
 ) {
     var commentPostId by remember { mutableStateOf<String?>(null) }
+    CommentCountEffect { change ->
+        if (change.target == InteractionTarget.POST) onIntent(HomeIntent.CommentCountChanged(change.parentId, change.delta))
+    }
 
     Scaffold(
         containerColor = RebornBackground, // 하드코딩 제거: 시맨틱 테마 컬러 적용
@@ -61,10 +65,7 @@ fun HomeScreen(
         CommentSheet(
             target = InteractionTarget.POST,
             parentId = postId,
-            onDismiss = { delta ->
-                commentPostId = null
-                if (delta != 0) onIntent(HomeIntent.CommentCountChanged(postId, delta))
-            }
+            onDismiss = { commentPostId = null }
         )
     }
 }

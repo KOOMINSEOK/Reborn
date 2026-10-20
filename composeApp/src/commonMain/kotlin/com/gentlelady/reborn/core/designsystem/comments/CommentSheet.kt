@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,29 +27,28 @@ import com.gentlelady.reborn.core.theme.RebornDangerRed
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import com.gentlelady.reborn.interaction.domain.Comment
+import com.gentlelady.reborn.interaction.presentation.CommentCountChange
 import com.gentlelady.reborn.interaction.presentation.CommentsIntent
 import com.gentlelady.reborn.interaction.presentation.CommentsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * 글·추억 글 공용 댓글 시트. 열면 [parentId] 의 댓글을 처음부터 받는다.
- * [onDismiss] 로 그동안 늘어난(+)/줄어든(-) 댓글 수를 돌려준다 → 화면의 댓글 수를 고친다.
+ * 댓글 수 변화는 시트를 띄우는 화면이 [CommentCountEffect] 로 받는다.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentSheet(
     target: InteractionTarget,
     parentId: String,
-    onDismiss: (countDelta: Int) -> Unit,
+    onDismiss: () -> Unit,
     viewModel: CommentsViewModel = koinViewModel(),
 ) {
     LaunchedEffect(target, parentId) { viewModel.onIntent(CommentsIntent.Open(target, parentId)) }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    // 열자마자 닫히면 이전 대상의 상태가 남아 있을 수 있다 → 지금 대상일 때만 delta 를 믿는다
-    val delta = if (state.parentId == parentId) state.countDelta else 0
 
     ModalBottomSheet(
-        onDismissRequest = { onDismiss(delta) },
+        onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = Color.White
     ) {
@@ -70,6 +70,7 @@ fun CommentSheet(
                     else -> CommentList(
                         comments = state.comments,
                         hasMore = state.nextOffset != null,
+                        deletingIds = state.deletingIds,
                         onLoadMore = { viewModel.onIntent(CommentsIntent.LoadMore) },
                         onDelete = { viewModel.onIntent(CommentsIntent.Delete(it)) }
                     )
@@ -90,6 +91,19 @@ fun CommentSheet(
     }
 }
 
+/**
+ * 서버에 반영된 댓글 수 변화를 받는다 (시트를 닫은 뒤 끝난 작성·삭제 포함).
+ * 시트를 띄우는 화면에 둔다 — 같은 화면(내비게이션 항목)의 [CommentsViewModel] 을 공유한다.
+ */
+@Composable
+fun CommentCountEffect(
+    viewModel: CommentsViewModel = koinViewModel(),
+    onChange: (CommentCountChange) -> Unit,
+) {
+    val latest by rememberUpdatedState(onChange)
+    LaunchedEffect(viewModel) { viewModel.countChanges.collect { latest(it) } }
+}
+
 @Composable
 private fun BoxScope.CenterNote(text: String) {
     Text(text, color = RebornSlateGray, fontSize = 13.sp, modifier = Modifier.align(Alignment.Center))
@@ -99,6 +113,7 @@ private fun BoxScope.CenterNote(text: String) {
 private fun CommentList(
     comments: List<Comment>,
     hasMore: Boolean,
+    deletingIds: Set<String>,
     onLoadMore: () -> Unit,
     onDelete: (String) -> Unit,
 ) {
@@ -132,7 +147,7 @@ private fun CommentList(
                     Text(comment.body, fontSize = 14.sp, lineHeight = 20.sp)
                 }
                 if (comment.isMine) {
-                    TextButton(onClick = { onDelete(comment.id) }) {
+                    TextButton(onClick = { onDelete(comment.id) }, enabled = comment.id !in deletingIds) {
                         Text("삭제", fontSize = 12.sp, color = RebornSlateGray)
                     }
                 }

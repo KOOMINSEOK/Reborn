@@ -56,10 +56,7 @@ fun MemorialHistoryDetailScreen(
         CommentSheet(
             target = InteractionTarget.HISTORY,
             parentId = item.id,
-            onDismiss = { delta ->
-                showComments = false
-                if (delta != 0) onIntent(MemorialIntent.HistoryCommentCountChanged(item.id, delta))
-            }
+            onDismiss = { showComments = false }
         )
     }
 
