@@ -96,7 +96,6 @@ fun MemorialHistoryDetailScreen(
                 authorProfileRes = item.authorProfileRes,
                 imageRes = item.imageRes,
                 imageUrls = item.imageUrls,
-                imageBitmap = item.imageBitmap,
                 showMoreIcon = false,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             ) {

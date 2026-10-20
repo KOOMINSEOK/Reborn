@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feedwrite
 
+import com.gentlelady.reborn.core.network.ImageUploader
 import com.gentlelady.reborn.core.network.RebornApi
 import com.gentlelady.reborn.feedwrite.data.repository.FeedWriteRepositoryImpl
 import com.gentlelady.reborn.feedwrite.domain.repository.FeedWriteRepository
@@ -76,7 +77,7 @@ class FeedWriteTest {
         val images = listOf(byteArrayOf(1), byteArrayOf(2), byteArrayOf(3))
         val at = Instant.parse("2026-10-27T00:00:00Z")
 
-        val repo = FeedWriteRepositoryImpl(api)
+        val repo = FeedWriteRepositoryImpl(api, ImageUploader(api))
         val uploaded = repo.uploadImages(images)
         repo.createPost("안녕", uploaded, isPosthumous = true, publishAt = at, clientRequestId = "req-1")
 

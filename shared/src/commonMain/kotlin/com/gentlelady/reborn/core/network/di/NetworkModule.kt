@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.core.network.di
 
+import com.gentlelady.reborn.core.network.ImageUploader
 import com.gentlelady.reborn.core.network.RebornApi
 import com.gentlelady.reborn.core.network.createRebornHttpClient
 import com.gentlelady.reborn.core.network.createUploadHttpClient
@@ -11,4 +12,5 @@ val networkModule = module {
     single { createRebornHttpClient(get()) }
     single(named("upload")) { createUploadHttpClient() }
     single { RebornApi(client = get(), uploadClient = get(named("upload"))) }
+    single { ImageUploader(get()) }
 }
