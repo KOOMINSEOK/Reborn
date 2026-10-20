@@ -22,4 +22,12 @@ class InternalRoutesTest {
         val response = client.post("/internal/publish-due") { header("X-Internal-Secret", "nope") }
         assertEquals(HttpStatusCode.Forbidden, response.status)
     }
+
+    @Test
+    fun cleanupUploadsRequiresSecret() = testApplication {
+        application { module() }
+        assertEquals(HttpStatusCode.Forbidden, client.post("/internal/cleanup-uploads").status)
+        val wrong = client.post("/internal/cleanup-uploads") { header("X-Internal-Secret", "nope") }
+        assertEquals(HttpStatusCode.Forbidden, wrong.status)
+    }
 }

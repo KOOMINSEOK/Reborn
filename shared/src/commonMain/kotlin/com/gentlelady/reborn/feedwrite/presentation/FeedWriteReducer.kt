@@ -13,14 +13,21 @@ object FeedWriteReducer {
         is FeedWriteIntent.ChangeCaption -> state.copy(caption = intent.caption, submitError = null)
         is FeedWriteIntent.AddImage ->
             if (state.images.size >= MAX_POST_IMAGES) state
-            else state.copy(images = state.images + intent.jpeg, submitError = null)
-        is FeedWriteIntent.RemoveImage -> state.copy(images = state.images.filterIndexed { i, _ -> i != intent.index })
+            else state.copy(images = state.images + intent.jpeg, uploadedImageUrls = null, submitError = null)
+        is FeedWriteIntent.RemoveImage -> state.copy(
+            images = state.images.filterIndexed { i, _ -> i != intent.index },
+            uploadedImageUrls = null,
+        )
         is FeedWriteIntent.Submit -> state
     }
 
     fun reduce(state: FeedWriteState, result: FeedWriteResult): FeedWriteState = when (result) {
         is FeedWriteResult.Submitting -> state.copy(isSubmitting = true, submitError = null)
         is FeedWriteResult.Submitted -> state.copy(isSubmitting = false, isSubmitted = true)
-        is FeedWriteResult.SubmitFailed -> state.copy(isSubmitting = false, submitError = result.message)
+        is FeedWriteResult.SubmitFailed -> state.copy(
+            isSubmitting = false,
+            submitError = result.message,
+            uploadedImageUrls = result.uploadedImageUrls,
+        )
     }
 }

@@ -2,8 +2,11 @@ package com.gentlelady.reborn.server.upload
 
 import com.gentlelady.reborn.server.Env
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.putJsonArray
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -47,6 +50,19 @@ object Storage {
         // 응답 url 은 `/object/upload/sign/...?token=...` 형태의 상대 경로
         val relative = Json.parseToJsonElement(res.body()).jsonObject.getValue("url").jsonPrimitive.content
         return "$supabaseUrl/storage/v1$relative"
+    }
+
+    /** 버킷 객체 일괄 삭제. [paths] 는 버킷 기준 경로(`{userId}/{uuid}.jpg`). */
+    fun delete(paths: List<String>) {
+        val body = buildJsonObject { putJsonArray("prefixes") { paths.forEach { add(it) } } }.toString()
+        val req = HttpRequest.newBuilder(URI("$supabaseUrl/storage/v1/object/$BUCKET"))
+            .header("apikey", secretKey)
+            .header("Content-Type", "application/json")
+            .timeout(TIMEOUT)
+            .method("DELETE", HttpRequest.BodyPublishers.ofString(body))
+            .build()
+        val res = http.send(req, HttpResponse.BodyHandlers.ofString())
+        check(res.statusCode() == 200) { "storage delete failed: ${res.statusCode()} ${res.body()}" }
     }
 }
 

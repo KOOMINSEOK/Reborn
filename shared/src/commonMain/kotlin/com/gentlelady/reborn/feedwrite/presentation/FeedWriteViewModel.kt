@@ -38,8 +38,10 @@ class FeedWriteViewModel(
             val result = createPostUseCase(
                 caption = current.caption,
                 images = current.images,
+                uploadedImageUrls = current.uploadedImageUrls,
                 isPosthumous = type == FeedPostType.POSTHUMOUS,
                 publishAt = current.publishAt(type, Clock.System.now(), TimeZone.currentSystemDefault()),
+                requestId = current.requestId,
             )
             _state.update { FeedWriteReducer.reduce(it, result) }
         }

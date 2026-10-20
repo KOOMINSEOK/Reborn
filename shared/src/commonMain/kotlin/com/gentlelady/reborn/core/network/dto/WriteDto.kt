@@ -17,4 +17,6 @@ data class CreatePostDto(
     val imageUrls: List<String>,
     val isPosthumous: Boolean,
     val publishAt: String? = null,
+    /** 멱등성 키. 같은 값으로 재시도하면 서버가 글을 새로 만들지 않는다. */
+    val clientRequestId: String? = null,
 )

@@ -6,6 +6,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 enum class FeedPostType { LIVING, POSTHUMOUS }
 
@@ -49,11 +51,18 @@ data class FeedWriteState(
     // ponytail: 공개 범위·대상 팔로워는 서버 posts 에 아직 없음 → 화면에서만 고르고 전송하지 않는다.
     val visibility: PostVisibility = PostVisibility.FOLLOWERS,
     val selectedFollowerIds: Set<String> = emptySet(),
+    /** 이 작성 플로우의 멱등성 키. 재시도해도 바뀌지 않는다. */
+    val requestId: String = newRequestId(),
+    /** 지난 시도에서 다 올라간 사진 URL. 글 작성만 실패했을 때 재시도에서 재사용하고, 사진을 바꾸면 버린다. */
+    val uploadedImageUrls: List<String>? = null,
     val isSubmitting: Boolean = false,
     val submitError: String? = null,
     /** true 가 되면 화면이 작성 플로우를 닫는다. */
     val isSubmitted: Boolean = false,
 )
+
+@OptIn(ExperimentalUuidApi::class)
+private fun newRequestId(): String = Uuid.random().toString()
 
 /** 사후 게시글의 공개(발행) 시각. 생전 게시글은 즉시 발행이라 null. */
 fun FeedWriteState.publishAt(type: FeedPostType, now: Instant, zone: TimeZone): Instant? {
@@ -80,5 +89,5 @@ sealed interface FeedWriteIntent {
 sealed interface FeedWriteResult {
     data object Submitting : FeedWriteResult
     data object Submitted : FeedWriteResult
-    data class SubmitFailed(val message: String) : FeedWriteResult
+    data class SubmitFailed(val message: String, val uploadedImageUrls: List<String>? = null) : FeedWriteResult
 }
