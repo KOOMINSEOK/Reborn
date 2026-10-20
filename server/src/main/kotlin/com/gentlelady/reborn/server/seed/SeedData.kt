@@ -5,6 +5,9 @@ import java.util.UUID
 /** 앱의 HomeMockData / MemorialMockData 를 서버 시드로 옮긴 것 + 화면을 채울 예시 데이터. 고정 UUID → idempotent. */
 internal object SeedData {
 
+    /** 시드 내용을 바꾸면 올린다 → 다음 기동에 한 번 다시 돈다 (seed_runs). */
+    const val VERSION = "2026-10-21.1"
+
     data class SeedUser(val id: UUID, val name: String, val email: String, val bio: String? = null, val avatar: String? = null)
     data class SeedPost(
         val id: UUID,
