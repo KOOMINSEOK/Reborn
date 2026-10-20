@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.feedwrite
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -108,8 +109,11 @@ fun TargetSelectionScreen(
                         CircleAvatarImage(size = 44.dp, fallbackText = follower.name, borderWidth = 0.dp, shadowElevation = 0.dp)
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = follower.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                            Text(text = follower.handle, fontSize = 12.sp, color = RebornSlateGray)
+                            Text(
+                                text = follower.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
+                            )
+                            Text(text = follower.handle, fontSize = 12.sp, color = RebornSlateGray, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         SelectionCheckCircle(isSelected = isSelected)
                     }

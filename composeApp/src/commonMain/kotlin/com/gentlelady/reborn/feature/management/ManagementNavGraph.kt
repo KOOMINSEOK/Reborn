@@ -17,6 +17,9 @@ import com.gentlelady.reborn.feature.management.archive.ArchiveScreen
 import com.gentlelady.reborn.feature.management.profile_edit.BasicInfoManagementScreen
 import com.gentlelady.reborn.feature.management.profile_edit.PaymentManagementScreen
 import com.gentlelady.reborn.feature.management.profile_edit.ProfileEditScreen
+import com.gentlelady.reborn.feature.management.profile_edit.ProfileTextEditScreen
+import com.gentlelady.reborn.myprofile.domain.usecase.MAX_BIO
+import com.gentlelady.reborn.myprofile.domain.usecase.MAX_DISPLAY_NAME
 import com.gentlelady.reborn.feature.management.saved.SavedScreen
 import com.gentlelady.reborn.feature.management.scheduled_feed.ScheduledFeedScreen
 import com.gentlelady.reborn.feature.management.security.SecurityScreen
@@ -101,9 +104,47 @@ fun NavGraphBuilder.managementNavGraph(
         BasicInfoManagementScreen(
             profileState = myProfileState,
             onBackClick = { navController.popBackStack() },
-            onClickNickname = { /* TODO: 닉네임 편집 화면 */ },
+            onClickNickname = {
+                onMyProfileIntent(MyProfileIntent.StartEditProfileText)
+                navController.navigate("management/profile_edit/nickname")
+            },
             onProfilePhotoPicked = { jpeg -> onMyProfileIntent(MyProfileIntent.ChangeAvatar(jpeg)) },
-            onClickBio = { /* TODO: 한 줄 소개 편집 화면 */ }
+            onClickBio = {
+                onMyProfileIntent(MyProfileIntent.StartEditProfileText)
+                navController.navigate("management/profile_edit/bio")
+            }
+        )
+    }
+
+    composable("management/profile_edit/nickname") {
+        ProfileTextEditScreen(
+            title = "닉네임",
+            initialValue = myProfileState.displayName,
+            maxLength = MAX_DISPLAY_NAME,
+            singleLine = true,
+            placeholder = "닉네임을 입력해주세요",
+            isSaving = myProfileState.isSavingProfileText,
+            error = myProfileState.profileTextError,
+            savedToken = myProfileState.displayNameSavedToken,
+            onSave = { onMyProfileIntent(MyProfileIntent.SaveDisplayName(it)) },
+            onSaved = { navController.popBackStack() },
+            onBackClick = { navController.popBackStack() }
+        )
+    }
+
+    composable("management/profile_edit/bio") {
+        ProfileTextEditScreen(
+            title = "한 줄 소개",
+            initialValue = myProfileState.bio,
+            maxLength = MAX_BIO,
+            singleLine = false,
+            placeholder = "나를 한 줄로 소개해보세요",
+            isSaving = myProfileState.isSavingProfileText,
+            error = myProfileState.profileTextError,
+            savedToken = myProfileState.bioSavedToken,
+            onSave = { onMyProfileIntent(MyProfileIntent.SaveBio(it)) },
+            onSaved = { navController.popBackStack() },
+            onBackClick = { navController.popBackStack() }
         )
     }
 

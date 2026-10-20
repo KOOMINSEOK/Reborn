@@ -11,6 +11,9 @@ interface MyProfileRepository {
 
     /** 사진(JPEG)을 올리고 내 아바타로 저장. 쓰기는 mock 폴백 없음 — 실패 시 예외. */
     suspend fun updateAvatar(jpeg: ByteArray): MyProfileDto
+
+    /** 닉네임·한 줄 소개 저장 (null 인 쪽은 안 바꿈). 실패 시 예외. */
+    suspend fun updateText(displayName: String?, bio: String?): MyProfileDto
 }
 
 class MyProfileRepositoryImpl(
@@ -24,4 +27,7 @@ class MyProfileRepositoryImpl(
         val url = uploader.upload(listOf(jpeg)).single()
         return api.updateMyProfile(UpdateProfileDto(avatarUrl = url))
     }
+
+    override suspend fun updateText(displayName: String?, bio: String?): MyProfileDto =
+        api.updateMyProfile(UpdateProfileDto(displayName = displayName, bio = bio))
 }

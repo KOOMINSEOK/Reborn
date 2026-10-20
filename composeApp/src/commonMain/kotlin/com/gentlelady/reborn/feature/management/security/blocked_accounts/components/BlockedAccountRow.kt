@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.management.security.blocked_accounts.components
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,9 +46,12 @@ internal fun BlockedAccountRow(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = item.name, color = Color.Black, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = item.name, color = Color.Black, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = "@${item.username}", color = RebornSlateGray, fontSize = 13.sp)
+            Text(text = "@${item.username}", color = RebornSlateGray, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
 
         Button(

@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.core.designsystem.components
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -108,13 +109,16 @@ private fun ContentCardHeader(
         )
         Spacer(modifier = Modifier.width(10.dp))
 
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = authorName,
                     color = RebornTextPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 headerBadge?.let {
                     Spacer(modifier = Modifier.width(6.dp))
@@ -128,7 +132,6 @@ private fun ContentCardHeader(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
         if (showMoreIcon) {
             Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = RebornUnselectedGray)
         }
