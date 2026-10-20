@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.data.MemorialMockData
 import com.gentlelady.reborn.memorial.data.MemorialRepository
+import com.gentlelady.reborn.memorial.domain.usecase.CreateHistoryUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +15,7 @@ import kotlinx.datetime.Clock
 
 class MemorialViewModel(
     private val repository: MemorialRepository,
+    private val createHistoryUseCase: CreateHistoryUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MemorialMockData.memorialState)
@@ -62,32 +64,14 @@ class MemorialViewModel(
             is MemorialIntent.ClickAddHistory ->
                 _state.update { it.copy(isWritingHistory = true, historyWriteFormState = MemorialHistoryWriteFormState()) }
 
-            is MemorialIntent.UpdateHistoryWriteCaption ->
-                _state.update { it.copy(historyWriteFormState = it.historyWriteFormState.copy(caption = intent.caption)) }
+            // 게시 중에는 사진·본문을 바꾸지 않는다 (올라가는 내용과 화면이 어긋나지 않게)
+            is MemorialIntent.UpdateHistoryWriteCaption -> updateForm { it.copy(caption = intent.caption, error = null) }
 
-            is MemorialIntent.UpdateHistoryWriteImage ->
-                _state.update { it.copy(historyWriteFormState = it.historyWriteFormState.copy(imageBitmap = intent.imageBitmap)) }
+            is MemorialIntent.UpdateHistoryWriteImage -> updateForm { it.copy(image = intent.jpeg, error = null) }
 
-            is MemorialIntent.ClickRemoveHistoryImage ->
-                _state.update { it.copy(historyWriteFormState = it.historyWriteFormState.copy(imageBitmap = null)) }
+            is MemorialIntent.ClickRemoveHistoryImage -> updateForm { it.copy(image = null) }
 
-            is MemorialIntent.ClickPostHistory -> {
-                _state.update { current ->
-                    val bitmap = current.historyWriteFormState.imageBitmap ?: return@update current
-                    val newItem = MemorialHistoryItem(
-                        id = "h_${Clock.System.now().toEpochMilliseconds()}",
-                        imageBitmap = bitmap,
-                        authorName = "나",
-                        date = "방금 전",
-                        caption = current.historyWriteFormState.caption,
-                    )
-                    current.copy(
-                        historyItems = listOf(newItem) + current.historyItems,
-                        isWritingHistory = false,
-                        historyWriteFormState = MemorialHistoryWriteFormState(),
-                    )
-                }
-            }
+            is MemorialIntent.ClickPostHistory -> postHistory()
 
             is MemorialIntent.ClickCloseHistoryWrite -> _state.update { it.copy(isWritingHistory = false) }
 
@@ -95,6 +79,34 @@ class MemorialViewModel(
                 _state.update { it.copy(onlineWreathItems = listOf(intent.item) + it.onlineWreathItems) }
 
             else -> { /* 공유/음악/더보기/헌화/화환구매 등은 UI·NavGraph 에서 처리 */ }
+        }
+    }
+
+    private fun updateForm(change: (MemorialHistoryWriteFormState) -> MemorialHistoryWriteFormState) {
+        _state.update { s ->
+            if (s.historyWriteFormState.isPosting) s else s.copy(historyWriteFormState = change(s.historyWriteFormState))
+        }
+    }
+
+    private fun postHistory() {
+        val current = _state.value
+        val form = current.historyWriteFormState
+        val image = form.image ?: return
+        if (form.isPosting) return
+        _state.update { it.copy(historyWriteFormState = form.copy(isPosting = true, error = null)) }
+        viewModelScope.launch {
+            when (val result = createHistoryUseCase(current.memorialId, form.caption, image)) {
+                is CreateHistoryUseCase.Result.Posted -> _state.update {
+                    it.copy(
+                        historyItems = listOf(result.item) + it.historyItems,
+                        isWritingHistory = false,
+                        historyWriteFormState = MemorialHistoryWriteFormState(),
+                    )
+                }
+                is CreateHistoryUseCase.Result.Failed -> _state.update {
+                    it.copy(historyWriteFormState = it.historyWriteFormState.copy(isPosting = false, error = result.message))
+                }
+            }
         }
     }
 

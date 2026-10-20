@@ -134,11 +134,9 @@ fun MemorialScreen(
                         MemorialTab.HISTORY -> {
                             ImageGridAlbum(
                                 images = state.historyItems.mapNotNull { item ->
-                                    val bitmap = item.imageBitmap
                                     val url = item.imageUrls.firstOrNull()
                                     val res = item.imageRes
                                     when {
-                                        bitmap != null -> GridImageSource.Bitmap(bitmap)
                                         !url.isNullOrBlank() -> GridImageSource.Url(url)
                                         res != null -> GridImageSource.Resource(res)
                                         else -> null

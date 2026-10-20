@@ -1,7 +1,6 @@
 // shared/src/commonMain/kotlin/com/gentlelady/reborn/memorial/presentation/MemorialContract.kt
 package com.gentlelady.reborn.memorial.presentation
 
-import androidx.compose.ui.graphics.ImageBitmap
 import org.jetbrains.compose.resources.DrawableResource
 
 /** 서버 미연결 시 폴백에 쓰는, 데모용 시드 메모리얼 id. */
@@ -28,7 +27,6 @@ data class MemorialHistoryItem(
     val caption: String,
     val imageUrls: List<String> = emptyList(), // 서버 이미지 URL 들 (순서 = 표시 순서)
     val imageRes: DrawableResource? = null, // 앱 번들 목업 이미지 (프리뷰/목데이터용)
-    val imageBitmap: ImageBitmap? = null, // 갤러리에서 직접 등록한 이미지 (우선 적용)
     val authorProfileRes: DrawableResource? = null,
     val likes: Int = 0,
     val comments: Int = 0
@@ -50,8 +48,11 @@ data class MemorialProfileData(
 )
 
 data class MemorialHistoryWriteFormState(
-    val imageBitmap: ImageBitmap? = null,
-    val caption: String = ""
+    /** 고른 사진(업로드용 JPEG). 미리보기는 Coil 이 바이트를 그대로 그린다. */
+    val image: ByteArray? = null,
+    val caption: String = "",
+    val isPosting: Boolean = false,
+    val error: String? = null,
 )
 
 data class MemorialState(
@@ -84,7 +85,7 @@ sealed interface MemorialIntent {
 
     // 히스토리 작성 화면 전용 인텐트
     object ClickAddHistory : MemorialIntent
-    data class UpdateHistoryWriteImage(val imageBitmap: ImageBitmap) : MemorialIntent
+    data class UpdateHistoryWriteImage(val jpeg: ByteArray) : MemorialIntent
     object ClickRemoveHistoryImage : MemorialIntent
     data class UpdateHistoryWriteCaption(val caption: String) : MemorialIntent
     object ClickPostHistory : MemorialIntent

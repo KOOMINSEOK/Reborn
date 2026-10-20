@@ -1,7 +1,6 @@
 // composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/history/MemorialHistoryWriteScreen.kt
 package com.gentlelady.reborn.feature.memorial.history
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +30,7 @@ import com.gentlelady.reborn.core.designsystem.components.CircleIconBadge
 import com.gentlelady.reborn.core.designsystem.dashedBorder
 import com.gentlelady.reborn.core.platform.rememberGalleryImagePicker
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
+import com.gentlelady.reborn.core.theme.RebornDangerRed
 import com.gentlelady.reborn.core.theme.RebornInputBorderGray
 import com.gentlelady.reborn.core.theme.RebornLightBlueBg
 import com.gentlelady.reborn.core.theme.RebornSlateGray
@@ -38,12 +38,11 @@ import com.gentlelady.reborn.core.theme.RebornUnselectedGray
 import com.gentlelady.reborn.ic_image_add
 import com.gentlelady.reborn.memorial.presentation.MemorialHistoryWriteFormState
 import com.gentlelady.reborn.memorial.presentation.MemorialIntent
-import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import coil3.compose.AsyncImage
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemorialHistoryWriteScreen(
     formState: MemorialHistoryWriteFormState,
@@ -51,8 +50,7 @@ fun MemorialHistoryWriteScreen(
     modifier: Modifier = Modifier
 ) {
     val launchGalleryPicker = rememberGalleryImagePicker(
-        // 추억 글 작성은 아직 서버 미연동(로컬 표시만) → 받은 JPEG 를 바로 비트맵으로 풀어 기존 흐름 유지
-        onImagePicked = { jpeg -> onIntent(MemorialIntent.UpdateHistoryWriteImage(jpeg.decodeToImageBitmap())) }
+        onImagePicked = { jpeg -> onIntent(MemorialIntent.UpdateHistoryWriteImage(jpeg)) }
     )
 
     Scaffold(
@@ -76,9 +74,18 @@ fun MemorialHistoryWriteScreen(
         },
         bottomBar = {
             Surface(color = Color.White) {
+                Column {
+                formState.error?.let { message ->
+                    Text(
+                        text = message,
+                        fontSize = 13.sp,
+                        color = RebornDangerRed,
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)
+                    )
+                }
                 Button(
                     onClick = { onIntent(MemorialIntent.ClickPostHistory) },
-                    enabled = formState.imageBitmap != null,
+                    enabled = formState.image != null && !formState.isPosting,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = RebornCobaltBlue,
@@ -90,11 +97,12 @@ fun MemorialHistoryWriteScreen(
                         .height(52.dp)
                 ) {
                     Text(
-                        text = "히스토리(추억) 게시하기",
+                        text = if (formState.isPosting) "올리는 중…" else "히스토리(추억) 게시하기",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+                }
                 }
             }
         }
@@ -118,7 +126,7 @@ fun MemorialHistoryWriteScreen(
             )
 
             // 2. 사진/영상 추가 (선택 전: 점선 박스 / 선택 후: 사진 미리보기 + X 취소 버튼)
-            val pickedImage = formState.imageBitmap
+            val pickedImage = formState.image
             if (pickedImage != null) {
                 Box(
                     modifier = Modifier
@@ -126,8 +134,8 @@ fun MemorialHistoryWriteScreen(
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                 ) {
-                    Image(
-                        bitmap = pickedImage,
+                    AsyncImage(
+                        model = pickedImage,
                         contentDescription = "선택한 사진",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop

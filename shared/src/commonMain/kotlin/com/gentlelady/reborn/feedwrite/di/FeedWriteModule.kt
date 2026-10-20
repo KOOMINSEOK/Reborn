@@ -7,7 +7,7 @@ import com.gentlelady.reborn.feedwrite.presentation.FeedWriteViewModel
 import org.koin.dsl.module
 
 val feedWriteModule = module {
-    single<FeedWriteRepository> { FeedWriteRepositoryImpl(get()) }
+    single<FeedWriteRepository> { FeedWriteRepositoryImpl(get(), get()) }
     factory { CreatePostUseCase(get()) }
     factory { FeedWriteViewModel(get()) }
 }

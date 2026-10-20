@@ -1,9 +1,11 @@
 package com.gentlelady.reborn.core.network
 
+import com.gentlelady.reborn.core.network.dto.CreateHistoryDto
 import com.gentlelady.reborn.core.network.dto.CreatePostDto
 import com.gentlelady.reborn.core.network.dto.CreateUploadDto
 import com.gentlelady.reborn.core.network.dto.FeedDto
 import com.gentlelady.reborn.core.network.dto.GuestbookListDto
+import com.gentlelady.reborn.core.network.dto.HistoryDto
 import com.gentlelady.reborn.core.network.dto.HistoryListDto
 import com.gentlelady.reborn.core.network.dto.MemorialProfileDto
 import com.gentlelady.reborn.core.network.dto.PostDto
@@ -68,6 +70,9 @@ class RebornApi(
 
     suspend fun createPost(req: CreatePostDto): PostDto =
         client.post("posts") { setBody(req) }.body()
+
+    suspend fun createHistory(memorialId: String, req: CreateHistoryDto): HistoryDto =
+        client.post("memorials/$memorialId/history") { setBody(req) }.body()
 }
 
 private const val UPLOAD_TIMEOUT_MS = 60_000L

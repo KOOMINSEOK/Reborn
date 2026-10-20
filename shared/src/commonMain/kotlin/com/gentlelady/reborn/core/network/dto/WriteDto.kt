@@ -10,6 +10,13 @@ data class CreateUploadDto(val contentType: String)
 @Serializable
 data class UploadDto(val uploadUrl: String, val imageUrl: String)
 
+/** 서버 `POST /memorials/{id}/history` 요청. */
+@Serializable
+data class CreateHistoryDto(
+    val caption: String,
+    val imageUrls: List<String>,
+)
+
 /** 서버 `POST /posts` 요청. publishAt(ISO-8601) 이 있으면 예약 발행. */
 @Serializable
 data class CreatePostDto(
