@@ -67,4 +67,20 @@ data class GuestbookListResponse(
     val nextOffset: Int? = null,
     /** 더 이전 글이 있으면 다음 요청의 ?cursor= 값. 마지막 글의 (작성 시각, id) — 그 글이 지워져도 유효. */
     val nextCursor: String? = null,
+    /** 더 최신 글이 있으면 다음 요청의 ?after= 값 (?around= / ?after= 응답에서만). null = 최신까지 다 받음. */
+    val newerCursor: String? = null,
 )
+
+/** 내가 남긴 방명록 한 건 + 어느 추모 페이지인지. 누르면 그 페이지 방명록의 이 글 위치로 이동한다. */
+@Serializable
+data class MyGuestbookEntryResponse(
+    val id: String,
+    val memorialId: String,
+    val memorialName: String,
+    val memorialProfileImageUrl: String? = null,
+    val message: String,
+    val createdAt: String,
+)
+
+@Serializable
+data class MyGuestbookListResponse(val items: List<MyGuestbookEntryResponse>, val nextCursor: String? = null)

@@ -52,7 +52,23 @@ data class GuestbookListDto(
     val nextOffset: Int? = null,
     /** 더 이전 글이 있으면 다음 요청의 cursor. null = 끝. */
     val nextCursor: String? = null,
+    /** 더 최신 글이 있으면 다음 요청의 after (around/after 응답). null = 최신까지 받음. */
+    val newerCursor: String? = null,
 )
+
+/** 서버 `GET /me/guestbook` 한 건 — 내가 남긴 방명록 + 어느 추모 페이지인지. */
+@Serializable
+data class MyGuestbookEntryDto(
+    val id: String,
+    val memorialId: String,
+    val memorialName: String,
+    val memorialProfileImageUrl: String? = null,
+    val message: String,
+    val createdAt: String,
+)
+
+@Serializable
+data class MyGuestbookListDto(val items: List<MyGuestbookEntryDto>, val nextCursor: String? = null)
 
 fun MemorialProfileDto.toProfileData(): MemorialProfileData = MemorialProfileData(
     id = id,

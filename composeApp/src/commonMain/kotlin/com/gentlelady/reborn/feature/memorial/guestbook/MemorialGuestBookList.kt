@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberUpdatedState
@@ -54,6 +55,13 @@ internal fun MemorialGuestBookList(
     hasOlder: Boolean = false,
     isLoadingOlder: Boolean = false,
     onLoadOlder: () -> Unit = {},
+    hasNewer: Boolean = false,
+    isLoadingNewer: Boolean = false,
+    onLoadNewer: () -> Unit = {},
+    /** 이 방명록 위치로 스크롤하고 잠깐 강조 (내 방명록에서 눌러 들어왔을 때) */
+    focusId: String? = null,
+    /** 바뀔 때마다 위치를 다시 잡는다: 포커스 글, 없으면 맨 아래(최신) */
+    scrollToken: Int = 0,
 ) {
     Box(
         modifier = modifier
@@ -66,30 +74,54 @@ internal fun MemorialGuestBookList(
         } else {
             val listState = rememberLazyListState()
             val latestOnLoadOlder by rememberUpdatedState(onLoadOlder)
+            val latestOnLoadNewer by rememberUpdatedState(onLoadNewer)
 
             // 사용자가 손으로 한 번이라도 끌었나 — 자동 스크롤(처음 열기·새 글)이 이전 글 불러오기를 일으키지 않게
             var userDragged by remember { mutableStateOf(false) }
             val isDragged by listState.interactionSource.collectIsDraggedAsState()
             LaunchedEffect(isDragged) { if (isDragged) userDragged = true }
 
-            // 맨 아래(최신) 글이 바뀔 때만 아래로 — 처음엔 바로, 새 글은 부드럽게.
+            // 위치 잡기 (토큰이 바뀔 때만 — 이전/이후 글을 이어 붙일 땐 안 움직인다):
+            // 포커스 글이 있으면 그 글이 위에서 세 번째쯤 오게 + 잠깐 강조, 없으면 맨 아래(최신).
             // 대상은 지금 목록 기준으로 계산 (layoutInfo 는 아직 이전 측정값일 수 있다)
-            var scrolledOnce by remember { mutableStateOf(false) }
-            LaunchedEffect(guestBookMessages.last().id) {
-                val last = guestBookMessages.lastIndex
-                if (scrolledOnce) listState.animateScrollToItem(last) else listState.scrollToItem(last)
-                scrolledOnce = true
+            var highlightedId by remember { mutableStateOf<String?>(null) }
+            LaunchedEffect(scrollToken) {
+                val focusIndex = focusId?.let { id -> guestBookMessages.indexOfFirst { it.id == id } } ?: -1
+                when {
+                    focusIndex >= 0 -> {
+                        listState.scrollToItem((focusIndex - 2).coerceAtLeast(0))
+                        highlightedId = focusId
+                        delay(HIGHLIGHT_MILLIS)
+                        highlightedId = null
+                    }
+                    scrollToken > 1 -> listState.animateScrollToItem(guestBookMessages.lastIndex)
+                    else -> listState.scrollToItem(guestBookMessages.lastIndex)
+                }
             }
 
             // 이전 글이 위에 붙으면 보던 글(직전의 맨 위 글)로 되돌려 둔다 → 읽던 위치 유지,
-            // 그리고 다시 위로 스크롤해야 다음 페이지를 부른다.
+            // 그리고 다시 위로 스크롤해야 다음 페이지를 부른다. (내가 이전 글을 부른 경우에만)
+            var expectingOlder by remember { mutableStateOf(false) }
             var prevFirstId by remember { mutableStateOf<String?>(null) }
             LaunchedEffect(guestBookMessages.first().id) {
                 val prev = prevFirstId
                 prevFirstId = guestBookMessages.first().id
-                if (prev == null) return@LaunchedEffect
+                if (prev == null || !expectingOlder) return@LaunchedEffect
+                expectingOlder = false
                 val index = guestBookMessages.indexOfFirst { it.id == prev }
                 if (index > 0) listState.scrollToItem(index)
+            }
+
+            // 손으로 스크롤해서 맨 아래에 닿으면 이후 글 불러오기 (특정 글로 이동해 들어와 중간을 보고 있을 때만).
+            // 뒤에 붙는 거라 보던 위치는 그대로다.
+            val latestIsLoadingNewer by rememberUpdatedState(isLoadingNewer)
+            LaunchedEffect(listState, hasNewer) {
+                if (!hasNewer) return@LaunchedEffect
+                // 경계(맨 아래) 변화만 본다 — 로딩 상태를 조건에 넣으면 실패 직후 다시 true 가 되어 자동 재요청 루프가 된다
+                snapshotFlow { userDragged && !listState.canScrollForward }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { if (!latestIsLoadingNewer) latestOnLoadNewer() }
             }
 
             // 손으로 스크롤해서 정말 맨 위(첫 글이 다 보임)에 닿으면 이전 글 불러오기.
@@ -97,13 +129,18 @@ internal fun MemorialGuestBookList(
             val latestIsLoadingOlder by rememberUpdatedState(isLoadingOlder)
             LaunchedEffect(listState, hasOlder) {
                 if (!hasOlder) return@LaunchedEffect
+                // 경계(맨 위) 변화만 본다 — 실패하면 사용자가 벗어났다 다시 닿아야 재시도
                 snapshotFlow {
-                    userDragged && !latestIsLoadingOlder &&
-                        listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+                    userDragged && listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
                 }
                     .distinctUntilChanged()
                     .filter { it }
-                    .collect { latestOnLoadOlder() }
+                    .collect {
+                        if (!latestIsLoadingOlder) {
+                            expectingOlder = true
+                            latestOnLoadOlder()
+                        }
+                    }
             }
 
             LazyColumn(
@@ -118,7 +155,7 @@ internal fun MemorialGuestBookList(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(guestBookMessages, key = { it.id }) { item ->
-                    GuestBookMessageRow(item = item)
+                    GuestBookMessageRow(item = item, highlighted = item.id == highlightedId)
                 }
             }
 
@@ -128,6 +165,13 @@ internal fun MemorialGuestBookList(
                     color = RebornDeepBlue,
                     strokeWidth = 2.dp,
                     modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).size(20.dp)
+                )
+            }
+            if (isLoadingNewer) {
+                CircularProgressIndicator(
+                    color = RebornDeepBlue,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 72.dp).size(20.dp)
                 )
             }
         }
@@ -199,7 +243,9 @@ private fun GuestBookEmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun GuestBookMessageRow(
     item: MemorialGuestBookItem,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** 내 방명록에서 눌러 들어온 그 글 — 잠깐 테두리로 강조 */
+    highlighted: Boolean = false,
 ) {
     val isMine = item.isMine
 
@@ -216,6 +262,7 @@ private fun GuestBookMessageRow(
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = if (isMine) RebornMyBubbleBg else RebornOtherBubbleBg,
+            border = if (highlighted) BorderStroke(2.dp, RebornCobaltBlue) else null,
             modifier = Modifier.widthIn(max = 260.dp)
         ) {
             Text(
@@ -349,3 +396,5 @@ private fun MemorialGuestBookListEmptyPreview() {
         }
     }
 }
+
+private const val HIGHLIGHT_MILLIS = 2500L

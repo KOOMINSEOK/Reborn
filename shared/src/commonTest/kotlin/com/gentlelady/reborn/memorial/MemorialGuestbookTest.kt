@@ -5,6 +5,7 @@ import com.gentlelady.reborn.core.auth.SessionStore
 import com.gentlelady.reborn.core.network.ImageUploader
 import com.gentlelady.reborn.core.network.RebornApi
 import com.gentlelady.reborn.memorial.data.MemorialRepositoryImpl
+import com.gentlelady.reborn.memorial.presentation.MemorialTab
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -43,6 +44,15 @@ class MemorialGuestbookTest {
                     headers = json,
                 )
                 path.endsWith("/memorials/m1/history") -> respond("""{"items":[]}""", headers = json)
+                // 특정 글 주변 (around=g5): 최신순 g6, g5, g4 + 양방향 커서
+                path.endsWith("/memorials/m1/guestbook") && req.url.parameters["around"] == "g5" -> respond(
+                    """{"items":[${entry("g6", "other")},${entry("g5", me)},${entry("g4", "other")}],
+                    "nextCursor":"old1","newerCursor":"new1"}""",
+                    headers = json,
+                )
+                // 이후 페이지 (after=new1): 최신순 g8, g7, 더 없음
+                path.endsWith("/memorials/m1/guestbook") && req.url.parameters["after"] == "new1" ->
+                    respond("""{"items":[${entry("g8", "other")},${entry("g7", "other")}]}""", headers = json)
                 // 이전 페이지 (cursor=c1): 최신순으로 g0b, g0a, 다음 커서 c2
                 path.endsWith("/memorials/m1/guestbook") && req.url.parameters["cursor"] == "c1" ->
                     respond("""{"items":[${entry("g0b", "other")},${entry("g0a", "other")}],"nextCursor":"c2"}""", headers = json)
@@ -77,6 +87,23 @@ class MemorialGuestbookTest {
         val (older, next) = repo().first.loadOlderGuestbook("m1", cursor = "c1")
         assertEquals(listOf("g0a", "g0b"), older.map { it.id })
         assertEquals("c2", next)
+    }
+
+    @Test
+    fun opensGuestbookAroundFocusedEntry() = runTest {
+        val state = repo().first.getMemorial("m1", focusGuestBookId = "g5")
+        assertEquals(listOf("g4", "g5", "g6"), state.guestBookMessages.map { it.id })
+        assertEquals("g5", state.guestBookFocusId)
+        assertEquals(MemorialTab.GUESTBOOK, state.selectedTab)
+        assertEquals("old1", state.olderGuestBookCursor)
+        assertEquals("new1", state.newerGuestBookCursor)
+    }
+
+    @Test
+    fun loadsNewerPageInScreenOrder() = runTest {
+        val (newer, next) = repo().first.loadNewerGuestbook("m1", cursor = "new1")
+        assertEquals(listOf("g7", "g8"), newer.map { it.id })
+        assertEquals(null, next)
     }
 
     @Test

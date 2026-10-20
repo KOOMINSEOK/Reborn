@@ -7,6 +7,7 @@ import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.feature.message.components.ChatDetailScreen
 import com.gentlelady.reborn.feature.message.components.GuestBookSearchScreen
 import com.gentlelady.reborn.feature.message.components.MessageSuggestScreen
+import com.gentlelady.reborn.message.presentation.GuestBookItem
 import com.gentlelady.reborn.message.presentation.MessageIntent
 import com.gentlelady.reborn.message.presentation.MessageState
 import com.gentlelady.reborn.message.presentation.MessageTab
@@ -31,9 +32,8 @@ fun NavGraphBuilder.messageNavGraph(
                         else "message/guestbook_search"
                     )
                     is MessageIntent.ClickChatRoom -> navController.navigate("message/chat/${intent.roomId}")
-                    is MessageIntent.ClickGuestBook -> {
-                        // TODO(stub): 내가 남긴 방명록의 추모 페이지 방명록 화면으로 이동
-                    }
+                    is MessageIntent.ClickGuestBook ->
+                        state.guestBooks.firstOrNull { it.id == intent.bookId }?.let { navController.openGuestBook(it) }
                     else -> onIntent(intent)
                 }
             }
@@ -52,11 +52,9 @@ fun NavGraphBuilder.messageNavGraph(
 
     composable("message/guestbook_search") {
         GuestBookSearchScreen(
-            all = MockDataSource.messageGuestBooks,
+            all = state.guestBooks,
             onBack = { navController.popBackStack() },
-            onResultClick = {
-                // TODO(stub): 내 댓글이 있는 추모 페이지 방명록 화면으로 이동
-            }
+            onResultClick = { navController.openGuestBook(it) }
         )
     }
 
@@ -69,4 +67,10 @@ fun NavGraphBuilder.messageNavGraph(
             onBack = { navController.popBackStack() }
         )
     }
+}
+
+/** 내가 남긴 방명록 → 그 추모 페이지의 방명록 탭을 이 글 위치로 (목업 항목은 추모 페이지가 없어 이동하지 않음) */
+private fun NavHostController.openGuestBook(book: GuestBookItem) {
+    if (book.memorialId.isBlank()) return
+    navigate("memorial/other/${book.memorialId}?focusGuestbook=${book.id}")
 }

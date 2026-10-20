@@ -171,6 +171,11 @@ fun MemorialScreen(
                                 hasOlder = state.olderGuestBookCursor != null,
                                 isLoadingOlder = state.isLoadingOlderGuestBook,
                                 onLoadOlder = { onIntent(MemorialIntent.LoadOlderGuestBook) },
+                                hasNewer = state.newerGuestBookCursor != null,
+                                isLoadingNewer = state.isLoadingNewerGuestBook,
+                                onLoadNewer = { onIntent(MemorialIntent.LoadNewerGuestBook) },
+                                focusId = state.guestBookFocusId,
+                                scrollToken = state.guestBookScrollToken,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }

@@ -65,7 +65,9 @@ data class GuestBookItem(
     val recentContent: String,      // 방명록 내용 요약
     val relativeTime: String,       // 상대적 시간 묘사 (예: "1년 전", "방금 전")
     val avatarUrl: String = "",     // 고인 아바타 이미지 경로 혹은 리소스 키
-    val daysAgo: Int = 0            // 최신순 정렬 기준 (작을수록 최근)
+    val daysAgo: Int = 0,           // 최신순 정렬 기준 (작을수록 최근)
+    /** 이 방명록이 달린 추모 페이지. 비어 있으면(목업) 눌러도 이동하지 않는다. */
+    val memorialId: String = "",
 )
 
 /**
