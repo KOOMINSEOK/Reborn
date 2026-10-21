@@ -11,6 +11,7 @@ import com.gentlelady.reborn.userprofile.domain.GetUserProfileUseCase
 import com.gentlelady.reborn.userprofile.domain.SetFollowUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,10 +58,13 @@ class UserProfileViewModel(
         loadJob?.cancel()
         reduce(UserProfileResult.Loading(userId))
         loadJob = viewModelScope.launch {
+            // coroutineScope 로 감싸야 한쪽 실패가 여기서 잡힌다 — 맨 async 의 실패는 바깥 launch 까지 번져 앱이 죽는다
             val result = runCatching {
-                val profile = async { getProfile(userId) }
-                val posts = async { getPosts(userId, 0) }
-                Triple(profile.await(), posts.await().first, posts.await().second)
+                coroutineScope {
+                    val profile = async { getProfile(userId) }
+                    val posts = async { getPosts(userId, 0) }
+                    Triple(profile.await(), posts.await().first, posts.await().second)
+                }
             }
             if (gen != generation) return@launch
             result
@@ -94,7 +98,7 @@ class UserProfileViewModel(
         val gen = generation
         followSync.toggle(
             viewModelScope, profile.id, profile.followedByMe, profile.followerCount,
-            onError = { if (gen == generation) reduce(UserProfileResult.Message(followErrorText(it))) },
+            onError = { if (gen == generation) reduce(UserProfileResult.Message(followErrorMessage(it))) },
         ) { following, count ->
             if (gen == generation) reduce(UserProfileResult.FollowChanged(following, count))
         }
@@ -107,12 +111,13 @@ class UserProfileViewModel(
         }
     }
 
-    private fun followErrorText(e: Throwable): String = when ((e as? FollowRejectedException)?.code) {
-        "private_account" -> "비공개 계정은 아직 팔로우할 수 없어요."
-        "blocked" -> "차단을 풀어야 팔로우할 수 있어요."
-        "user_not_found" -> "사용자를 찾을 수 없어요."
-        else -> "팔로우하지 못했어요. 로그인 상태를 확인해 주세요."
-    }
-
     private fun reduce(result: UserProfileResult) = _state.update { UserProfileReducer.reduce(it, result) }
+}
+
+/** 팔로우 실패 안내 (프로필·팔로워 목록 공용) */
+internal fun followErrorMessage(e: Throwable): String = when ((e as? FollowRejectedException)?.code) {
+    "private_account" -> "비공개 계정은 아직 팔로우할 수 없어요."
+    "blocked" -> "차단을 풀어야 팔로우할 수 있어요."
+    "user_not_found" -> "사용자를 찾을 수 없어요."
+    else -> "팔로우하지 못했어요. 로그인 상태를 확인해 주세요."
 }

@@ -25,6 +25,8 @@ data class MyProfileState(
     val followingCount: Int = 0,
     val scheduledFeedCount: Int = 0,
     val feeds: List<MyProfileFeedItem> = emptyList(), // 💡 독립 모델 매칭 완료
+    /** 서버의 내 id. 있으면 팔로워 목록·전체 글 화면으로 갈 수 있다 (목업이면 null) */
+    val myUserId: String? = null,
     val isLoading: Boolean = true
 )
 
@@ -34,6 +36,8 @@ sealed interface MyProfileIntent {
     object ClickEditProfile : MyProfileIntent
     object ClickToggleMemorialMode : MyProfileIntent
     object ClickViewAllFeeds : MyProfileIntent
+    object ClickFollowers : MyProfileIntent
+    object ClickFollowing : MyProfileIntent
     data class ClickManagementMenu(val menuId: String) : MyProfileIntent
     /** 갤러리에서 고른 사진(업로드용 JPEG)으로 프로필 사진 바꾸기 */
     data class ChangeAvatar(val jpeg: ByteArray) : MyProfileIntent

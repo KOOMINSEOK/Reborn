@@ -3,6 +3,7 @@ package com.gentlelady.reborn.feature.userprofile
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,6 +36,7 @@ import com.gentlelady.reborn.core.theme.RebornCobaltBlue
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
+import com.gentlelady.reborn.userprofile.domain.FollowTab
 import com.gentlelady.reborn.userprofile.domain.UserProfile
 import com.gentlelady.reborn.userprofile.presentation.UserProfileIntent
 import com.gentlelady.reborn.userprofile.presentation.UserProfileState
@@ -48,6 +50,8 @@ import org.koin.compose.viewmodel.koinViewModel
 fun UserProfileRoute(
     userId: String,
     onBack: () -> Unit,
+    /** (그 사람 id, 탭, 핸들) */
+    onOpenFollows: (String, FollowTab, String) -> Unit = { _, _, _ -> },
     viewModel: UserProfileViewModel = koinViewModel(),
 ) {
     LaunchedEffect(userId) { viewModel.onIntent(UserProfileIntent.Load(userId)) }
@@ -57,7 +61,7 @@ fun UserProfileRoute(
             viewModel.onIntent(UserProfileIntent.CommentCountChanged(change.parentId, change.delta))
         }
     }
-    UserProfileScreen(state = state, onIntent = viewModel::onIntent, onBack = onBack)
+    UserProfileScreen(state = state, onIntent = viewModel::onIntent, onBack = onBack, onOpenFollows = onOpenFollows)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,6 +70,7 @@ fun UserProfileScreen(
     state: UserProfileState,
     onIntent: (UserProfileIntent) -> Unit,
     onBack: () -> Unit,
+    onOpenFollows: (String, FollowTab, String) -> Unit = { _, _, _ -> },
 ) {
     var commentPostId by remember { mutableStateOf<String?>(null) }
     val snackbar = remember { SnackbarHostState() }
@@ -116,7 +121,8 @@ fun UserProfileScreen(
                     state = state,
                     profile = profile,
                     onIntent = onIntent,
-                    onCommentClick = { commentPostId = it }
+                    onCommentClick = { commentPostId = it },
+                    onOpenFollows = { tab -> onOpenFollows(profile.id, tab, profile.handle) }
                 )
             }
         }
@@ -133,6 +139,7 @@ private fun ProfileContent(
     profile: UserProfile,
     onIntent: (UserProfileIntent) -> Unit,
     onCommentClick: (String) -> Unit,
+    onOpenFollows: (FollowTab) -> Unit,
 ) {
     val listState = rememberLazyListState()
     // 끝에서 3개 안쪽까지 내려오면 다음 페이지
@@ -146,7 +153,12 @@ private fun ProfileContent(
 
     LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
         item(key = "header") {
-            ProfileHeader(profile = profile, onFollowClick = { onIntent(UserProfileIntent.ToggleFollow) })
+            ProfileHeader(
+                profile = profile,
+                onFollowClick = { onIntent(UserProfileIntent.ToggleFollow) },
+                // 나를 차단했거나 비공개면 서버가 목록을 안 준다 → 잠긴 프로필은 숫자만
+                onOpenFollows = if (profile.isLocked) null else onOpenFollows
+            )
         }
         when {
             profile.blockedByMe -> item(key = "note") { Note("차단한 사용자예요. 차단을 풀면 글을 볼 수 있어요.") }
@@ -160,6 +172,9 @@ private fun ProfileContent(
                 )
             }
         }
+        if (state.loadMoreFailed) {
+            item(key = "retry") { RetryRow { onIntent(UserProfileIntent.LoadMore) } }
+        }
         if (state.isLoadingMore) {
             item(key = "more") {
                 Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
@@ -171,7 +186,7 @@ private fun ProfileContent(
 }
 
 @Composable
-private fun ProfileHeader(profile: UserProfile, onFollowClick: () -> Unit) {
+private fun ProfileHeader(profile: UserProfile, onFollowClick: () -> Unit, onOpenFollows: ((FollowTab) -> Unit)?) {
     Column(Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 24.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val shape = RoundedCornerShape(20.dp)
@@ -192,8 +207,8 @@ private fun ProfileHeader(profile: UserProfile, onFollowClick: () -> Unit) {
                 }
             }
             Spacer(Modifier.width(20.dp))
-            Metric(profile.followerCount, "팔로워", Modifier.weight(1f))
-            Metric(profile.followingCount, "팔로잉", Modifier.weight(1f))
+            Metric(profile.followerCount, "팔로워", Modifier.weight(1f), onOpenFollows?.let { { it(FollowTab.FOLLOWERS) } })
+            Metric(profile.followingCount, "팔로잉", Modifier.weight(1f), onOpenFollows?.let { { it(FollowTab.FOLLOWING) } })
         }
 
         Spacer(Modifier.height(12.dp))
@@ -240,8 +255,14 @@ private fun ProfileHeader(profile: UserProfile, onFollowClick: () -> Unit) {
 }
 
 @Composable
-private fun Metric(count: Int, label: String, modifier: Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+private fun Metric(count: Int, label: String, modifier: Modifier, onClick: (() -> Unit)?) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(8.dp))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(count.toString(), fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Text(label, fontSize = 12.sp, color = RebornSlateGray)
     }

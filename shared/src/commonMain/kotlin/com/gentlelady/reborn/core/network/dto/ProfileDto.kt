@@ -30,6 +30,19 @@ data class PublicProfileDto(
     val blockedByMe: Boolean = false,
 )
 
+/** 서버 팔로워·팔로잉 목록 한 줄. */
+@Serializable
+data class UserSummaryDto(
+    val id: String,
+    val handle: String,
+    val displayName: String,
+    val avatarUrl: String? = null,
+    val followedByMe: Boolean = false,
+)
+
+@Serializable
+data class UserListDto(val items: List<UserSummaryDto>, val nextOffset: Int? = null)
+
 /** 서버 `POST|DELETE /users/{id}/follow` 응답. */
 @Serializable
 data class FollowDto(val following: Boolean, val followerCount: Int)

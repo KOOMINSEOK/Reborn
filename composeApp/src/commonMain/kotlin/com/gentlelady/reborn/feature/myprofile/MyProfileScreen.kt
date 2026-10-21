@@ -54,7 +54,9 @@ fun MyProfileScreen(
                             // 1. 상단 배경, 프로필 아바타, 지표 정보 섹션
                             MyProfileHeaderSection(
                                 state = state,
-                                onEditProfileClick = { onIntent(MyProfileIntent.ClickEditProfile) }
+                                onEditProfileClick = { onIntent(MyProfileIntent.ClickEditProfile) },
+                                onFollowersClick = { onIntent(MyProfileIntent.ClickFollowers) },
+                                onFollowingClick = { onIntent(MyProfileIntent.ClickFollowing) }
                             )
 
                             HorizontalDivider(

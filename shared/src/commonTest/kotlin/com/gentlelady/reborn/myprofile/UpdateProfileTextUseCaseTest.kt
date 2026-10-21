@@ -17,6 +17,7 @@ class UpdateProfileTextUseCaseTest {
         val calls = mutableListOf<Pair<String?, String?>>()
         override suspend fun getMyProfile(): MyProfileDto? = null
         override suspend fun updateAvatar(jpeg: ByteArray): MyProfileDto = error("unused")
+        override suspend fun myPosts(userId: String, limit: Int) = error("unused")
         override suspend fun updateText(displayName: String?, bio: String?): MyProfileDto {
             calls += displayName to bio
             return MyProfileDto(id = "u", handle = "h", displayName = displayName ?: "old", bio = bio)

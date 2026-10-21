@@ -1,5 +1,8 @@
 package com.gentlelady.reborn.userprofile
 
+import com.gentlelady.reborn.core.auth.CurrentUserIdUseCase
+import com.gentlelady.reborn.core.auth.Session
+import com.gentlelady.reborn.core.auth.SessionStore
 import com.gentlelady.reborn.core.network.InteractionTarget
 import com.gentlelady.reborn.home.domain.model.HomePost
 import com.gentlelady.reborn.interaction.data.InteractionRepository
@@ -7,6 +10,11 @@ import com.gentlelady.reborn.interaction.domain.SetLikeUseCase
 import com.gentlelady.reborn.interaction.presentation.LikeSync
 import com.gentlelady.reborn.userprofile.data.UserProfileRepository
 import com.gentlelady.reborn.userprofile.domain.FollowRejectedException
+import com.gentlelady.reborn.userprofile.domain.FollowTab
+import com.gentlelady.reborn.userprofile.domain.FollowUser
+import com.gentlelady.reborn.userprofile.domain.GetRelationsUseCase
+import com.gentlelady.reborn.userprofile.presentation.FollowListIntent
+import com.gentlelady.reborn.userprofile.presentation.FollowListViewModel
 import com.gentlelady.reborn.userprofile.domain.GetUserPostsUseCase
 import com.gentlelady.reborn.userprofile.domain.GetUserProfileUseCase
 import com.gentlelady.reborn.userprofile.domain.SetFollowUseCase
@@ -45,11 +53,25 @@ class UserProfileViewModelTest {
         val followReplies = mutableListOf<CompletableDeferred<Pair<Boolean, Int>>>()
         val profileReplies = mutableMapOf<String, CompletableDeferred<UserProfile>>()
         override suspend fun profile(userId: String) =
-            profileReplies[userId]?.await() ?: profiles.getValue(userId)
+            profileReplies[userId]?.await() ?: profiles[userId] ?: error("timeout")
         override suspend fun posts(userId: String, offset: Int): Pair<List<HomePost>, Int?> =
             listOf(HomePost(id = "p_$userId", authorId = userId, authorName = "x", caption = "", postedAt = "")) to null
         override suspend fun setFollow(userId: String, follow: Boolean) =
             CompletableDeferred<Pair<Boolean, Int>>().also { followReplies += it }.await()
+        val relationCalls = mutableListOf<Pair<FollowTab, Int>>()
+        var failNextRelations = false
+        var holdRelations: CompletableDeferred<Unit>? = null
+        override suspend fun relations(userId: String, tab: FollowTab, offset: Int): Pair<List<FollowUser>, Int?> {
+            relationCalls += tab to offset
+            holdRelations?.await()
+            if (failNextRelations) { failNextRelations = false; error("timeout") }
+            // 팔로워 탭: 2명 + 다음 페이지 / 팔로잉 탭: "x" 1명(팔로워 탭에도 있음)
+            return when (tab) {
+                FollowTab.FOLLOWERS -> if (offset == 0) listOf(user("x"), user("y")) to 2 else listOf(user("z")) to null
+                FollowTab.FOLLOWING -> listOf(user("x")) to null
+            }
+        }
+        private fun user(id: String) = FollowUser(id, id, id, null, followedByMe = false, isMe = false)
     }
 
     private object NoLikes : InteractionRepository {
@@ -114,5 +136,116 @@ class UserProfileViewModelTest {
 
         assertEquals("b", vm.state.value.profile!!.id)
         assertEquals(listOf("p_b"), vm.state.value.posts.map { it.id })
+    }
+
+    // ---------- 팔로워·팔로잉 목록 ----------
+
+    @Test
+    fun followListLoadsTabsLazilyAndPages() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap())
+        val vm = followListVm(repo)
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWERS))
+        runCurrent()
+        assertEquals(listOf("x", "y"), vm.state.value.current.users.map { it.id })
+
+        vm.onIntent(FollowListIntent.LoadMore)
+        runCurrent()
+        assertEquals(listOf("x", "y", "z"), vm.state.value.current.users.map { it.id })
+
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWING))
+        runCurrent()
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWERS)) // 이미 받은 탭은 다시 안 받는다
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWING)) // 같은 사람 다시 열기도
+        runCurrent()
+        assertEquals(listOf(FollowTab.FOLLOWERS to 0, FollowTab.FOLLOWERS to 2, FollowTab.FOLLOWING to 0), repo.relationCalls)
+    }
+
+    @Test
+    fun followInListUpdatesSamePersonInBothTabs() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap())
+        val vm = followListVm(repo)
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWERS))
+        runCurrent()
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWING))
+        runCurrent()
+
+        vm.onIntent(FollowListIntent.ToggleFollow("x"))
+        runCurrent()
+        repo.followReplies[0].complete(true to 1)
+        runCurrent()
+        val pages = vm.state.value.pages
+        assertTrue(pages.getValue(FollowTab.FOLLOWERS).users.first { it.id == "x" }.followedByMe)
+        assertTrue(pages.getValue(FollowTab.FOLLOWING).users.first { it.id == "x" }.followedByMe)
+    }
+
+    private fun followListVm(repo: FakeRepo, me: String? = null) = FollowListViewModel(
+        GetRelationsUseCase(repo), SetFollowUseCase(repo),
+        CurrentUserIdUseCase(SessionStore().apply { if (me != null) current = Session("AT", "RT", 0, userId = me) }),
+    )
+
+    @Test
+    fun followingFromMyFollowersTabRefetchesMyFollowingTab() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap())
+        val vm = followListVm(repo, me = "u")
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWING))
+        runCurrent()
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWERS))
+        runCurrent()
+
+        vm.onIntent(FollowListIntent.ToggleFollow("y")) // 내 팔로워 y 를 맞팔 → 내 팔로잉이 바뀜
+        runCurrent()
+        repo.followReplies[0].complete(true to 1)
+        runCurrent()
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWING))
+        runCurrent()
+        assertEquals(2, repo.relationCalls.count { it == FollowTab.FOLLOWING to 0 }) // 다시 받음
+    }
+
+    @Test
+    fun loadMoreFailureShowsRetryAndRetryContinues() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap())
+        val vm = followListVm(repo)
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWERS))
+        runCurrent()
+        repo.failNextRelations = true
+        vm.onIntent(FollowListIntent.LoadMore)
+        runCurrent()
+        assertTrue(vm.state.value.current.loadMoreFailed)
+
+        vm.onIntent(FollowListIntent.LoadMore) // "다시 시도"
+        runCurrent()
+        assertFalse(vm.state.value.current.loadMoreFailed)
+        assertEquals(listOf("x", "y", "z"), vm.state.value.current.users.map { it.id })
+    }
+
+    @Test
+    fun refreshDropsLoadMoreStartedBeforeIt() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap())
+        val vm = followListVm(repo)
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWERS))
+        runCurrent()
+        val hold = CompletableDeferred<Unit>()
+        repo.holdRelations = hold
+        vm.onIntent(FollowListIntent.LoadMore) // offset 2 를 받는 중
+        runCurrent()
+        vm.onIntent(FollowListIntent.Refresh) // 돌아옴 → 처음부터
+        runCurrent()
+        repo.holdRelations = null
+        hold.complete(Unit)
+        runCurrent()
+        // 첫 페이지만 — 옛 더 불러오기(z)가 새 목록 뒤에 붙지 않는다
+        assertEquals(listOf("x", "y"), vm.state.value.current.users.map { it.id })
+        assertFalse(vm.state.value.current.isLoadingMore)
+    }
+
+    @Test
+    fun serverDownShowsErrorInsteadOfCrashing() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap()) // 프로필 조회 실패 (서버 꺼짐·시간 초과)
+        val vm = vm(repo)
+        vm.onIntent(UserProfileIntent.Load("u"))
+        runCurrent() // 실패가 바깥으로 번지면 여기서 테스트가 깨진다
+
+        assertTrue(vm.state.value.loadFailed)
+        assertFalse(vm.state.value.isLoading)
     }
 }

@@ -3,6 +3,7 @@ package com.gentlelady.reborn.feature.myprofile.components
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,8 @@ internal fun MyProfileHeaderSection(
     state: MyProfileState,
     onBackClick: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
+    onFollowersClick: () -> Unit = {},
+    onFollowingClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -135,12 +138,14 @@ internal fun MyProfileHeaderSection(
                 MyProfileMetricItem(
                     count = state.followersCount.toString(),
                     label = "팔로워",
-                    showLock = false
+                    showLock = false,
+                    onClick = onFollowersClick
                 )
                 MyProfileMetricItem(
                     count = state.followingCount.toString(),
                     label = "팔로잉",
-                    showLock = false
+                    showLock = false,
+                    onClick = onFollowingClick
                 )
             }
         }
@@ -186,10 +191,14 @@ private fun RowScope.MyProfileMetricItem(
     count: String,
     label: String,
     showLock: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     Column(
-        modifier = modifier.weight(1f),
+        modifier = modifier
+            .weight(1f)
+            .clip(RoundedCornerShape(8.dp))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

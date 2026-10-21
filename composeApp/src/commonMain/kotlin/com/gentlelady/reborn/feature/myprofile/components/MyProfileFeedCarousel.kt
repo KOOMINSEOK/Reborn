@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.Res
+import com.gentlelady.reborn.core.designsystem.components.RebornImage
 import com.gentlelady.reborn.core.theme.*
 import com.gentlelady.reborn.ic_like
 import com.gentlelady.reborn.ic_comment
@@ -125,8 +126,9 @@ private fun CarouselCardItem(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 상단 이미지 영역
-            Image(
-                painter = painterResource(item.thumbnail),
+            RebornImage(
+                url = item.imageUrl,
+                fallback = item.thumbnail,
                 contentDescription = "Feed Thumbnail",
                 modifier = Modifier
                     .fillMaxWidth()

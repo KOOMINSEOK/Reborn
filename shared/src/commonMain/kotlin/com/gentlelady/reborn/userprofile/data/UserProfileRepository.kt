@@ -6,6 +6,8 @@ import com.gentlelady.reborn.core.network.dto.toAbsoluteServerUrl
 import com.gentlelady.reborn.core.network.dto.toHomePost
 import com.gentlelady.reborn.home.domain.model.HomePost
 import com.gentlelady.reborn.userprofile.domain.FollowRejectedException
+import com.gentlelady.reborn.userprofile.domain.FollowTab
+import com.gentlelady.reborn.userprofile.domain.FollowUser
 import com.gentlelady.reborn.userprofile.domain.UserProfile
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.statement.bodyAsText
@@ -17,6 +19,9 @@ interface UserProfileRepository {
 
     /** 최신순 한 페이지 + 다음 offset (null 이면 끝). */
     suspend fun posts(userId: String, offset: Int): Pair<List<HomePost>, Int?>
+
+    /** 팔로워([FollowTab.FOLLOWERS]) 또는 팔로잉 한 페이지 + 다음 offset (null 이면 끝). */
+    suspend fun relations(userId: String, tab: FollowTab, offset: Int): Pair<List<FollowUser>, Int?>
 
     /** 팔로우/언팔로우 후 서버 기준 (팔로우 중, 팔로워 수). 서버가 거절하면 [FollowRejectedException]. */
     suspend fun setFollow(userId: String, follow: Boolean): Pair<Boolean, Int>
@@ -45,6 +50,22 @@ class UserProfileRepositoryImpl(
 
     override suspend fun posts(userId: String, offset: Int): Pair<List<HomePost>, Int?> =
         api.userPosts(userId, offset, PAGE_SIZE).let { page -> page.items.map { it.toHomePost() } to page.nextOffset }
+
+    override suspend fun relations(userId: String, tab: FollowTab, offset: Int): Pair<List<FollowUser>, Int?> {
+        val me = session.current?.userId
+        return api.userRelations(userId, following = tab == FollowTab.FOLLOWING, offset = offset).let { page ->
+            page.items.map {
+                FollowUser(
+                    id = it.id,
+                    handle = it.handle,
+                    displayName = it.displayName,
+                    avatarUrl = it.avatarUrl.toAbsoluteServerUrl(),
+                    followedByMe = it.followedByMe,
+                    isMe = it.id == me,
+                )
+            } to page.nextOffset
+        }
+    }
 
     override suspend fun setFollow(userId: String, follow: Boolean): Pair<Boolean, Int> {
         val result = try {
