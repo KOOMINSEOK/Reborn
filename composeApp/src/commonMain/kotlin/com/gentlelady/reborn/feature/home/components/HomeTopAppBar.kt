@@ -27,7 +27,7 @@ import com.gentlelady.reborn.core.theme.RebornTopBarDividerGray
 fun HomeTopAppBar(
     onAddClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
-    hasUnreadNotification: Boolean = true
+    hasUnreadNotification: Boolean = false
 ) {
     Column {
         TopAppBar(

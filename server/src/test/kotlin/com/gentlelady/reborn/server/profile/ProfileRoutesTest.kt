@@ -3,6 +3,7 @@ package com.gentlelady.reborn.server.profile
 import com.gentlelady.reborn.server.module
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
+import io.ktor.client.request.post
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import kotlin.test.Test
@@ -18,6 +19,9 @@ class ProfileRoutesTest {
 
         assertEquals(HttpStatusCode.Unauthorized, client.get("/me/profile").status)
         assertEquals(HttpStatusCode.Unauthorized, client.patch("/me/profile").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/notifications").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/notifications/unread-count").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.post("/notifications/read").status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/users/$id").status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/users/$id/followers").status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/users/$id/following").status)

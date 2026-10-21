@@ -14,5 +14,5 @@ val homeModule = module {
     factory { GetHomeFeedUseCase(get()) }
 
     // Presentation
-    factory { HomeViewModel(get(), get()) }
+    factory { HomeViewModel(get(), get(), get()) }
 }

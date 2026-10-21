@@ -9,6 +9,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeViewModel
 import com.gentlelady.reborn.interaction.data.InteractionRepository
 import com.gentlelady.reborn.interaction.domain.SetLikeUseCase
 import com.gentlelady.reborn.interaction.presentation.LikeSync
+import com.gentlelady.reborn.notification.GetUnreadNotificationCountUseCase
+import com.gentlelady.reborn.notification.NotificationRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,12 +45,18 @@ class HomeViewModelTest {
         override suspend fun deleteComment(target: InteractionTarget, commentId: String) = error("unused")
     }
 
+    private object NoNotifications : NotificationRepository {
+        override suspend fun notifications(cursor: String?) = error("unused")
+        override suspend fun unreadCount() = 0
+        override suspend fun markRead(upTo: String) = Unit
+    }
+
     private fun post(id: String, author: String) = HomePost(id = id, authorId = author, authorName = author, caption = "", postedAt = "")
 
     @Test
     fun blockedAuthorDisappearsAtOnceAndStaleFeedCannotBringItBack() = runTest(dispatcher) {
         val repo = FakeRepo()
-        val vm = HomeViewModel(GetHomeFeedUseCase(repo), LikeSync(SetLikeUseCase(NoLikes)))
+        val vm = HomeViewModel(GetHomeFeedUseCase(repo), LikeSync(SetLikeUseCase(NoLikes)), GetUnreadNotificationCountUseCase(NoNotifications))
         runCurrent()
         repo.replies[0].complete(listOf(post("1", "a"), post("2", "b")))
         runCurrent()

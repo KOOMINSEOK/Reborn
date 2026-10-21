@@ -165,7 +165,8 @@ private const val GUESTBOOK_SELECT = """
  * 추모 페이지 공개 범위 (별칭 `m`). `?` 4개 = 전부 viewerId.
  * public = 누구나 · followers = 개설자를 팔로우하는 사람 · private = 개설자만. 개설자와 양방향 차단이면 안 보인다.
  */
-private const val MEMORIAL_VISIBLE = """
+/** 별칭 m 의 추모 페이지를 viewer 가 볼 수 있나. `?` 4개 = viewerId ×4. 알림에서도 쓴다. */
+internal const val MEMORIAL_VISIBLE = """
     and (
         m.creator_id = ?
         or m.visibility = 'public'

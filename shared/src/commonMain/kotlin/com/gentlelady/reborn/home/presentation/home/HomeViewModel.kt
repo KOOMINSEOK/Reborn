@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.core.network.InteractionTarget
 import com.gentlelady.reborn.home.domain.usecase.GetHomeFeedUseCase
 import com.gentlelady.reborn.interaction.presentation.LikeSync
+import com.gentlelady.reborn.notification.GetUnreadNotificationCountUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
     private val likeSync: LikeSync,
+    private val getUnreadNotificationCount: GetUnreadNotificationCountUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -31,6 +33,7 @@ class HomeViewModel(
             is HomeIntent.ToggleLike -> toggleLike(intent.postId)
             is HomeIntent.CommentCountChanged -> reduce(HomeResult.CommentCountChanged(intent.postId, intent.delta))
             is HomeIntent.HideAuthor -> reduce(HomeResult.AuthorHidden(intent.authorId))
+            is HomeIntent.RefreshUnreadNotifications -> refreshUnread()
         }
     }
 
@@ -42,6 +45,23 @@ class HomeViewModel(
     }
 
     private fun reduce(result: HomeResult) = _state.update { HomeReducer.reduce(it, result) }
+
+    private var unreadJob: Job? = null
+
+    /** 실패(로그인 안 함·서버 꺼짐)면 0 — 점을 띄우지 않는다. 마지막 요청만 반영. */
+    private fun refreshUnread() {
+        unreadJob?.cancel()
+        unreadJob = viewModelScope.launch {
+            val count = try {
+                getUnreadNotificationCount()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                0
+            }
+            reduce(HomeResult.UnreadNotifications(count))
+        }
+    }
 
     private var feedJob: Job? = null
     private var feedGeneration = 0
