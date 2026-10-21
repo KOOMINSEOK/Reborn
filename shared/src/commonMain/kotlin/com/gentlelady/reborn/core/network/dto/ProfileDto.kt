@@ -13,6 +13,7 @@ data class MyProfileDto(
     val isPrivate: Boolean = false,
     val followerCount: Int = 0,
     val followingCount: Int = 0,
+    val posthumousPostCount: Int = 0,
 )
 
 /** 서버 `GET /users/{id}` 응답 (다른 사람 프로필). */

@@ -83,6 +83,7 @@ class MyProfileViewModel(
                     profileImageUrl = null,
                     followersCount = profile.followerCount,
                     followingCount = profile.followingCount,
+                    posthumousFeedCount = profile.posthumousPostCount,
                     myUserId = profile.id,
                     // 로그인한 사람의 화면에 목업 글을 남기지 않는다 (글 조회가 실패해도)
                     feeds = emptyList(),
