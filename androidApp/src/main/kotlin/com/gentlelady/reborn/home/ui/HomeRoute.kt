@@ -9,6 +9,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.gentlelady.reborn.App
 import com.gentlelady.reborn.auth.presentation.AuthViewModel
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.gentlelady.reborn.feature.signup.SignupFlow
+import com.gentlelady.reborn.signup.SignupGate
+import com.gentlelady.reborn.signup.SignupIntent
+import com.gentlelady.reborn.signup.SignupStep
+import com.gentlelady.reborn.signup.SignupViewModel
 import com.gentlelady.reborn.auth.presentation.LoginIntent
 import com.gentlelady.reborn.feature.auth.LoginScreen
 import com.gentlelady.reborn.home.presentation.home.HomeIntent
@@ -31,18 +42,38 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeRoute() {
-    // 로그인 게이트: 세션 없으면 로그인 화면. "둘러보기"로 건너뛰면 mock 으로 앱 사용.
+    // 첫 화면 게이트:
+    // - 로그인 안 함 → 가입 시작 화면 (거기서 "로그인" → 이메일 로그인 화면, 로그인 화면의 "둘러보기"면 mock 으로 앱 사용)
+    // - 세션은 있는데 가입이 덜 끝남(아이디 안 만듦) → 남은 가입 단계부터
     val authViewModel: AuthViewModel = koinViewModel()
     val loginState by authViewModel.state.collectAsState()
+    val signupViewModel: SignupViewModel = koinViewModel()
+    val signupState by signupViewModel.state.collectAsState()
     var skippedLogin by rememberSaveable { mutableStateOf(false) }
 
-    if (!loginState.loggedIn && !skippedLogin) {
-        LoginScreen(
-            state = loginState,
-            onIntent = authViewModel::handleIntent,
-            onSkip = { skippedLogin = true },
-        )
-        return
+    if (!(skippedLogin && !loginState.loggedIn)) {
+        when (signupState.gate) {
+            // 저장된 세션의 가입 상태를 묻는 동안 — 잠깐 흰 화면 (앱이 먼저 보였다가 가입 화면으로 튀지 않게)
+            SignupGate.CHECKING -> {
+                Box(Modifier.fillMaxSize().background(Color.White))
+                return
+            }
+            SignupGate.SIGNUP -> {
+                if (signupState.showLogin) {
+                    BackHandler { signupViewModel.onIntent(SignupIntent.CloseLogin) }
+                    LoginScreen(
+                        state = loginState,
+                        onIntent = authViewModel::handleIntent,
+                        onSkip = { skippedLogin = true },
+                    )
+                } else {
+                    BackHandler(enabled = signupState.step != SignupStep.START) { signupViewModel.onIntent(SignupIntent.Back) }
+                    SignupFlow(signupState, signupViewModel::onIntent)
+                }
+                return
+            }
+            SignupGate.DONE -> Unit
+        }
     }
 
     // 1. Koin을 통해 Shared 모듈의 네 개의 뇌(ViewModel)를 모두 주입받음

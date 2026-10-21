@@ -52,6 +52,12 @@ val RebornBlack = Color(0xFF111111)
 
 // 외부 브랜드 컬러 (카카오톡 채널 버튼 등)
 val RebornKakaoYellow = Color(0xFFFEE500)
+val RebornNaverGreen = Color(0xFF03C75A)
+
+// 회원가입 디자인의 주 색 (로고·버튼). 앱 공통 파랑(0F62FE)보다 짙은 남색
+val RebornNavy = Color(0xFF1D45A8)
+// 회원가입 입력칸·보조 버튼 배경
+val RebornFieldBg = Color(0xFFF4F6FA)
 
 // ========================================================================
 // 2. Semantic Mapping (프로필 관리 그리드 전용 변수 등록)

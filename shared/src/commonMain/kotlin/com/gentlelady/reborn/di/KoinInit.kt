@@ -6,6 +6,7 @@ import com.gentlelady.reborn.feedwrite.di.feedWriteModule
 import com.gentlelady.reborn.home.di.homeModule
 import com.gentlelady.reborn.interaction.di.interactionModule
 import com.gentlelady.reborn.notification.notificationModule
+import com.gentlelady.reborn.signup.signupModule
 import com.gentlelady.reborn.userprofile.di.userProfileModule
 import com.gentlelady.reborn.memorial.di.memorialModule
 import com.gentlelady.reborn.onboarding.di.onboardingModule
@@ -35,6 +36,7 @@ fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
             homeModule,
             interactionModule,
             notificationModule,
+            signupModule,
             userProfileModule,
             memorialModule,
             feedWriteModule,
