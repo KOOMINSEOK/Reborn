@@ -9,7 +9,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Duration
 
-enum class NotificationType { POST_LIKE, POST_COMMENT, HISTORY_LIKE, HISTORY_COMMENT, FOLLOW, GUESTBOOK }
+enum class NotificationType {
+    POST_LIKE, POST_COMMENT, HISTORY_LIKE, HISTORY_COMMENT, FOLLOW, GUESTBOOK,
+    /** 이 앱이 모르는 새 종류 (서버가 먼저 늘어났을 때). 눌러도 아무 데도 안 간다 */
+    UNKNOWN,
+}
 
 data class Notification(
     val id: String,
@@ -38,6 +42,7 @@ data class Notification(
             NotificationType.HISTORY_COMMENT -> "님이 회원님의 추억 글에 댓글을 남겼어요: ${preview.orEmpty()}"
             NotificationType.FOLLOW -> "님이 회원님을 팔로우하기 시작했어요."
             NotificationType.GUESTBOOK -> "님이 ${memorialName.orEmpty()}님의 추모 페이지에 방명록을 남겼어요: ${preview.orEmpty()}"
+            NotificationType.UNKNOWN -> "님의 새 알림이 있어요. 앱을 업데이트하면 볼 수 있어요."
         }
 }
 
@@ -56,7 +61,7 @@ fun relativeTime(createdAt: String, now: Instant = Clock.System.now(), zone: Tim
 
 /** 알림. mock 폴백 없음 — 실패 시 예외 (화면이 오류를 보여준다). */
 interface NotificationRepository {
-    /** 최신순 한 페이지 + 다음 커서 (null 이면 끝). 모르는 종류는 건너뛴다 (서버가 먼저 늘어나도 앱이 죽지 않게). */
+    /** 최신순 한 페이지 + 다음 커서 (null 이면 끝). 모르는 종류는 [NotificationType.UNKNOWN] 으로 (서버가 먼저 늘어나도 앱이 죽지 않게). */
     suspend fun notifications(cursor: String?): Pair<List<Notification>, String?>
     suspend fun unreadCount(): Int
     /** [upTo] (받은 가장 최신 알림의 createdAt) 까지 읽음으로 */
@@ -66,14 +71,15 @@ interface NotificationRepository {
 class NotificationRepositoryImpl(private val api: RebornApi) : NotificationRepository {
 
     override suspend fun notifications(cursor: String?): Pair<List<Notification>, String?> =
-        api.notifications(cursor).let { page -> page.items.mapNotNull { it.toNotification() } to page.nextCursor }
+        api.notifications(cursor).let { page -> page.items.map { it.toNotification() } to page.nextCursor }
 
     override suspend fun unreadCount(): Int = api.unreadNotificationCount().count
 
     override suspend fun markRead(upTo: String) = api.markNotificationsRead(upTo)
 
-    private fun NotificationDto.toNotification(): Notification? {
-        val type = NotificationType.entries.firstOrNull { it.name.equals(type, ignoreCase = true) } ?: return null
+    private fun NotificationDto.toNotification(): Notification {
+        val type = NotificationType.entries.firstOrNull { it != NotificationType.UNKNOWN && it.name.equals(type, ignoreCase = true) }
+            ?: NotificationType.UNKNOWN
         return Notification(
             id = id,
             type = type,

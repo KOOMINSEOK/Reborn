@@ -1,6 +1,7 @@
 package com.gentlelady.reborn.server.notification
 
 import com.gentlelady.reborn.server.memorial.GuestbookCursor
+import com.gentlelady.reborn.server.memorial.MEMORIAL_VISIBLE
 import com.gentlelady.reborn.server.plugins.Db
 import kotlinx.serialization.Serializable
 import java.sql.ResultSet
@@ -38,7 +39,9 @@ data class UnreadCountResponse(val count: Int)
 
 /**
  * 알림은 DB 트리거가 만든다 (V12). 여기선 읽기·읽음 처리만.
- * 나와 차단 관계(어느 쪽이든)인 사람의 알림은 보이지 않는다 — 차단을 풀면 다시 보인다.
+ * 보이는 알림 = [VISIBLE]: 나와 차단 관계(어느 쪽이든)인 사람의 알림, 지금 내가 볼 수 없는 추모 페이지
+ * (비공개 전환·개설자와 차단)의 알림은 빼고 — 상황이 바뀌면 다시 보인다.
+ * 목록·안 읽은 수·읽음 처리가 모두 같은 조건을 쓴다 (안 보이는 알림을 몰래 읽음 처리하지 않게).
  */
 class NotificationRepository {
 
@@ -56,20 +59,20 @@ class NotificationRepository {
             left join memorial_history h on h.id = n.history_id
             left join memorials m on m.id = n.memorial_id
             where n.recipient_id = ?
-            """.trimIndent() + NOT_BLOCKED + """
+            """.trimIndent() + VISIBLE + """
               and (?::timestamptz is null or (n.created_at, n.id) < (?::timestamptz, ?::uuid))
             order by n.created_at desc, n.id desc
             limit ?
             """.trimIndent(),
-            recipientId, recipientId, recipientId,
+            recipientId, *visibleParams(recipientId),
             before?.createdAt, before?.createdAt, before?.id, limit,
             map = ResultSet::toNotification,
         )
 
     fun unreadCount(recipientId: UUID): Int =
         Db.queryFirst(
-            "select count(*) as c from notifications n where n.recipient_id = ? and n.read_at is null" + NOT_BLOCKED,
-            recipientId, recipientId, recipientId,
+            "select count(*) as c from notifications n where n.recipient_id = ? and n.read_at is null" + VISIBLE,
+            recipientId, *visibleParams(recipientId),
         ) { it.getInt("c") } ?: 0
 
     /**
@@ -80,21 +83,28 @@ class NotificationRepository {
     fun markRead(recipientId: UUID, upTo: OffsetDateTime?): Int =
         Db.update(
             """
-            update notifications set read_at = now()
-            where recipient_id = ? and read_at is null and created_at <= coalesce(?::timestamptz, now())
-            """.trimIndent(),
-            recipientId, upTo,
+            update notifications n set read_at = now()
+            where n.recipient_id = ? and n.read_at is null and n.created_at <= coalesce(?::timestamptz, now())
+            """.trimIndent() + VISIBLE,
+            recipientId, upTo, *visibleParams(recipientId),
         )
 }
 
-/** 알림을 만든 사람과 받는 사람이 차단 관계면 뺀다. `?` 2개 = recipientId, recipientId. */
-private const val NOT_BLOCKED = """
+/**
+ * 받는 사람에게 지금 보여도 되는 알림 (별칭 n). `?` 6개 = recipientId ×6 ([visibleParams]).
+ * - 만든 사람과 차단 관계가 아니고
+ * - 추모 페이지 알림이면 그 페이지를 지금 볼 수 있을 때만 (비공개 전환·개설자와 차단이면 숨김)
+ */
+private const val VISIBLE = """
     and not exists (
         select 1 from blocks b
         where (b.blocker_id = ? and b.blocked_id = n.actor_id)
            or (b.blocker_id = n.actor_id and b.blocked_id = ?)
     )
+    and (n.memorial_id is null or exists (select 1 from memorials m where m.id = n.memorial_id""" + MEMORIAL_VISIBLE + """))
 """
+
+private fun visibleParams(recipientId: UUID): Array<Any?> = Array(6) { recipientId }
 
 private fun ResultSet.toNotification() = NotificationResponse(
     id = getString("id"),

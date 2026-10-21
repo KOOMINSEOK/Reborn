@@ -111,6 +111,7 @@ fun NotificationsScreen(
                         NotificationType.HISTORY_LIKE, NotificationType.HISTORY_COMMENT ->
                             n.memorialId?.let { onOpen(NotificationTarget.Memorial(it)) }
                         NotificationType.GUESTBOOK -> n.memorialId?.let { onOpen(NotificationTarget.Memorial(it, n.sourceId)) }
+                        NotificationType.UNKNOWN -> Unit
                     }
                 }
             }

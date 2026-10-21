@@ -94,7 +94,7 @@ class NotificationTest {
     }
 
     @Test
-    fun unknownTypesFromNewerServerAreSkipped() = runTest {
+    fun unknownTypesFromNewerServerStayAsPlaceholders() = runTest {
         val json = headersOf(HttpHeaders.ContentType, "application/json")
         val body = """{"items":[
             {"id":"1","type":"follow","actorId":"a","actorName":"가","createdAt":"2026-10-21T10:00:00Z","read":false},
@@ -109,8 +109,10 @@ class NotificationTest {
             uploadClient = HttpClient(MockEngine { respond("") }),
         )
         val (items, next) = NotificationRepositoryImpl(api).notifications(null)
-        assertEquals(listOf("1", "3"), items.map { it.id })
+        // 버리면 한 페이지가 통째로 모르는 종류일 때 목록이 비어 더 불러오기·읽음 처리가 멈춘다
+        assertEquals(listOf("1", "2", "3"), items.map { it.id })
+        assertEquals(NotificationType.UNKNOWN, items[1].type)
         assertEquals(null, next)
-        assertTrue(items[1].message.contains("홍길동님의 추모 페이지에 방명록을 남겼어요: 보고싶어"))
+        assertTrue(items[2].message.contains("홍길동님의 추모 페이지에 방명록을 남겼어요: 보고싶어"))
     }
 }
