@@ -38,6 +38,7 @@ class InteractionRepositoryImpl(
 
     private fun CommentDto.toComment() = Comment(
         id = id,
+        authorId = authorId,
         authorName = authorName,
         body = body,
         date = createdAt.take(10),

@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.management.security.domain.di
 
+import com.gentlelady.reborn.core.auth.CurrentUserIdUseCase
 import com.gentlelady.reborn.management.security.account_visibility.presentation.AccountVisibilityViewModel
 import com.gentlelady.reborn.management.security.blocked_accounts.presentation.BlockedAccountsViewModel
 import com.gentlelady.reborn.management.security.change_password.presentation.ChangePasswordViewModel
@@ -10,5 +11,5 @@ val securityModule = module {
     factory { AccountVisibilityViewModel() }
     factory { DeviceManagementViewModel() }
     factory { ChangePasswordViewModel() }
-    factory { BlockedAccountsViewModel() }
+    factory { BlockedAccountsViewModel(get(), get(), CurrentUserIdUseCase(get())) }
 }

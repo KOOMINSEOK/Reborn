@@ -60,7 +60,7 @@ class InteractionTest {
             CompletableDeferred<Unit>().also { deleteReplies += it }.await()
     }
 
-    private fun comment(id: String) = Comment(id, "a", "b", "2026-10-21", isMine = true)
+    private fun comment(id: String) = Comment(id, "u", "a", "b", "2026-10-21", isMine = true)
 
     private fun commentsVm(repo: FakeRepo) =
         CommentsViewModel(GetCommentsUseCase(repo), AddCommentUseCase(repo), DeleteCommentUseCase(repo))

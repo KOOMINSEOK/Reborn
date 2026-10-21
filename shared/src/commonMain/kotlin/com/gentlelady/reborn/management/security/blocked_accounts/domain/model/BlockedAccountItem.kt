@@ -6,5 +6,7 @@ data class BlockedAccountItem(
     val id: String,
     val name: String,
     val username: String,
-    val avatar: DrawableResource?
+    val avatar: DrawableResource?,
+    /** 서버 사진 URL. 있으면 [avatar] 보다 우선 */
+    val avatarUrl: String? = null,
 )

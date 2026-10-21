@@ -17,6 +17,7 @@ import com.gentlelady.reborn.userprofile.presentation.FollowListIntent
 import com.gentlelady.reborn.userprofile.presentation.FollowListViewModel
 import com.gentlelady.reborn.userprofile.domain.GetUserPostsUseCase
 import com.gentlelady.reborn.userprofile.domain.GetUserProfileUseCase
+import com.gentlelady.reborn.userprofile.domain.SetBlockUseCase
 import com.gentlelady.reborn.userprofile.domain.SetFollowUseCase
 import com.gentlelady.reborn.userprofile.domain.UserProfile
 import com.gentlelady.reborn.userprofile.presentation.UserProfileIntent
@@ -49,7 +50,11 @@ class UserProfileViewModelTest {
         UserProfile(id, "h_$id", "이름$id", "", null, private, followerCount = 10, followingCount = 3,
             followedByMe = false, blockedByMe = false, isMe = false)
 
-    private class FakeRepo(val profiles: Map<String, UserProfile>) : UserProfileRepository {
+    private class FakeRepo(var profiles: Map<String, UserProfile>) : UserProfileRepository {
+        val blockReplies = mutableListOf<CompletableDeferred<Unit>>()
+        override suspend fun setBlock(userId: String, block: Boolean) =
+            CompletableDeferred<Unit>().also { blockReplies += it }.await()
+        override suspend fun blockedUsers() = error("unused")
         val followReplies = mutableListOf<CompletableDeferred<Pair<Boolean, Int>>>()
         val profileReplies = mutableMapOf<String, CompletableDeferred<UserProfile>>()
         override suspend fun profile(userId: String) =
@@ -83,6 +88,7 @@ class UserProfileViewModelTest {
 
     private fun vm(repo: FakeRepo) = UserProfileViewModel(
         GetUserProfileUseCase(repo), GetUserPostsUseCase(repo), SetFollowUseCase(repo), LikeSync(SetLikeUseCase(NoLikes)),
+        SetBlockUseCase(repo),
     )
 
     @Test
@@ -247,5 +253,51 @@ class UserProfileViewModelTest {
 
         assertTrue(vm.state.value.loadFailed)
         assertFalse(vm.state.value.isLoading)
+    }
+
+    // ---------- 차단 ----------
+
+    @Test
+    fun blockingReloadsProfileAndTellsOtherScreens() = runTest(dispatcher) {
+        val repo = FakeRepo(mapOf("u" to profile("u").copy(followedByMe = true)))
+        val vm = vm(repo)
+        vm.onIntent(UserProfileIntent.Load("u"))
+        runCurrent()
+
+        vm.onIntent(UserProfileIntent.SetBlocked(true))
+        assertTrue(vm.state.value.isChangingBlock)
+        vm.onIntent(UserProfileIntent.SetBlocked(true)) // 두 번 눌러도 요청은 하나
+        runCurrent()
+        assertEquals(1, repo.blockReplies.size)
+
+        // 서버: 차단하면 팔로우도 끊긴다
+        repo.profiles = mapOf("u" to profile("u").copy(blockedByMe = true, followedByMe = false))
+        repo.blockReplies[0].complete(Unit)
+        runCurrent()
+
+        val s = vm.state.value
+        assertTrue(s.profile!!.blockedByMe)
+        assertFalse(s.profile!!.followedByMe)
+        assertFalse(s.isChangingBlock)
+        assertEquals(1, s.blockChangedToken) // 홈 피드가 다시 받게
+        assertEquals("차단했어요.", s.message) // 다시 받는 동안에도 안내가 남는다
+    }
+
+    @Test
+    fun failedBlockKeepsProfileAndExplains() = runTest(dispatcher) {
+        val repo = FakeRepo(mapOf("u" to profile("u")))
+        val vm = vm(repo)
+        vm.onIntent(UserProfileIntent.Load("u"))
+        runCurrent()
+        vm.onIntent(UserProfileIntent.SetBlocked(true))
+        runCurrent()
+        repo.blockReplies[0].completeExceptionally(IllegalStateException("down"))
+        runCurrent()
+
+        val s = vm.state.value
+        assertFalse(s.profile!!.blockedByMe)
+        assertFalse(s.isChangingBlock)
+        assertEquals(0, s.blockChangedToken)
+        assertEquals("차단하지 못했어요.", s.message)
     }
 }

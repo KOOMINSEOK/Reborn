@@ -49,14 +49,19 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun MemorialHistoryDetailScreen(
     item: MemorialHistoryItem,
     onIntent: (MemorialIntent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onUserClick: (String) -> Unit = {}
 ) {
     var showComments by remember { mutableStateOf(false) }
     if (showComments) {
         CommentSheet(
             target = InteractionTarget.HISTORY,
             parentId = item.id,
-            onDismiss = { showComments = false }
+            onDismiss = { showComments = false },
+            onAuthorClick = {
+                showComments = false
+                onUserClick(it)
+            }
         )
     }
 

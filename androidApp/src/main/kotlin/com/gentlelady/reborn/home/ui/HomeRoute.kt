@@ -86,6 +86,12 @@ fun HomeRoute() {
         myProfileViewModel.handleIntent(MyProfileIntent.LoadProfile)
     }
 
+    // 설정 > 차단한 계정에서 풀면 그 사람 글이 다시 보이게 피드를 다시 받는다
+    val unblockedToken = blockedAccountsState.unblockedToken
+    LaunchedEffect(unblockedToken) {
+        if (unblockedToken > 0) homeViewModel.handleIntent(HomeIntent.LoadFeed)
+    }
+
     // 로그인 상태가 바뀌면 피드·내 프로필을 다시 불러온다 (mock ↔ 서버 데이터 전환, 다른 계정 사진이 남지 않게).
     LaunchedEffect(loginState.loggedIn) {
         homeViewModel.handleIntent(HomeIntent.LoadFeed)
