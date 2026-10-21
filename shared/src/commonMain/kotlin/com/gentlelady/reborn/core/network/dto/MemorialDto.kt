@@ -86,6 +86,7 @@ fun HistoryDto.toHistoryItem(): MemorialHistoryItem = MemorialHistoryItem(
     caption = caption,
     imageUrls = imageUrls.mapNotNull { it.toAbsoluteServerUrl() },
     likes = likeCount,
+    liked = liked,
     comments = commentCount,
 )
 

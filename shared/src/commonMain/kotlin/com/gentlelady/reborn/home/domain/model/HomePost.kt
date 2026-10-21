@@ -15,6 +15,8 @@ data class HomePost(
     val isPosthumous: Boolean = false,
     val isLocked: Boolean = false,
     val likes: Int = 0,
+    /** 내가 좋아요를 눌렀는지 */
+    val liked: Boolean = false,
     val comments: Int = 0,
     val postedAt: String,
 )

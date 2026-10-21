@@ -17,7 +17,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun PostItem(
     post: HomePost,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLikeClick: () -> Unit = {},
+    onCommentClick: () -> Unit = {}
 ) {
     RebornCard(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -28,7 +30,7 @@ fun PostItem(
             PosthumousBanner()
         }
         PostImageArea(post = post)
-        PostActionRow(post = post)
+        PostActionRow(post = post, onLikeClick = onLikeClick, onCommentClick = onCommentClick)
         PostCaption(post = post, modifier = Modifier.padding(bottom = 12.dp))
     }
 }

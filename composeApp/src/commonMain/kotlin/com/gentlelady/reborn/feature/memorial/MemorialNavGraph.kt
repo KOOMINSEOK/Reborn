@@ -14,6 +14,8 @@ import com.gentlelady.reborn.memorial.presentation.DEMO_MEMORIAL_ID
 import com.gentlelady.reborn.memorial.presentation.MemorialIntent
 import com.gentlelady.reborn.memorial.presentation.MemorialViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import com.gentlelady.reborn.core.designsystem.comments.CommentCountEffect
+import com.gentlelady.reborn.core.network.InteractionTarget
 
 fun NavGraphBuilder.memorialNavGraph(
     navController: NavHostController,
@@ -52,6 +54,12 @@ private fun MemorialRoute(
     }
     LaunchedEffect(state.isWritingHistory) {
         onWritingHistoryChange(state.isWritingHistory)
+    }
+    // 추억 글 댓글 수 (시트를 닫은 뒤 끝난 작성·삭제도)
+    CommentCountEffect { change ->
+        if (change.target == InteractionTarget.HISTORY) {
+            viewModel.onIntent(MemorialIntent.HistoryCommentCountChanged(change.parentId, change.delta))
+        }
     }
     DisposableEffect(Unit) {
         onDispose { onWritingHistoryChange(false) }
