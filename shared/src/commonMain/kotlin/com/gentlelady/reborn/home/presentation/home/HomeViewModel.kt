@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.core.network.InteractionTarget
 import com.gentlelady.reborn.home.domain.usecase.GetHomeFeedUseCase
 import com.gentlelady.reborn.interaction.presentation.LikeSync
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +30,7 @@ class HomeViewModel(
             is HomeIntent.ClickMemorialIcon -> { /* 네비게이션은 UI 레이어에서 처리됨 */ }
             is HomeIntent.ToggleLike -> toggleLike(intent.postId)
             is HomeIntent.CommentCountChanged -> reduce(HomeResult.CommentCountChanged(intent.postId, intent.delta))
+            is HomeIntent.HideAuthor -> reduce(HomeResult.AuthorHidden(intent.authorId))
         }
     }
 
@@ -41,12 +43,18 @@ class HomeViewModel(
 
     private fun reduce(result: HomeResult) = _state.update { HomeReducer.reduce(it, result) }
 
+    private var feedJob: Job? = null
+    private var feedGeneration = 0
+
+    /** 마지막 요청만 반영한다 — 차단 전에 출발한 응답이 늦게 와서 차단한 사람 글을 되살리지 않게. */
     private fun loadFeed() {
-        viewModelScope.launch {
+        val gen = ++feedGeneration
+        feedJob?.cancel()
+        feedJob = viewModelScope.launch {
             _state.update { HomeReducer.reduce(it, HomeResult.Loading) }
             // 서버 우선, 실패 시 레포지토리가 mock 으로 폴백한다.
             val posts = getHomeFeedUseCase()
-            _state.update { HomeReducer.reduce(it, HomeResult.FeedLoaded(posts)) }
+            if (gen == feedGeneration) _state.update { HomeReducer.reduce(it, HomeResult.FeedLoaded(posts)) }
         }
     }
 }

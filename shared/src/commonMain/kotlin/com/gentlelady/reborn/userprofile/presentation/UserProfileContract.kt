@@ -20,6 +20,8 @@ data class UserProfileState(
     val isChangingBlock: Boolean = false,
     /** 차단 상태가 바뀔 때마다 올린다 → 홈 피드 등 다른 화면이 다시 받는다 */
     val blockChangedToken: Int = 0,
+    /** 마지막으로 바뀐 차단 (누구를, 차단했나 풀었나) */
+    val lastBlockChange: Pair<String, Boolean>? = null,
 )
 
 sealed interface UserProfileIntent {
@@ -46,7 +48,7 @@ sealed interface UserProfileResult {
     data class Message(val text: String?) : UserProfileResult
     object ChangingBlock : UserProfileResult
     object BlockChangeFailed : UserProfileResult
-    object BlockChanged : UserProfileResult
+    data class BlockChanged(val userId: String, val blocked: Boolean) : UserProfileResult
 }
 
 object UserProfileReducer {
@@ -57,6 +59,7 @@ object UserProfileReducer {
             isLoading = true,
             message = state.message.takeIf { state.userId == result.userId },
             blockChangedToken = state.blockChangedToken,
+            lastBlockChange = state.lastBlockChange,
         )
         is UserProfileResult.Loaded -> state.copy(
             profile = result.profile,
@@ -82,7 +85,11 @@ object UserProfileReducer {
         is UserProfileResult.Message -> state.copy(message = result.text)
         is UserProfileResult.ChangingBlock -> state.copy(isChangingBlock = true)
         is UserProfileResult.BlockChangeFailed -> state.copy(isChangingBlock = false)
-        is UserProfileResult.BlockChanged -> state.copy(isChangingBlock = false, blockChangedToken = state.blockChangedToken + 1)
+        is UserProfileResult.BlockChanged -> state.copy(
+            isChangingBlock = false,
+            blockChangedToken = state.blockChangedToken + 1,
+            lastBlockChange = result.userId to result.blocked,
+        )
     }
 
     private fun UserProfileState.updatePost(id: String, change: (HomePost) -> HomePost) =

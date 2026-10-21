@@ -148,7 +148,10 @@ fun MainScreen(
                     onBack = { navController.popBackStack() },
                     onOpenFollows = { id, tab, handle -> navController.navigate(followsRoute(id, tab, handle)) },
                     // 차단하면 그 사람 글이 피드에서 빠지고, 풀면 다시 보인다
-                    onBlockChanged = { onHomeIntent(HomeIntent.LoadFeed) },
+                    onBlockChanged = { userId, blocked ->
+                        if (blocked) onHomeIntent(HomeIntent.HideAuthor(userId)) // 다시 받기 전에도 바로 안 보이게
+                        onHomeIntent(HomeIntent.LoadFeed)
+                    },
                     onUserClick = { navController.navigate("user/$it") }
                 )
             }

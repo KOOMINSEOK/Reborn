@@ -27,8 +27,24 @@ class BlockedAccountsViewModel(
     val state: StateFlow<BlockedAccountsState> = _state.asStateFlow()
 
     private var loadJob: Job? = null
-    /** 다시 받을 때마다 올린다 — 이전 조회·해제 응답이 새 목록을 덮지 않게 */
+    /** 다시 받을 때마다 올린다 — 이전 조회 응답이 새 목록을 덮지 않게 (해제 결과는 이걸로 버리지 않는다) */
     private var generation = 0
+    /** 지금 목록의 주인 (로그인한 사람). 바뀌면 이전 사람의 목록·진행 중인 해제를 모두 버린다 */
+    private var owner: String? = null
+
+    init {
+        // 앱 전체에 하나뿐인 ViewModel 이라 로그아웃·다른 계정 로그인에도 남는다 → 계정이 바뀌면 바로 비운다
+        viewModelScope.launch {
+            currentUserId.changes.collect { id ->
+                if (id != owner) {
+                    owner = id
+                    generation++
+                    loadJob?.cancel()
+                    _state.value = BlockedAccountsState(isLoading = id != null)
+                }
+            }
+        }
+    }
 
     fun handleIntent(intent: BlockedAccountsIntent) {
         when (intent) {
@@ -44,7 +60,12 @@ class BlockedAccountsViewModel(
     private fun load() {
         val gen = ++generation
         loadJob?.cancel()
-        if (currentUserId() == null) {
+        val me = currentUserId()
+        if (me != owner) { // 수집보다 먼저 불렸을 때도 이전 사람 목록을 보이지 않게
+            owner = me
+            _state.value = BlockedAccountsState(isLoading = me != null)
+        }
+        if (me == null) {
             _state.update { BlockedAccountsState(accounts = BlockedAccountsMockData.blockedAccounts, isLoading = false) }
             return
         }
@@ -68,11 +89,12 @@ class BlockedAccountsViewModel(
             _state.update { st -> st.copy(accounts = st.accounts.filterNot { it.id == id }) }
             return
         }
-        val gen = generation
+        val requestedBy = owner
         _state.update { it.copy(unblockingIds = it.unblockingIds + id) }
         viewModelScope.launch {
             val result = runCatching { setBlock(id, false) }
-            if (gen != generation) return@launch
+            // 그 사이 계정이 바뀌었으면 버린다 (목록을 새로 받은 건 상관없다 — 결과는 반영해야 한다)
+            if (requestedBy != owner) return@launch
             _state.update { st ->
                 if (result.isSuccess) {
                     st.copy(
@@ -84,6 +106,8 @@ class BlockedAccountsViewModel(
                     st.copy(unblockingIds = st.unblockingIds - id, message = "차단을 풀지 못했어요. 잠시 후 다시 시도해 주세요.")
                 }
             }
+            // 해제 전에 출발한 목록 응답이 그 줄을 되살렸을 수 있다 → 서버 목록으로 맞춘다
+            if (result.isSuccess) load()
         }
     }
 }

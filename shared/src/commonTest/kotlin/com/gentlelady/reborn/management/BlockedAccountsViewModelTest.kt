@@ -41,8 +41,10 @@ class BlockedAccountsViewModelTest {
         var blocked = listOf(item("a"), item("b"))
         val unblocks = mutableListOf<Pair<String, CompletableDeferred<Unit>>>()
         override suspend fun blockedUsers() = blocked
-        override suspend fun setBlock(userId: String, block: Boolean) =
+        override suspend fun setBlock(userId: String, block: Boolean) {
             CompletableDeferred<Unit>().also { unblocks += userId to it }.await()
+            if (!block) blocked = blocked.filterNot { it.id == userId } // 진짜 서버처럼
+        }
         override suspend fun profile(userId: String): UserProfile = error("unused")
         override suspend fun posts(userId: String, offset: Int): Pair<List<HomePost>, Int?> = error("unused")
         override suspend fun relations(userId: String, tab: FollowTab, offset: Int): Pair<List<FollowUser>, Int?> = error("unused")
@@ -53,10 +55,12 @@ class BlockedAccountsViewModelTest {
         fun item(id: String) = BlockedAccountItem(id, "이름$id", "h_$id", avatar = null)
     }
 
-    private fun vm(repo: FakeRepo, me: String?) = BlockedAccountsViewModel(
-        GetBlockedUsersUseCase(repo), SetBlockUseCase(repo),
-        CurrentUserIdUseCase(SessionStore().apply { if (me != null) current = Session("AT", "RT", 0, userId = me) }),
-    )
+    private fun vm(repo: FakeRepo, me: String?) = vm(repo, store(me))
+
+    private fun vm(repo: FakeRepo, store: SessionStore) =
+        BlockedAccountsViewModel(GetBlockedUsersUseCase(repo), SetBlockUseCase(repo), CurrentUserIdUseCase(store))
+
+    private fun store(me: String?) = SessionStore().apply { if (me != null) current = Session("AT", "RT", 0, userId = me) }
 
     @Test
     fun loggedInShowsServerListAndUnblockRemovesAfterServer() = runTest(dispatcher) {
@@ -109,5 +113,40 @@ class BlockedAccountsViewModelTest {
         browse.handleIntent(BlockedAccountsIntent.LoadBlockedAccounts)
         assertEquals(BlockedAccountsMockData.blockedAccounts, browse.state.value.accounts)
         assertNull(browse.state.value.message)
+    }
+
+    @Test
+    fun switchingAccountClearsPreviousBlockedListImmediately() = runTest(dispatcher) {
+        val repo = FakeRepo()
+        val store = store("me")
+        val vm = vm(repo, store)
+        vm.handleIntent(BlockedAccountsIntent.LoadBlockedAccounts)
+        runCurrent()
+        assertEquals(listOf("a", "b"), vm.state.value.accounts.map { it.id })
+
+        store.current = Session("AT2", "RT2", 0, userId = "other") // 다른 계정 로그인
+        runCurrent()
+        assertTrue(vm.state.value.accounts.isEmpty()) // 이전 사람 목록이 남지 않는다
+        assertTrue(vm.state.value.isLoading)
+    }
+
+    @Test
+    fun reopeningWhileUnblockingStillAppliesTheResult() = runTest(dispatcher) {
+        val repo = FakeRepo()
+        val vm = vm(repo, me = "me")
+        vm.handleIntent(BlockedAccountsIntent.LoadBlockedAccounts)
+        runCurrent()
+        vm.handleIntent(BlockedAccountsIntent.ClickUnblock("a"))
+        vm.handleIntent(BlockedAccountsIntent.ConfirmUnblock)
+        runCurrent()
+
+        vm.handleIntent(BlockedAccountsIntent.LoadBlockedAccounts) // 나갔다 다시 들어옴 (해제 응답 전)
+        runCurrent()
+        repo.unblocks[0].second.complete(Unit)
+        runCurrent()
+
+        assertEquals(listOf("b"), vm.state.value.accounts.map { it.id })
+        assertTrue(vm.state.value.unblockingIds.isEmpty()) // 버튼이 막힌 채 남지 않는다
+        assertEquals(1, vm.state.value.unblockedToken) // 홈 피드도 다시 받는다
     }
 }

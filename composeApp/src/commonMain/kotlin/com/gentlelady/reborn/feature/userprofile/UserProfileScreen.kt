@@ -54,8 +54,8 @@ fun UserProfileRoute(
     onBack: () -> Unit,
     /** (그 사람 id, 탭, 핸들) */
     onOpenFollows: (String, FollowTab, String) -> Unit = { _, _, _ -> },
-    /** 차단/해제가 서버에 반영됐을 때 — 홈 피드 등을 다시 받게 */
-    onBlockChanged: () -> Unit = {},
+    /** 차단/해제가 서버에 반영됐을 때 (그 사람 id, 차단했나) — 홈 피드 등을 맞추게 */
+    onBlockChanged: (String, Boolean) -> Unit = { _, _ -> },
     onUserClick: (String) -> Unit = {},
     viewModel: UserProfileViewModel = koinViewModel(),
 ) {
@@ -67,7 +67,10 @@ fun UserProfileRoute(
         }
     }
     val token = state.blockChangedToken
-    LaunchedEffect(token) { if (token > 0) onBlockChanged() }
+    LaunchedEffect(token) {
+        val change = state.lastBlockChange
+        if (token > 0 && change != null) onBlockChanged(change.first, change.second)
+    }
     UserProfileScreen(
         state = state,
         onIntent = viewModel::onIntent,

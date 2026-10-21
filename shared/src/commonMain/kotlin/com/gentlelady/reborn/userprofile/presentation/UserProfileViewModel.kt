@@ -68,7 +68,7 @@ class UserProfileViewModel(
             if (gen != generation) return@launch
             result
                 .onSuccess {
-                    reduce(UserProfileResult.BlockChanged)
+                    reduce(UserProfileResult.BlockChanged(profile.id, block))
                     reduce(UserProfileResult.Message(if (block) "차단했어요." else "차단을 풀었어요."))
                     load(profile.id)
                 }
