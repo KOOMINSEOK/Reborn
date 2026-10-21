@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
+import android.util.Log
 import java.io.ByteArrayOutputStream
 import kotlin.math.max
 
@@ -14,9 +15,17 @@ import kotlin.math.max
  * - 긴 변 [MAX_SIDE]px 로 줄여서 디코딩 → 48MP 원본도 메모리에 통째로 올리지 않는다
  * - EXIF 회전을 반영 (BitmapFactory 는 무시한다)
  * - HEIC·PNG 등 원본 형식과 상관없이 서버 허용 형식(jpeg)으로 맞춘다
- * 읽을 수 없는 파일이면 null.
+ * 읽을 수 없는 파일이면 null — 목록엔 있는데 실제 파일이 지워진 사진, 클라우드에만 있는 사진,
+ * 권한이 빠진 Uri, 깨진 이미지 등. 예외를 던지지 않는다 (호출부가 IO 코루틴이라 던지면 앱이 죽는다).
  */
-internal fun Context.readJpegForUpload(uri: Uri): ByteArray? {
+internal fun Context.readJpegForUpload(uri: Uri): ByteArray? = try {
+    decodeForUpload(uri)
+} catch (e: Exception) {
+    Log.w("ImagePicker", "cannot read picked image", e)
+    null
+}
+
+private fun Context.decodeForUpload(uri: Uri): ByteArray? {
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
     val longSide = max(bounds.outWidth, bounds.outHeight)
