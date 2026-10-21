@@ -2,6 +2,7 @@ package com.gentlelady.reborn.myprofile.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gentlelady.reborn.core.auth.CurrentUserIdUseCase
 import com.gentlelady.reborn.core.network.dto.toAbsoluteServerUrl
 import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.myprofile.data.MyProfileRepository
@@ -18,13 +19,23 @@ class MyProfileViewModel(
     private val repository: MyProfileRepository,
     private val updateAvatarUseCase: UpdateAvatarUseCase,
     private val updateProfileTextUseCase: UpdateProfileTextUseCase,
+    private val currentUserId: CurrentUserIdUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MyProfileState())
     val state: StateFlow<MyProfileState> = _state.asStateFlow()
 
+    /** 로그인한 계정이 바뀔 때마다 올린다 — 이전 계정에 대한 늦은 응답을 버린다 */
+    private var accountGeneration = 0
+
     init {
-        handleIntent(MyProfileIntent.LoadProfile)
+        // 처음 + 로그인·로그아웃·계정 전환마다: 이전 계정 데이터를 지우고 다시 받는다
+        viewModelScope.launch {
+            currentUserId.changes.collect {
+                accountGeneration++
+                handleIntent(MyProfileIntent.LoadProfile)
+            }
+        }
     }
 
     fun handleIntent(intent: MyProfileIntent) {
@@ -58,8 +69,10 @@ class MyProfileViewModel(
         profileJob?.cancel() // 조회는 하나만 — 늦게 온 옛 응답이 덮지 않게
         val version = avatarVersion
         val text = textVersion
+        val account = accountGeneration
         profileJob = viewModelScope.launch {
             val profile = repository.getMyProfile() ?: return@launch
+            if (account != accountGeneration) return@launch
             _state.update {
                 it.copy(
                     username = profile.handle,
@@ -71,10 +84,12 @@ class MyProfileViewModel(
                     followersCount = profile.followerCount,
                     followingCount = profile.followingCount,
                     myUserId = profile.id,
+                    // 로그인한 사람의 화면에 목업 글을 남기지 않는다 (글 조회가 실패해도)
+                    feeds = emptyList(),
                 )
             }
-            runCatching { repository.myPosts(profile.id, FEED_CARD_COUNT) }
-                .onSuccess { posts -> _state.update { it.copy(feeds = posts) } }
+            val posts = runCatching { repository.myPosts(profile.id, FEED_CARD_COUNT) }.getOrNull()
+            if (posts != null && account == accountGeneration) _state.update { it.copy(feeds = posts) }
         }
     }
 

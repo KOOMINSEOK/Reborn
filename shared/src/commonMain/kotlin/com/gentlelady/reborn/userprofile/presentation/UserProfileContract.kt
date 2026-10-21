@@ -12,6 +12,8 @@ data class UserProfileState(
     val isLoading: Boolean = true,
     val isLoadingMore: Boolean = false,
     val loadFailed: Boolean = false,
+    /** 더 불러오기 실패 → 목록 끝에 "다시 시도" */
+    val loadMoreFailed: Boolean = false,
     /** 한 번 보여주고 지우는 안내 (팔로우 실패 등) */
     val message: String? = null,
 )
@@ -50,13 +52,13 @@ object UserProfileReducer {
             loadFailed = false,
         )
         is UserProfileResult.LoadFailed -> state.copy(isLoading = false, loadFailed = true)
-        is UserProfileResult.LoadingMore -> state.copy(isLoadingMore = true)
+        is UserProfileResult.LoadingMore -> state.copy(isLoadingMore = true, loadMoreFailed = false)
         is UserProfileResult.MoreLoaded -> state.copy(
             posts = state.posts + result.posts.filter { new -> state.posts.none { it.id == new.id } },
             nextOffset = result.nextOffset,
             isLoadingMore = false,
         )
-        is UserProfileResult.LoadMoreFailed -> state.copy(isLoadingMore = false)
+        is UserProfileResult.LoadMoreFailed -> state.copy(isLoadingMore = false, loadMoreFailed = true)
         is UserProfileResult.FollowChanged -> state.copy(
             profile = state.profile?.copy(followedByMe = result.following, followerCount = result.followerCount),
         )

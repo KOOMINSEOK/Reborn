@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gentlelady.reborn.core.designsystem.components.RebornImage
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
@@ -48,6 +50,13 @@ fun FollowListRoute(
     viewModel: FollowListViewModel = koinViewModel(),
 ) {
     LaunchedEffect(userId) { viewModel.onIntent(FollowListIntent.Open(userId, tab)) }
+    // 다른 프로필에서 팔로우를 바꾸고 돌아왔을 때 맞춘다 (처음 열 때는 Open 이 받으므로 VM 이 건너뜀)
+    var resumedBefore by rememberSaveable { mutableStateOf(false) }
+    LifecycleResumeEffect(Unit) {
+        // 첫 진입의 resume 은 Open 이 이미 받는 중 → 건너뛴다 (중복 요청 방지)
+        if (resumedBefore) viewModel.onIntent(FollowListIntent.Refresh) else resumedBefore = true
+        onPauseOrDispose { }
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
     FollowListScreen(state, handle, viewModel::onIntent, onBack, onUserClick)
 }
@@ -133,6 +142,7 @@ fun FollowListScreen(
                         users = page.users,
                         hasMore = page.nextOffset != null,
                         isLoadingMore = page.isLoadingMore,
+                        loadMoreFailed = page.loadMoreFailed,
                         onLoadMore = { onIntent(FollowListIntent.LoadMore) },
                         onUserClick = onUserClick,
                         onFollowClick = { onIntent(FollowListIntent.ToggleFollow(it)) }
@@ -149,6 +159,7 @@ private fun UserList(
     users: List<FollowUser>,
     hasMore: Boolean,
     isLoadingMore: Boolean,
+    loadMoreFailed: Boolean,
     onLoadMore: () -> Unit,
     onUserClick: (String) -> Unit,
     onFollowClick: (String) -> Unit,
@@ -164,6 +175,9 @@ private fun UserList(
     LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
         items(users, key = { it.id }) { user ->
             UserRow(user, onClick = { onUserClick(user.id) }, onFollowClick = { onFollowClick(user.id) })
+        }
+        if (loadMoreFailed) {
+            item { RetryRow(onLoadMore) }
         }
         if (isLoadingMore) {
             item {
@@ -211,5 +225,14 @@ private fun UserRow(user: FollowUser, onClick: () -> Unit, onFollowClick: () -> 
                 }
             }
         }
+    }
+}
+
+/** 더 불러오기에 실패했을 때 목록 끝 (자동으로 다시 부르지 않는다 — 오프라인에서 계속 돌지 않게) */
+@Composable
+internal fun RetryRow(onRetry: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("더 불러오지 못했어요.", color = RebornSlateGray, fontSize = 13.sp)
+        TextButton(onClick = onRetry) { Text("다시 시도") }
     }
 }

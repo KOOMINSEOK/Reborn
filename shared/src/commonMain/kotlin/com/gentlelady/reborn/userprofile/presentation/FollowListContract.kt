@@ -11,6 +11,8 @@ data class RelationPage(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val loadFailed: Boolean = false,
+    /** 더 불러오기 실패 → 목록 끝에 "다시 시도" */
+    val loadMoreFailed: Boolean = false,
     /** 한 번이라도 받았나 (탭을 처음 열 때만 받는다) */
     val loaded: Boolean = false,
 )
@@ -32,6 +34,8 @@ sealed interface FollowListIntent {
     object LoadMore : FollowListIntent
     data class ToggleFollow(val userId: String) : FollowListIntent
     object MessageShown : FollowListIntent
+    /** 화면으로 돌아왔을 때 — 다른 화면에서 팔로우를 바꿨을 수 있다 */
+    object Refresh : FollowListIntent
 }
 
 sealed interface FollowListResult {
@@ -43,6 +47,10 @@ sealed interface FollowListResult {
     /** 같은 사람이 두 탭에 다 있을 수 있다 → 둘 다 고친다 */
     data class FollowChanged(val userId: String, val following: Boolean) : FollowListResult
     data class Message(val text: String?) : FollowListResult
+    /** 이 탭은 다음에 볼 때 처음부터 다시 받는다 */
+    data class Invalidated(val tab: FollowTab) : FollowListResult
+    /** 받던 더 불러오기를 버림 (처음부터 다시 받으므로) */
+    data class LoadMoreCancelled(val tab: FollowTab) : FollowListResult
 }
 
 object FollowListReducer {
@@ -50,7 +58,7 @@ object FollowListReducer {
         is FollowListResult.Opened -> FollowListState(userId = result.userId, tab = result.tab)
         is FollowListResult.TabSelected -> state.copy(tab = result.tab)
         is FollowListResult.Loading -> state.updatePage(result.tab) {
-            if (result.more) it.copy(isLoadingMore = true) else it.copy(isLoading = true, loadFailed = false)
+            if (result.more) it.copy(isLoadingMore = true, loadMoreFailed = false) else it.copy(isLoading = true, loadFailed = false)
         }
         is FollowListResult.Loaded -> state.updatePage(result.tab) {
             it.copy(
@@ -60,11 +68,12 @@ object FollowListReducer {
                 isLoading = false,
                 isLoadingMore = false,
                 loadFailed = false,
+                loadMoreFailed = false,
                 loaded = true,
             )
         }
         is FollowListResult.LoadFailed -> state.updatePage(result.tab) {
-            if (result.more) it.copy(isLoadingMore = false) else it.copy(isLoading = false, loadFailed = true)
+            if (result.more) it.copy(isLoadingMore = false, loadMoreFailed = true) else it.copy(isLoading = false, loadFailed = true)
         }
         is FollowListResult.FollowChanged -> state.copy(
             pages = state.pages.mapValues { (_, page) ->
@@ -72,6 +81,8 @@ object FollowListReducer {
             },
         )
         is FollowListResult.Message -> state.copy(message = result.text)
+        is FollowListResult.Invalidated -> state.updatePage(result.tab) { it.copy(loaded = false) }
+        is FollowListResult.LoadMoreCancelled -> state.updatePage(result.tab) { it.copy(isLoadingMore = false) }
     }
 
     private fun FollowListState.updatePage(tab: FollowTab, change: (RelationPage) -> RelationPage) =

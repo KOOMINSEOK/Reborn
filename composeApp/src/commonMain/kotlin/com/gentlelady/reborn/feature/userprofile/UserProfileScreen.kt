@@ -172,6 +172,9 @@ private fun ProfileContent(
                 )
             }
         }
+        if (state.loadMoreFailed) {
+            item(key = "retry") { RetryRow { onIntent(UserProfileIntent.LoadMore) } }
+        }
         if (state.isLoadingMore) {
             item(key = "more") {
                 Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {

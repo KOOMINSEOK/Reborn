@@ -8,6 +8,7 @@ import com.gentlelady.reborn.userprofile.presentation.FollowListViewModel
 import com.gentlelady.reborn.userprofile.domain.GetUserProfileUseCase
 import com.gentlelady.reborn.userprofile.domain.SetFollowUseCase
 import com.gentlelady.reborn.userprofile.presentation.UserProfileViewModel
+import com.gentlelady.reborn.core.auth.CurrentUserIdUseCase
 import org.koin.dsl.module
 
 val userProfileModule = module {
@@ -17,5 +18,5 @@ val userProfileModule = module {
     factory { SetFollowUseCase(get()) }
     factory { GetRelationsUseCase(get()) }
     factory { UserProfileViewModel(get(), get(), get(), get()) }
-    factory { FollowListViewModel(get(), get()) }
+    factory { FollowListViewModel(get(), get(), CurrentUserIdUseCase(get())) }
 }
