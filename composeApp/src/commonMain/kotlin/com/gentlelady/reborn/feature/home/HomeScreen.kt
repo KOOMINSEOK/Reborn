@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,8 +34,14 @@ fun HomeScreen(
     state: HomeState,
     onIntent: (HomeIntent) -> Unit = {},
     onAddClick: () -> Unit = {},
-    onAuthorClick: (String) -> Unit = {}
+    onAuthorClick: (String) -> Unit = {},
+    onNotificationClick: () -> Unit = {}
 ) {
+    // 홈으로 돌아올 때마다 안 읽은 알림 수를 다시 (알림을 읽고 왔을 수 있다)
+    LifecycleResumeEffect(Unit) {
+        onIntent(HomeIntent.RefreshUnreadNotifications)
+        onPauseOrDispose { }
+    }
     var commentPostId by remember { mutableStateOf<String?>(null) }
     CommentCountEffect { change ->
         if (change.target == InteractionTarget.POST) onIntent(HomeIntent.CommentCountChanged(change.parentId, change.delta))
@@ -44,7 +51,11 @@ fun HomeScreen(
         containerColor = RebornBackground, // 하드코딩 제거: 시맨틱 테마 컬러 적용
         contentWindowInsets = WindowInsets(0.dp), // 바깥 MainScreen Scaffold가 이미 하단 인셋을 처리하므로 중복 방지
         topBar = {
-            HomeTopAppBar(onAddClick = onAddClick)
+            HomeTopAppBar(
+                onAddClick = onAddClick,
+                onNotificationClick = onNotificationClick,
+                hasUnreadNotification = state.unreadNotifications > 0
+            )
         }
     ) { padding ->
         LazyColumn(

@@ -7,6 +7,8 @@ import com.gentlelady.reborn.server.interaction.interactionRoutes
 import com.gentlelady.reborn.server.internal.internalRoutes
 import com.gentlelady.reborn.server.memorial.MemorialRepository
 import com.gentlelady.reborn.server.memorial.memorialRoutes
+import com.gentlelady.reborn.server.notification.NotificationRepository
+import com.gentlelady.reborn.server.notification.notificationRoutes
 import com.gentlelady.reborn.server.profile.ProfileRepository
 import com.gentlelady.reborn.server.profile.profileRoutes
 import com.gentlelady.reborn.server.upload.uploadRoutes
@@ -23,6 +25,7 @@ fun Application.configureRouting() {
     val feed = FeedRepository()
     val memorial = MemorialRepository()
     val profile = ProfileRepository()
+    val notifications = NotificationRepository()
     val postInteractions = InteractionRepo("posts", "post_likes", "post_comments", "post_id")
     val historyInteractions = InteractionRepo("memorial_history", "history_likes", "history_comments", "history_id")
 
@@ -50,6 +53,7 @@ fun Application.configureRouting() {
         feedRoutes(feed)
         memorialRoutes(memorial, historyInteractions)
         profileRoutes(profile)
+        notificationRoutes(notifications)
         uploadRoutes()
     }
 }

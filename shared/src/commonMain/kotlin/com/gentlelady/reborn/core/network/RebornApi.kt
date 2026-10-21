@@ -18,6 +18,8 @@ import com.gentlelady.reborn.core.network.dto.LikeDto
 import com.gentlelady.reborn.core.network.dto.MemorialProfileDto
 import com.gentlelady.reborn.core.network.dto.MyGuestbookListDto
 import com.gentlelady.reborn.core.network.dto.MyProfileDto
+import com.gentlelady.reborn.core.network.dto.NotificationListDto
+import com.gentlelady.reborn.core.network.dto.UnreadCountDto
 import com.gentlelady.reborn.core.network.dto.UpdateProfileDto
 import com.gentlelady.reborn.core.network.dto.PostDto
 import com.gentlelady.reborn.core.network.dto.PublicProfileDto
@@ -144,6 +146,17 @@ class RebornApi(
     suspend fun setFollow(id: String, follow: Boolean): FollowDto {
         val path = "users/$id/follow"
         return (if (follow) client.post(path) else client.delete(path)).body()
+    }
+
+    /** 최신순. [cursor] = 지난 응답의 nextCursor. */
+    suspend fun notifications(cursor: String? = null): NotificationListDto =
+        client.get("notifications") { cursor?.let { parameter("cursor", it) } }.body()
+
+    suspend fun unreadNotificationCount(): UnreadCountDto = client.get("notifications/unread-count").body()
+
+    /** [upTo] = 받은 가장 최신 알림의 createdAt — 그 뒤에 온 알림은 안 읽음으로 남는다. */
+    suspend fun markNotificationsRead(upTo: String) {
+        client.post("notifications/read") { parameter("upTo", upTo) }
     }
 
     /** 좋아요 켜기(POST)/끄기(DELETE). 둘 다 멱등 — 같은 요청을 여러 번 보내도 결과는 같다. */

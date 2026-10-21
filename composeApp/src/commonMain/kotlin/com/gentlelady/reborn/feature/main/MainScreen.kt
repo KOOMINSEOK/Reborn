@@ -11,6 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import io.ktor.http.encodeURLQueryComponent
+import com.gentlelady.reborn.feature.notification.NotificationTarget
+import com.gentlelady.reborn.feature.notification.NotificationsRoute
 import com.gentlelady.reborn.feature.userprofile.FollowListRoute
 import com.gentlelady.reborn.feature.userprofile.UserProfileRoute
 import com.gentlelady.reborn.userprofile.domain.FollowTab
@@ -108,7 +110,7 @@ fun MainScreen(
                 // 작성 플로우 전 화면에서 바텀바를 그대로 노출한다 (디자인 시안 기준)
                 "feed_write/entry", "feed_write/living", "feed_write/posthumous",
                 "feed_write/schedule", "feed_write/target_select",
-                "user/{userId}", "follows/{userId}/{tab}?handle={handle}"
+                "user/{userId}", "follows/{userId}/{tab}?handle={handle}", "notifications"
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
@@ -137,7 +139,24 @@ fun MainScreen(
                     state = homeState,
                     onIntent = onHomeIntent,
                     onAddClick = { navController.navigate("feed_write/entry") },
-                    onAuthorClick = { navController.navigate("user/$it") }
+                    onAuthorClick = { navController.navigate("user/$it") },
+                    onNotificationClick = { navController.navigate("notifications") }
+                )
+            }
+
+            // 알림 목록 (홈 종 버튼)
+            composable("notifications") {
+                NotificationsRoute(
+                    onBack = { navController.popBackStack() },
+                    onOpen = { target ->
+                        when (target) {
+                            is NotificationTarget.User -> navController.navigate("user/${target.userId}")
+                            is NotificationTarget.Memorial -> navController.navigate(
+                                "memorial/other/${target.memorialId}" +
+                                    (target.focusGuestbookId?.let { "?focusGuestbook=$it" } ?: "")
+                            )
+                        }
+                    }
                 )
             }
 
