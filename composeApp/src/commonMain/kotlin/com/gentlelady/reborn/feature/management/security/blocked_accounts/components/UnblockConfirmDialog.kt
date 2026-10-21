@@ -42,6 +42,7 @@ internal fun UnblockConfirmDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CircleAvatarImage(
+                    imageUrl = target.avatarUrl,
                     imageRes = target.avatar,
                     size = 64.dp,
                     fallbackText = target.name,

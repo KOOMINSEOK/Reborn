@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.core.designsystem.comments
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,6 +43,8 @@ fun CommentSheet(
     target: InteractionTarget,
     parentId: String,
     onDismiss: () -> Unit,
+    /** 댓글 작성자를 눌렀을 때 (작성자 id). 시트는 띄운 쪽이 닫는다 */
+    onAuthorClick: ((String) -> Unit)? = null,
     viewModel: CommentsViewModel = koinViewModel(),
 ) {
     LaunchedEffect(target, parentId) { viewModel.onIntent(CommentsIntent.Open(target, parentId)) }
@@ -71,6 +74,7 @@ fun CommentSheet(
                         comments = state.comments,
                         hasMore = state.nextOffset != null,
                         deletingIds = state.deletingIds,
+                        onAuthorClick = onAuthorClick,
                         onLoadMore = { viewModel.onIntent(CommentsIntent.LoadMore) },
                         onDelete = { viewModel.onIntent(CommentsIntent.Delete(it)) }
                     )
@@ -114,6 +118,7 @@ private fun CommentList(
     comments: List<Comment>,
     hasMore: Boolean,
     deletingIds: Set<String>,
+    onAuthorClick: ((String) -> Unit)?,
     onLoadMore: () -> Unit,
     onDelete: (String) -> Unit,
 ) {
@@ -138,7 +143,9 @@ private fun CommentList(
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .then(if (onAuthorClick != null) Modifier.clickable { onAuthorClick(comment.authorId) } else Modifier)
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(comment.date, fontSize = 11.sp, color = RebornSlateGray)

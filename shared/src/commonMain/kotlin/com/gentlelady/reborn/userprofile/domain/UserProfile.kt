@@ -48,6 +48,14 @@ class GetRelationsUseCase(private val repository: UserProfileRepository) {
     suspend operator fun invoke(userId: String, tab: FollowTab, offset: Int) = repository.relations(userId, tab, offset)
 }
 
+class SetBlockUseCase(private val repository: UserProfileRepository) {
+    suspend operator fun invoke(userId: String, block: Boolean) = repository.setBlock(userId, block)
+}
+
+class GetBlockedUsersUseCase(private val repository: UserProfileRepository) {
+    suspend operator fun invoke() = repository.blockedUsers()
+}
+
 class SetFollowUseCase(private val repository: UserProfileRepository) {
     suspend operator fun invoke(userId: String, follow: Boolean) = repository.setFollow(userId, follow)
 }

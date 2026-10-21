@@ -16,6 +16,10 @@ data class UserProfileState(
     val loadMoreFailed: Boolean = false,
     /** 한 번 보여주고 지우는 안내 (팔로우 실패 등) */
     val message: String? = null,
+    /** 차단/해제 요청 중 (메뉴를 막는다) */
+    val isChangingBlock: Boolean = false,
+    /** 차단 상태가 바뀔 때마다 올린다 → 홈 피드 등 다른 화면이 다시 받는다 */
+    val blockChangedToken: Int = 0,
 )
 
 sealed interface UserProfileIntent {
@@ -26,6 +30,7 @@ sealed interface UserProfileIntent {
     data class ToggleLike(val postId: String) : UserProfileIntent
     data class CommentCountChanged(val postId: String, val delta: Int) : UserProfileIntent
     object MessageShown : UserProfileIntent
+    data class SetBlocked(val block: Boolean) : UserProfileIntent
 }
 
 sealed interface UserProfileResult {
@@ -39,11 +44,20 @@ sealed interface UserProfileResult {
     data class LikeChanged(val postId: String, val liked: Boolean, val likes: Int) : UserProfileResult
     data class CommentCountChanged(val postId: String, val delta: Int) : UserProfileResult
     data class Message(val text: String?) : UserProfileResult
+    object ChangingBlock : UserProfileResult
+    object BlockChangeFailed : UserProfileResult
+    object BlockChanged : UserProfileResult
 }
 
 object UserProfileReducer {
     fun reduce(state: UserProfileState, result: UserProfileResult): UserProfileState = when (result) {
-        is UserProfileResult.Loading -> UserProfileState(userId = result.userId, isLoading = true)
+        // 같은 사람을 다시 받을 땐(차단 후 등) 안내·토큰을 남긴다
+        is UserProfileResult.Loading -> UserProfileState(
+            userId = result.userId,
+            isLoading = true,
+            message = state.message.takeIf { state.userId == result.userId },
+            blockChangedToken = state.blockChangedToken,
+        )
         is UserProfileResult.Loaded -> state.copy(
             profile = result.profile,
             posts = result.posts,
@@ -66,6 +80,9 @@ object UserProfileReducer {
         is UserProfileResult.CommentCountChanged ->
             state.updatePost(result.postId) { it.copy(comments = (it.comments + result.delta).coerceAtLeast(0)) }
         is UserProfileResult.Message -> state.copy(message = result.text)
+        is UserProfileResult.ChangingBlock -> state.copy(isChangingBlock = true)
+        is UserProfileResult.BlockChangeFailed -> state.copy(isChangingBlock = false)
+        is UserProfileResult.BlockChanged -> state.copy(isChangingBlock = false, blockChangedToken = state.blockChangedToken + 1)
     }
 
     private fun UserProfileState.updatePost(id: String, change: (HomePost) -> HomePost) =

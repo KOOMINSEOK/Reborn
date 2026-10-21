@@ -33,7 +33,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun MemorialScreen(
     state: MemorialState,
     onIntent: (MemorialIntent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onUserClick: (String) -> Unit = {}
 ) {
     val selectedHistoryItem = state.selectedHistoryIndex?.let { state.historyItems.getOrNull(it) }
 
@@ -42,7 +43,8 @@ fun MemorialScreen(
         MemorialHistoryDetailScreen(
             item = selectedHistoryItem,
             onIntent = onIntent,
-            modifier = modifier
+            modifier = modifier,
+            onUserClick = onUserClick
         )
     } else if (state.isWritingHistory) {
         MemorialHistoryWriteScreen(

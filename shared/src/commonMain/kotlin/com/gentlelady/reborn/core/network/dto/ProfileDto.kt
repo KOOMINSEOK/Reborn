@@ -43,6 +43,13 @@ data class UserSummaryDto(
 @Serializable
 data class UserListDto(val items: List<UserSummaryDto>, val nextOffset: Int? = null)
 
+/** 서버 `GET /blocks` 한 줄. */
+@Serializable
+data class BlockedUserDto(val id: String, val name: String, val handle: String, val avatarUrl: String? = null)
+
+@Serializable
+data class BlockedListDto(val items: List<BlockedUserDto>)
+
 /** 서버 `POST|DELETE /users/{id}/follow` 응답. */
 @Serializable
 data class FollowDto(val following: Boolean, val followerCount: Int)

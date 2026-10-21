@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +34,7 @@ import com.gentlelady.reborn.core.designsystem.components.RebornImage
 import com.gentlelady.reborn.core.network.InteractionTarget
 import com.gentlelady.reborn.core.theme.RebornBackground
 import com.gentlelady.reborn.core.theme.RebornCobaltBlue
+import com.gentlelady.reborn.core.theme.RebornDangerRed
 import com.gentlelady.reborn.core.theme.RebornDividerGray
 import com.gentlelady.reborn.core.theme.RebornGridBorderGray
 import com.gentlelady.reborn.core.theme.RebornSlateGray
@@ -52,6 +54,9 @@ fun UserProfileRoute(
     onBack: () -> Unit,
     /** (그 사람 id, 탭, 핸들) */
     onOpenFollows: (String, FollowTab, String) -> Unit = { _, _, _ -> },
+    /** 차단/해제가 서버에 반영됐을 때 — 홈 피드 등을 다시 받게 */
+    onBlockChanged: () -> Unit = {},
+    onUserClick: (String) -> Unit = {},
     viewModel: UserProfileViewModel = koinViewModel(),
 ) {
     LaunchedEffect(userId) { viewModel.onIntent(UserProfileIntent.Load(userId)) }
@@ -61,7 +66,15 @@ fun UserProfileRoute(
             viewModel.onIntent(UserProfileIntent.CommentCountChanged(change.parentId, change.delta))
         }
     }
-    UserProfileScreen(state = state, onIntent = viewModel::onIntent, onBack = onBack, onOpenFollows = onOpenFollows)
+    val token = state.blockChangedToken
+    LaunchedEffect(token) { if (token > 0) onBlockChanged() }
+    UserProfileScreen(
+        state = state,
+        onIntent = viewModel::onIntent,
+        onBack = onBack,
+        onOpenFollows = onOpenFollows,
+        onUserClick = onUserClick
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,8 +84,10 @@ fun UserProfileScreen(
     onIntent: (UserProfileIntent) -> Unit,
     onBack: () -> Unit,
     onOpenFollows: (String, FollowTab, String) -> Unit = { _, _, _ -> },
+    onUserClick: (String) -> Unit = {},
 ) {
     var commentPostId by remember { mutableStateOf<String?>(null) }
+    var blockConfirm by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -99,6 +114,17 @@ fun UserProfileScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                    }
+                },
+                actions = {
+                    val profile = state.profile
+                    if (profile != null && !profile.isMe) {
+                        ProfileMenu(
+                            blocked = profile.blockedByMe,
+                            enabled = !state.isChangingBlock,
+                            onBlockClick = { blockConfirm = true },
+                            onUnblockClick = { onIntent(UserProfileIntent.SetBlocked(false)) }
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
@@ -129,7 +155,31 @@ fun UserProfileScreen(
     }
 
     commentPostId?.let { postId ->
-        CommentSheet(target = InteractionTarget.POST, parentId = postId, onDismiss = { commentPostId = null })
+        CommentSheet(
+            target = InteractionTarget.POST,
+            parentId = postId,
+            onDismiss = { commentPostId = null },
+            onAuthorClick = {
+                commentPostId = null
+                if (it != state.profile?.id) onUserClick(it) // 지금 보고 있는 사람이면 그대로
+            }
+        )
+    }
+
+    if (blockConfirm) {
+        val name = state.profile?.displayName.orEmpty()
+        AlertDialog(
+            onDismissRequest = { blockConfirm = false },
+            title = { Text("${name}님을 차단할까요?") },
+            text = { Text("서로의 글과 프로필이 보이지 않고, 서로 팔로우도 끊어져요. 차단은 설정 > 차단한 계정에서 풀 수 있어요.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    blockConfirm = false
+                    onIntent(UserProfileIntent.SetBlocked(true))
+                }) { Text("차단", color = RebornDangerRed) }
+            },
+            dismissButton = { TextButton(onClick = { blockConfirm = false }) { Text("취소") } }
+        )
     }
 }
 
@@ -156,6 +206,8 @@ private fun ProfileContent(
             ProfileHeader(
                 profile = profile,
                 onFollowClick = { onIntent(UserProfileIntent.ToggleFollow) },
+                onUnblockClick = { onIntent(UserProfileIntent.SetBlocked(false)) },
+                unblockEnabled = !state.isChangingBlock,
                 // 나를 차단했거나 비공개면 서버가 목록을 안 준다 → 잠긴 프로필은 숫자만
                 onOpenFollows = if (profile.isLocked) null else onOpenFollows
             )
@@ -186,7 +238,13 @@ private fun ProfileContent(
 }
 
 @Composable
-private fun ProfileHeader(profile: UserProfile, onFollowClick: () -> Unit, onOpenFollows: ((FollowTab) -> Unit)?) {
+private fun ProfileHeader(
+    profile: UserProfile,
+    onFollowClick: () -> Unit,
+    onUnblockClick: () -> Unit,
+    unblockEnabled: Boolean,
+    onOpenFollows: ((FollowTab) -> Unit)?,
+) {
     Column(Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 24.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val shape = RoundedCornerShape(20.dp)
@@ -235,7 +293,16 @@ private fun ProfileHeader(profile: UserProfile, onFollowClick: () -> Unit, onOpe
         if (!profile.isMe) {
             Spacer(Modifier.height(16.dp))
             val buttonModifier = Modifier.fillMaxWidth().height(40.dp)
-            if (profile.followedByMe) {
+            if (profile.blockedByMe) {
+                // 차단 중엔 팔로우할 수 없다 → 버튼 자리에 해제
+                OutlinedButton(
+                    onClick = onUnblockClick,
+                    enabled = unblockEnabled,
+                    modifier = buttonModifier,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, RebornGridBorderGray)
+                ) { Text("차단 해제", color = Color.Black, fontWeight = FontWeight.Bold) }
+            } else if (profile.followedByMe) {
                 OutlinedButton(
                     onClick = onFollowClick,
                     modifier = buttonModifier,
@@ -279,5 +346,25 @@ private fun Note(text: String, locked: Boolean = false) {
             Spacer(Modifier.height(8.dp))
         }
         Text(text, color = RebornSlateGray, fontSize = 13.sp, textAlign = TextAlign.Center)
+    }
+}
+
+/** 프로필 오른쪽 위 ··· — 차단/해제 */
+@Composable
+private fun ProfileMenu(blocked: Boolean, enabled: Boolean, onBlockClick: () -> Unit, onUnblockClick: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }, enabled = enabled) {
+            Icon(Icons.Default.MoreHoriz, contentDescription = "더보기")
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = Color.White) {
+            DropdownMenuItem(
+                text = { Text(if (blocked) "차단 해제" else "차단하기", color = if (blocked) Color.Black else RebornDangerRed) },
+                onClick = {
+                    open = false
+                    if (blocked) onUnblockClick() else onBlockClick()
+                }
+            )
+        }
     }
 }

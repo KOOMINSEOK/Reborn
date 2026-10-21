@@ -27,6 +27,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 internal fun BlockedAccountRow(
     item: BlockedAccountItem,
     onClickUnblock: () -> Unit,
+    unblocking: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -36,6 +37,7 @@ internal fun BlockedAccountRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         CircleAvatarImage(
+            imageUrl = item.avatarUrl,
             imageRes = item.avatar,
             size = 48.dp,
             fallbackText = item.name,
@@ -56,6 +58,7 @@ internal fun BlockedAccountRow(
 
         Button(
             onClick = onClickUnblock,
+            enabled = !unblocking,
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
             border = BorderStroke(1.dp, RebornGridBorderGray),

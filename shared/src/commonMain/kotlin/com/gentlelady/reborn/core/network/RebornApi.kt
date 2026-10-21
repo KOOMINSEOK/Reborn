@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.core.network
 
+import com.gentlelady.reborn.core.network.dto.BlockedListDto
 import com.gentlelady.reborn.core.network.dto.CommentDto
 import com.gentlelady.reborn.core.network.dto.CommentListDto
 import com.gentlelady.reborn.core.network.dto.CreateCommentDto
@@ -129,6 +130,15 @@ class RebornApi(
             parameter("offset", offset)
             parameter("limit", limit)
         }.body()
+
+    /** 차단(POST)/해제(DELETE). 둘 다 멱등. 차단하면 서버가 양방향 팔로우도 끊는다. */
+    suspend fun setBlock(id: String, block: Boolean) {
+        val path = "users/$id/block"
+        if (block) client.post(path) else client.delete(path)
+    }
+
+    /** 내가 차단한 사람들, 최근 차단 순. */
+    suspend fun blockedUsers(): BlockedListDto = client.get("blocks").body()
 
     /** 팔로우(POST)/언팔로우(DELETE). 둘 다 멱등. 서버 기준 팔로우 여부·팔로워 수를 돌려준다. */
     suspend fun setFollow(id: String, follow: Boolean): FollowDto {

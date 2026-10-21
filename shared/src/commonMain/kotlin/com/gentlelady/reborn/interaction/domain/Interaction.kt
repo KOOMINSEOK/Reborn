@@ -5,6 +5,8 @@ import com.gentlelady.reborn.interaction.data.InteractionRepository
 
 data class Comment(
     val id: String,
+    /** 누르면 그 사람 프로필로 */
+    val authorId: String,
     val authorName: String,
     val body: String,
     val date: String,

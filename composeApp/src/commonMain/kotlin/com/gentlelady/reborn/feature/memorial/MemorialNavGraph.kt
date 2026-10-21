@@ -67,6 +67,7 @@ private fun MemorialRoute(
 
     MemorialScreen(
         state = state,
+        onUserClick = { navController.navigate("user/$it") },
         onIntent = { intent ->
             when (intent) {
                 is MemorialIntent.ClickBack -> {

@@ -67,7 +67,11 @@ fun HomeScreen(
         CommentSheet(
             target = InteractionTarget.POST,
             parentId = postId,
-            onDismiss = { commentPostId = null }
+            onDismiss = { commentPostId = null },
+            onAuthorClick = {
+                commentPostId = null
+                onAuthorClick(it)
+            }
         )
     }
 }

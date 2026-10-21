@@ -8,6 +8,7 @@ import com.gentlelady.reborn.interaction.presentation.ToggleSync
 import com.gentlelady.reborn.userprofile.domain.FollowRejectedException
 import com.gentlelady.reborn.userprofile.domain.GetUserPostsUseCase
 import com.gentlelady.reborn.userprofile.domain.GetUserProfileUseCase
+import com.gentlelady.reborn.userprofile.domain.SetBlockUseCase
 import com.gentlelady.reborn.userprofile.domain.SetFollowUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -27,6 +28,7 @@ class UserProfileViewModel(
     private val getPosts: GetUserPostsUseCase,
     setFollow: SetFollowUseCase,
     private val likeSync: LikeSync,
+    private val setBlock: SetBlockUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserProfileState())
@@ -50,6 +52,30 @@ class UserProfileViewModel(
             is UserProfileIntent.ToggleLike -> toggleLike(intent.postId)
             is UserProfileIntent.CommentCountChanged -> reduce(UserProfileResult.CommentCountChanged(intent.postId, intent.delta))
             is UserProfileIntent.MessageShown -> reduce(UserProfileResult.Message(null))
+            is UserProfileIntent.SetBlocked -> changeBlock(intent.block)
+        }
+    }
+
+    /** 차단하면 서버가 팔로우도 끊고 글도 감춘다 → 성공하면 프로필을 처음부터 다시 받는다. */
+    private fun changeBlock(block: Boolean) {
+        val s = _state.value
+        val profile = s.profile ?: return
+        if (profile.isMe || s.isChangingBlock) return
+        val gen = generation
+        reduce(UserProfileResult.ChangingBlock)
+        viewModelScope.launch {
+            val result = runCatching { setBlock(profile.id, block) }
+            if (gen != generation) return@launch
+            result
+                .onSuccess {
+                    reduce(UserProfileResult.BlockChanged)
+                    reduce(UserProfileResult.Message(if (block) "차단했어요." else "차단을 풀었어요."))
+                    load(profile.id)
+                }
+                .onFailure {
+                    reduce(UserProfileResult.BlockChangeFailed)
+                    reduce(UserProfileResult.Message(if (block) "차단하지 못했어요." else "차단을 풀지 못했어요."))
+                }
         }
     }
 
