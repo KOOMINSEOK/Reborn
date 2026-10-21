@@ -2,7 +2,7 @@ package com.gentlelady.reborn.server.signup
 
 import com.gentlelady.reborn.server.Env
 import com.gentlelady.reborn.server.plugins.ErrorResponse
-import com.gentlelady.reborn.server.plugins.SUPABASE_AUTH
+import com.gentlelady.reborn.server.plugins.SUPABASE_SIGNUP_AUTH
 import com.gentlelady.reborn.server.plugins.userId
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
@@ -30,8 +30,12 @@ private val random = SecureRandom()
  */
 fun Route.signupRoutes(repo: SignupRepository) {
     val identityDev = Env.get("IDENTITY_DEV")?.lowercase() == "true"
+    // 개발용 본인인증은 응답에 인증번호를 담는다 → 실서비스에서 켜지면 누구나 남의 이름으로 인증된다. 켜져 있으면 기동을 막는다
+    check(!(identityDev && Env.get("APP_ENV")?.lowercase() == "production")) {
+        "IDENTITY_DEV=true 는 APP_ENV=production 에서 쓸 수 없어요 — 본인확인 업체를 연결하세요"
+    }
 
-    authenticate(SUPABASE_AUTH) {
+    authenticate(SUPABASE_SIGNUP_AUTH) {
         get("/me/signup") {
             repo.state(call.userId())?.let { call.respond(it) }
                 ?: call.respond(HttpStatusCode.NotFound, ErrorResponse("profile_not_found"))
@@ -52,11 +56,9 @@ fun Route.signupRoutes(repo: SignupRepository) {
             val req = call.receive<IdentityStartRequest>()
             identityInputError(req)?.let { return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse(it)) }
             val phone = req.phone.filter(Char::isDigit)
-            // 개발용 CI: 같은 사람이면 같은 값. 실서비스는 업체가 확인 뒤 돌려준다 (그땐 인증 성공 후에 중복을 본다)
+            // 개발용 CI: 같은 사람이면 같은 값. 실서비스는 업체가 확인 뒤 돌려준다.
+            // 이미 가입한 계정이 있는지는 여기서 알려주지 않는다 — 번호로 본인임을 확인한 뒤에만 (남의 정보로 가입 여부를 떠보지 못하게)
             val ci = hash("dev|${req.name.trim()}|${req.birth}|${req.genderDigit}|$phone")
-            repo.existingAccount(ci, userId)?.let {
-                return@post call.respond(HttpStatusCode.Conflict, AlreadyRegisteredResponse(account = it))
-            }
             val code = (0 until 6).joinToString("") { random.nextInt(10).toString() }
             val (id, expiresAt) = repo.createRequest(userId, ci, req.name.trim(), code)
             call.respond(IdentityStartResponse(id.toString(), expiresAt.toString(), devCode = code))
@@ -73,7 +75,7 @@ fun Route.signupRoutes(repo: SignupRepository) {
                 is SignupRepository.VerifyResult.Wrong ->
                     call.respond(HttpStatusCode.BadRequest, ErrorResponse(if (result.attemptsLeft > 0) "wrong_code" else "too_many_attempts"))
                 is SignupRepository.VerifyResult.Verified -> {
-                    // 번호를 받은 뒤 같은 사람이 다른 계정으로 먼저 가입을 마쳤을 수 있다 → 다시 확인
+                    // 본인임이 확인됐다 → 이제 같은 사람이 이미 가입을 마친 계정이 있는지 알려준다
                     repo.existingAccount(result.ci, userId)?.let {
                         return@post call.respond(HttpStatusCode.Conflict, AlreadyRegisteredResponse(account = it))
                     }
@@ -118,8 +120,16 @@ fun Route.signupRoutes(repo: SignupRepository) {
          */
         delete("/me/signup") {
             val userId = call.userId()
-            if (repo.isOnboarded(userId)) return@delete call.respond(HttpStatusCode.Conflict, ErrorResponse("already_onboarded"))
+            when (repo.markDeleting(userId)) {
+                // 이미 지워짐 (다시 누름) — 성공으로
+                SignupRepository.MarkDeleting.GONE -> return@delete call.respond(HttpStatusCode.NoContent)
+                SignupRepository.MarkDeleting.ONBOARDED ->
+                    return@delete call.respond(HttpStatusCode.Conflict, ErrorResponse("already_onboarded"))
+                SignupRepository.MarkDeleting.MARKED -> Unit
+            }
+            // 표시를 찍은 뒤엔 가입 마무리가 안 된다 → 지우는 사이 가입이 끝나 버리는 일이 없다
             if (!SupabaseAdmin.deleteUser(userId)) {
+                repo.unmarkDeleting(userId) // 못 지웠으면 다시 가입을 이어갈 수 있게
                 return@delete call.respond(HttpStatusCode.ServiceUnavailable, ErrorResponse("delete_failed"))
             }
             call.respond(HttpStatusCode.NoContent)

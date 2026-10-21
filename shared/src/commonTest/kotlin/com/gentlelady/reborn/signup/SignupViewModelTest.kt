@@ -49,7 +49,12 @@ class SignupViewModelTest {
             if (code == "123456") IdentityVerify.Verified("이윤주") else IdentityVerify.Wrong
         override suspend fun checkHandle(handle: String) = HandleStatus.AVAILABLE.also { checked += handle }
         override suspend fun complete(handle: String, purpose: String, avatar: ByteArray?) = completeResult.also { calls += "complete:$handle:$purpose" }
-        override suspend fun abandon() { calls += "abandon"; store.current = null }
+        var abandonFails = false
+        override suspend fun abandon() {
+            calls += "abandon"
+            if (abandonFails) error("server down")
+            store.current = null
+        }
     }
 
     private fun setup(session: Boolean = false): Triple<SignupViewModel, FakeRepo, SessionStore> {
@@ -219,5 +224,19 @@ class SignupViewModelTest {
         assertTrue(PasswordRules.of("abcdefg1").ok)
         assertTrue(PasswordRules.of("12345678!").ok)
         assertTrue(PasswordRules.of("비밀번호!!!!!").ok) // 한글도 "문자"
+    }
+
+    @Test
+    fun failedAbandonKeepsSessionAndExplains() = runTest(dispatcher) {
+        val (vm, repo, store) = setup(session = true)
+        repo.server = repo.server.copy(termsAgreed = true, hasPassword = true)
+        runCurrent()
+        repo.abandonFails = true
+        vm.onIntent(SignupIntent.Back)
+        vm.onIntent(SignupIntent.ConfirmAbandon)
+        runCurrent()
+        assertTrue(store.current != null) // 서버가 못 지웠으면 로그아웃도 안 한다
+        assertEquals(SignupStep.IDENTITY, vm.state.value.step)
+        assertEquals("가입을 그만두지 못했어요. 잠시 후 다시 시도해 주세요.", vm.state.value.message)
     }
 }

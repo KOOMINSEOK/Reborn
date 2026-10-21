@@ -107,6 +107,15 @@ class SignupRepository {
      */
     fun saveIdentity(userId: UUID, ci: String, name: String): Boolean =
         runCatching {
+            // 같은 사람이 예전에 인증만 하고 가입을 안 마친 계정이 그 CI 를 잡고 있으면 풀어 준다 —
+            // 방금 번호로 본인임을 확인한 쪽이 우선 (안 그러면 그 사람은 영영 가입을 못 한다)
+            Db.update(
+                """
+                update profiles set identity_ci = null, identity_verified_at = null, identity_name = null
+                where identity_ci = ? and id <> ? and onboarded_at is null
+                """.trimIndent(),
+                ci, userId,
+            )
             Db.update(
                 """
                 update profiles set identity_verified_at = now(), identity_ci = ?, identity_name = ?, display_name = ?
@@ -125,14 +134,26 @@ class SignupRepository {
             Db.update(
                 """
                 update profiles set handle = ?, signup_purpose = ?, onboarded_at = coalesce(onboarded_at, now())
-                where id = ? and terms_agreed_at is not null and identity_verified_at is not null
+                where id = ? and terms_agreed_at is not null and identity_verified_at is not null and deleting_at is null
                 """.trimIndent(),
                 handle, purpose, userId,
             ) == 1
         }.getOrElse { false }
 
-    fun isOnboarded(userId: UUID): Boolean =
-        Db.queryFirst("select onboarded_at is not null as o from profiles where id = ?", userId) { it.getBoolean("o") } == true
+    enum class MarkDeleting { MARKED, ONBOARDED, GONE }
+
+    /** 가입을 마치지 않은 계정에만 "지우는 중" 표시 (한 문장 — 가입 마무리와 동시에 와도 둘 중 하나만). */
+    fun markDeleting(userId: UUID): MarkDeleting {
+        val marked = Db.update(
+            "update profiles set deleting_at = now() where id = ? and onboarded_at is null",
+            userId,
+        )
+        if (marked == 1) return MarkDeleting.MARKED
+        val exists = Db.queryFirst("select 1 from profiles where id = ?", userId) { true } == true
+        return if (exists) MarkDeleting.ONBOARDED else MarkDeleting.GONE
+    }
+
+    fun unmarkDeleting(userId: UUID): Int = Db.update("update profiles set deleting_at = null where id = ?", userId)
 }
 
 /** 개발용 CI · 인증번호 해시. ponytail: 소금 없는 sha256 — 실서비스 CI 는 업체가 준다. */

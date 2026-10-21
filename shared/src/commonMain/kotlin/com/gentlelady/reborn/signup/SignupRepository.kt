@@ -49,7 +49,7 @@ interface SignupRepository {
     suspend fun checkHandle(handle: String): HandleStatus
     /** 가입 마무리. 아이디가 그 사이 잡혔으면 false */
     suspend fun complete(handle: String, purpose: String, avatar: ByteArray?): Boolean
-    /** 가입을 그만두고 로그아웃 (서버가 가입 중인 계정을 지운다) */
+    /** 가입을 그만두고 로그아웃 (서버가 가입 중인 계정을 지운다). 서버가 못 지우면 예외 — 로그아웃도 안 한다 */
     suspend fun abandon()
 }
 
@@ -122,8 +122,9 @@ class SignupRepositoryImpl(
     }
 
     /** 가입을 그만두고 이 기기에서 로그아웃 (서버가 가입 중인 계정을 지운다). 서버 실패해도 로그아웃은 한다. */
+    /** 서버가 계정을 지운 뒤에만 로그아웃 — 실패하면 예외 (화면이 다시 시도를 띄운다. 계정·동의 기록이 몰래 남지 않게) */
     override suspend fun abandon() {
-        runCatching { api.abandonSignup() }
+        api.abandonSignup()
         auth.signOut()
     }
 

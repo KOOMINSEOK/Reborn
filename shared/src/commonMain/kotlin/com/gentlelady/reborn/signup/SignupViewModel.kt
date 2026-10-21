@@ -282,7 +282,7 @@ class SignupViewModel(
 
     private fun useExistingAccount() {
         val account = _state.value.existingAccount ?: return
-        busy {
+        busy(onError = { "잠시 후 다시 시도해 주세요. 방금 만든 계정을 정리하지 못했어요." }) {
             repository.abandon()
             // 이메일 계정이면 기존 로그인 화면, 소셜이면 시작 화면의 그 버튼으로
             _state.value = SignupState(
@@ -343,7 +343,7 @@ class SignupViewModel(
 
     private fun abandon() {
         _state.update { it.copy(showAbandonConfirm = false) }
-        busy {
+        busy(onError = { "가입을 그만두지 못했어요. 잠시 후 다시 시도해 주세요." }) {
             repository.abandon()
             _state.value = SignupState(gate = SignupGate.SIGNUP)
         }
