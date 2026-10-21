@@ -30,6 +30,10 @@ data class PublicProfileDto(
     val blockedByMe: Boolean = false,
 )
 
+/** 서버 `POST|DELETE /users/{id}/follow` 응답. */
+@Serializable
+data class FollowDto(val following: Boolean, val followerCount: Int)
+
 /** 서버 `PATCH /me/profile` 요청. null 인 필드는 안 바꾼다. */
 @Serializable
 data class UpdateProfileDto(

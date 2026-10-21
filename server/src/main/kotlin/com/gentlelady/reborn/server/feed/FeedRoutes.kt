@@ -34,7 +34,7 @@ private fun Route.followEndpoints(repo: FeedRepository) {
             return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("cannot_follow_self"))
         }
         when (val error = repo.followUser(call.userId(), target)) {
-            null -> call.respond(HttpStatusCode.NoContent)
+            null -> call.respond(repo.followState(call.userId(), target))
             "user_not_found" -> call.respond(HttpStatusCode.NotFound, ErrorResponse(error))
             else -> call.respond(HttpStatusCode.Forbidden, ErrorResponse(error))
         }
@@ -46,8 +46,9 @@ private fun Route.followEndpoints(repo: FeedRepository) {
         call.respond(FeedResponse(items = items, nextOffset = if (items.size == limit) offset + limit else null))
     }
     delete("/users/{id}/follow") {
-        repo.unfollowUser(call.userId(), UUID.fromString(call.parameters["id"]))
-        call.respond(HttpStatusCode.NoContent)
+        val target = UUID.fromString(call.parameters["id"])
+        repo.unfollowUser(call.userId(), target)
+        call.respond(repo.followState(call.userId(), target))
     }
     post("/users/{id}/block") {
         repo.blockUser(call.userId(), UUID.fromString(call.parameters["id"]))

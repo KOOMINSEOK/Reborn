@@ -47,7 +47,7 @@ class UserProfileRepositoryImpl(
         api.userPosts(userId, offset, PAGE_SIZE).let { page -> page.items.map { it.toHomePost() } to page.nextOffset }
 
     override suspend fun setFollow(userId: String, follow: Boolean): Pair<Boolean, Int> {
-        try {
+        val result = try {
             api.setFollow(userId, follow)
         } catch (e: ClientRequestException) {
             val status = e.response.status
@@ -57,8 +57,8 @@ class UserProfileRepositoryImpl(
             }
             throw e
         }
-        // 팔로워 수는 남들도 바꾸므로 서버에서 다시 받는다
-        return profile(userId).let { it.followedByMe to it.followerCount }
+        // 저장 응답에 서버 기준 값이 같이 온다 — 따로 다시 조회하면 그 조회만 실패해도 성공을 실패로 되돌리게 된다
+        return result.following to result.followerCount
     }
 
     private companion object {

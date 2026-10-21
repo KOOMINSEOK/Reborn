@@ -19,7 +19,7 @@ class FeedRepository {
      * - 비공개 계정 → private_account. ponytail: 팔로우 요청(승인) 기능이 생기기 전까진 막는다
      *   (그냥 받아주면 비공개 글이 바로 보인다). 이미 팔로우 중이면 그대로 성공.
      */
-    fun followUser(followerId: UUID, followeeId: UUID): String? {
+    fun followUser(followerId: UUID, followeeId: UUID, recheck: Boolean = true): String? {
         require(followerId != followeeId) { "cannot follow yourself" }
         val target = Db.queryFirst(
             """
@@ -33,35 +33,62 @@ class FeedRepository {
         ) { Triple(it.getBoolean("is_private"), it.getBoolean("blocks_me") to it.getBoolean("blocked_by_me"), it.getBoolean("following")) }
             ?: return "user_not_found"
         val (isPrivate, blocks, following) = target
-        return when {
+        val error = when {
             blocks.first -> "user_not_found"
             blocks.second -> "blocked"
             following -> null
             isPrivate -> "private_account"
-            else -> {
-                Db.update(
-                    "insert into follows (follower_id, followee_id) values (?, ?) on conflict do nothing",
-                    followerId, followeeId,
-                )
-                null
-            }
+            else -> null
+        }
+        if (error != null || following) return error
+        // 위 검사와 이 저장 사이에 비공개 전환·차단이 끼어들 수 있다 → 저장 문장 안에서 다시 확인 (한 문장 = 원자적)
+        val inserted = Db.update(
+            """
+            insert into follows (follower_id, followee_id)
+            select ?, p.id from profiles p
+            where p.id = ? and p.is_private = false
+              and not exists (
+                  select 1 from blocks b
+                  where (b.blocker_id = p.id and b.blocked_id = ?) or (b.blocker_id = ? and b.blocked_id = p.id)
+              )
+            on conflict do nothing
+            """.trimIndent(),
+            followerId, followeeId, followerId, followerId,
+        )
+        // 0건 = 그 사이 상태가 바뀜 → 다시 판정해서 알맞은 이유로 (이미 팔로우 중이면 성공)
+        return when {
+            inserted > 0 -> null
+            recheck -> followUser(followerId, followeeId, recheck = false)
+            else -> "rejected" // 두 번 연속 상태가 바뀜 — 다시 눌러 달라고
         }
     }
+
+    /** 팔로우 버튼에 그릴 서버 기준 값. */
+    fun followState(viewerId: UUID, targetId: UUID): FollowResponse =
+        Db.queryFirst(
+            """
+            select exists(select 1 from follows where follower_id = ? and followee_id = ?) as following,
+                   (select count(*) from follows where followee_id = ?) as follower_count
+            """.trimIndent(),
+            viewerId, targetId, targetId,
+        ) { FollowResponse(it.getBoolean("following"), it.getInt("follower_count")) }!!
 
     fun unfollowUser(followerId: UUID, followeeId: UUID): Int =
         Db.update("delete from follows where follower_id = ? and followee_id = ?", followerId, followeeId)
 
     fun blockUser(blockerId: UUID, blockedId: UUID): Int {
         require(blockerId != blockedId) { "cannot block yourself" }
-        // 차단하면 양방향 팔로우도 끊는다.
+        // 차단을 먼저 저장하고 양방향 팔로우를 끊는다. 순서가 반대면 그 사이 들어온 팔로우가 차단과 함께 남는다.
+        // ponytail: 트랜잭션 없이 두 문장 — 동시에 시작된 팔로우 저장이 아주 좁은 틈으로 남을 수 있다. 문제 되면 한 트랜잭션으로.
+        val inserted = Db.update(
+            "insert into blocks (blocker_id, blocked_id) values (?, ?) on conflict do nothing",
+            blockerId, blockedId,
+        )
         Db.update(
             "delete from follows where (follower_id = ? and followee_id = ?) or (follower_id = ? and followee_id = ?)",
             blockerId, blockedId, blockedId, blockerId,
         )
-        return Db.update(
-            "insert into blocks (blocker_id, blocked_id) values (?, ?) on conflict do nothing",
-            blockerId, blockedId,
-        )
+        return inserted
     }
 
     fun unblockUser(blockerId: UUID, blockedId: UUID): Int =

@@ -8,6 +8,7 @@ import com.gentlelady.reborn.core.network.dto.CreateHistoryDto
 import com.gentlelady.reborn.core.network.dto.CreatePostDto
 import com.gentlelady.reborn.core.network.dto.CreateUploadDto
 import com.gentlelady.reborn.core.network.dto.FeedDto
+import com.gentlelady.reborn.core.network.dto.FollowDto
 import com.gentlelady.reborn.core.network.dto.GuestbookEntryDto
 import com.gentlelady.reborn.core.network.dto.GuestbookListDto
 import com.gentlelady.reborn.core.network.dto.HistoryDto
@@ -121,10 +122,10 @@ class RebornApi(
             parameter("limit", limit)
         }.body()
 
-    /** 팔로우(POST)/언팔로우(DELETE). 둘 다 멱등. */
-    suspend fun setFollow(id: String, follow: Boolean) {
+    /** 팔로우(POST)/언팔로우(DELETE). 둘 다 멱등. 서버 기준 팔로우 여부·팔로워 수를 돌려준다. */
+    suspend fun setFollow(id: String, follow: Boolean): FollowDto {
         val path = "users/$id/follow"
-        if (follow) client.post(path) else client.delete(path)
+        return (if (follow) client.post(path) else client.delete(path)).body()
     }
 
     /** 좋아요 켜기(POST)/끄기(DELETE). 둘 다 멱등 — 같은 요청을 여러 번 보내도 결과는 같다. */
