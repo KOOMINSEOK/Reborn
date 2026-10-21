@@ -21,6 +21,7 @@ tasks.test {
     environment("DB_URL", "")
     environment("SUPABASE_URL", "")
     environment("SEED_DEV", "")
+    environment("IDENTITY_DEV", "")
     environment("PUBLISH_TICKER_SECONDS", "")
     environment("INTERNAL_SECRET", "")
     environment("SUPABASE_SECRET_KEY", "")
