@@ -10,7 +10,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
+import io.ktor.http.encodeURLQueryComponent
+import com.gentlelady.reborn.feature.userprofile.FollowListRoute
 import com.gentlelady.reborn.feature.userprofile.UserProfileRoute
+import com.gentlelady.reborn.userprofile.domain.FollowTab
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -105,7 +108,7 @@ fun MainScreen(
                 // 작성 플로우 전 화면에서 바텀바를 그대로 노출한다 (디자인 시안 기준)
                 "feed_write/entry", "feed_write/living", "feed_write/posthumous",
                 "feed_write/schedule", "feed_write/target_select",
-                "user/{userId}"
+                "user/{userId}", "follows/{userId}/{tab}?handle={handle}"
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
@@ -142,7 +145,20 @@ fun MainScreen(
             composable("user/{userId}") { entry ->
                 UserProfileRoute(
                     userId = entry.arguments?.getString("userId").orEmpty(),
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onOpenFollows = { id, tab, handle -> navController.navigate(followsRoute(id, tab, handle)) }
+                )
+            }
+
+            // 팔로워·팔로잉 목록 (프로필의 숫자를 눌러서)
+            composable("follows/{userId}/{tab}?handle={handle}") { entry ->
+                val args = entry.arguments
+                FollowListRoute(
+                    userId = args?.getString("userId").orEmpty(),
+                    tab = if (args?.getString("tab") == "following") FollowTab.FOLLOWING else FollowTab.FOLLOWERS,
+                    handle = args?.getString("handle"),
+                    onBack = { navController.popBackStack() },
+                    onUserClick = { navController.navigate("user/$it") }
                 )
             }
 
@@ -174,6 +190,15 @@ fun MainScreen(
                         is MyProfileIntent.ClickToggleMemorialMode -> {
                             navController.navigate("memorial/me")
                         }
+                        // 서버 프로필을 받았을 때만 (목업이면 내 id 가 없다)
+                        is MyProfileIntent.ClickFollowers -> myProfileState.myUserId?.let {
+                            navController.navigate(followsRoute(it, FollowTab.FOLLOWERS, myProfileState.username))
+                        }
+                        is MyProfileIntent.ClickFollowing -> myProfileState.myUserId?.let {
+                            navController.navigate(followsRoute(it, FollowTab.FOLLOWING, myProfileState.username))
+                        }
+                        // 피드 "전체보기" → 내 글 전체 (다른 사람 프로필과 같은 화면, 팔로우 버튼만 없음)
+                        is MyProfileIntent.ClickViewAllFeeds -> myProfileState.myUserId?.let { navController.navigate("user/$it") }
                         // 💡 관리 그리드의 메뉴 클릭을 해당 관리 서브 화면 라우트로 연결
                         is MyProfileIntent.ClickManagementMenu -> {
                             when (intent.menuId) {
@@ -230,3 +255,8 @@ fun MainScreen(
         }
     }
 }
+
+/** 팔로워·팔로잉 목록 라우트. 핸들은 제목용 (URL 에 들어가므로 인코딩) */
+private fun followsRoute(userId: String, tab: FollowTab, handle: String): String =
+    "follows/$userId/${if (tab == FollowTab.FOLLOWING) "following" else "followers"}?handle=" +
+        handle.encodeURLQueryComponent()

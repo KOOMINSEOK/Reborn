@@ -7,6 +7,11 @@ import com.gentlelady.reborn.interaction.domain.SetLikeUseCase
 import com.gentlelady.reborn.interaction.presentation.LikeSync
 import com.gentlelady.reborn.userprofile.data.UserProfileRepository
 import com.gentlelady.reborn.userprofile.domain.FollowRejectedException
+import com.gentlelady.reborn.userprofile.domain.FollowTab
+import com.gentlelady.reborn.userprofile.domain.FollowUser
+import com.gentlelady.reborn.userprofile.domain.GetRelationsUseCase
+import com.gentlelady.reborn.userprofile.presentation.FollowListIntent
+import com.gentlelady.reborn.userprofile.presentation.FollowListViewModel
 import com.gentlelady.reborn.userprofile.domain.GetUserPostsUseCase
 import com.gentlelady.reborn.userprofile.domain.GetUserProfileUseCase
 import com.gentlelady.reborn.userprofile.domain.SetFollowUseCase
@@ -50,6 +55,16 @@ class UserProfileViewModelTest {
             listOf(HomePost(id = "p_$userId", authorId = userId, authorName = "x", caption = "", postedAt = "")) to null
         override suspend fun setFollow(userId: String, follow: Boolean) =
             CompletableDeferred<Pair<Boolean, Int>>().also { followReplies += it }.await()
+        val relationCalls = mutableListOf<Pair<FollowTab, Int>>()
+        override suspend fun relations(userId: String, tab: FollowTab, offset: Int): Pair<List<FollowUser>, Int?> {
+            relationCalls += tab to offset
+            // 팔로워 탭: 2명 + 다음 페이지 / 팔로잉 탭: "x" 1명(팔로워 탭에도 있음)
+            return when (tab) {
+                FollowTab.FOLLOWERS -> if (offset == 0) listOf(user("x"), user("y")) to 2 else listOf(user("z")) to null
+                FollowTab.FOLLOWING -> listOf(user("x")) to null
+            }
+        }
+        private fun user(id: String) = FollowUser(id, id, id, null, followedByMe = false, isMe = false)
     }
 
     private object NoLikes : InteractionRepository {
@@ -114,5 +129,45 @@ class UserProfileViewModelTest {
 
         assertEquals("b", vm.state.value.profile!!.id)
         assertEquals(listOf("p_b"), vm.state.value.posts.map { it.id })
+    }
+
+    // ---------- 팔로워·팔로잉 목록 ----------
+
+    @Test
+    fun followListLoadsTabsLazilyAndPages() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap())
+        val vm = FollowListViewModel(GetRelationsUseCase(repo), SetFollowUseCase(repo))
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWERS))
+        runCurrent()
+        assertEquals(listOf("x", "y"), vm.state.value.current.users.map { it.id })
+
+        vm.onIntent(FollowListIntent.LoadMore)
+        runCurrent()
+        assertEquals(listOf("x", "y", "z"), vm.state.value.current.users.map { it.id })
+
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWING))
+        runCurrent()
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWERS)) // 이미 받은 탭은 다시 안 받는다
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWING)) // 같은 사람 다시 열기도
+        runCurrent()
+        assertEquals(listOf(FollowTab.FOLLOWERS to 0, FollowTab.FOLLOWERS to 2, FollowTab.FOLLOWING to 0), repo.relationCalls)
+    }
+
+    @Test
+    fun followInListUpdatesSamePersonInBothTabs() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap())
+        val vm = FollowListViewModel(GetRelationsUseCase(repo), SetFollowUseCase(repo))
+        vm.onIntent(FollowListIntent.Open("u", FollowTab.FOLLOWERS))
+        runCurrent()
+        vm.onIntent(FollowListIntent.SelectTab(FollowTab.FOLLOWING))
+        runCurrent()
+
+        vm.onIntent(FollowListIntent.ToggleFollow("x"))
+        runCurrent()
+        repo.followReplies[0].complete(true to 1)
+        runCurrent()
+        val pages = vm.state.value.pages
+        assertTrue(pages.getValue(FollowTab.FOLLOWERS).users.first { it.id == "x" }.followedByMe)
+        assertTrue(pages.getValue(FollowTab.FOLLOWING).users.first { it.id == "x" }.followedByMe)
     }
 }

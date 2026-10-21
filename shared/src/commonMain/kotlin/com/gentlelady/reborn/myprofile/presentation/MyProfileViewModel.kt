@@ -40,7 +40,9 @@ class MyProfileViewModel(
             is MyProfileIntent.ClickEditBackground -> { /* 배경 편집 비즈니스 로직 */ }
             is MyProfileIntent.ClickEditProfile -> { /* 프로필 편집 비즈니스 로직 */ }
             is MyProfileIntent.ClickToggleMemorialMode -> { /* 메모리얼 모드 전환 로직 */ }
-            is MyProfileIntent.ClickViewAllFeeds -> { /* 피드 전체보기 액션 */ }
+            is MyProfileIntent.ClickViewAllFeeds,
+            is MyProfileIntent.ClickFollowers,
+            is MyProfileIntent.ClickFollowing -> { /* 화면 이동은 내비게이션에서 */ }
             is MyProfileIntent.ClickManagementMenu -> { /* 메뉴 분기 비즈니스 */ }
         }
     }
@@ -51,7 +53,7 @@ class MyProfileViewModel(
     /** 닉네임·소개를 저장하기 시작할 때마다 올린다 — 같은 이유 */
     private var textVersion = 0
 
-    /** 서버 프로필로 이름·핸들·사진·팔로워 수를 덮는다. 피드 등 나머지는 아직 목업. 실패하면 목업 그대로. */
+    /** 서버 프로필로 이름·핸들·사진·팔로워 수·내 글을 덮는다. 실패하면 목업 그대로 (내 글만 실패하면 글만 목업). */
     private fun loadServerProfile() {
         profileJob?.cancel() // 조회는 하나만 — 늦게 온 옛 응답이 덮지 않게
         val version = avatarVersion
@@ -64,10 +66,15 @@ class MyProfileViewModel(
                     displayName = if (text == textVersion) profile.displayName else it.displayName,
                     bio = if (text == textVersion) profile.bio.orEmpty() else it.bio,
                     avatarUrl = if (version == avatarVersion) profile.avatarUrl.toAbsoluteServerUrl() else it.avatarUrl,
+                    // 서버 프로필이 오면 목업 사진은 치운다 — 사진이 없는 계정에 남의 목업 사진이 보이지 않게
+                    profileImageUrl = null,
                     followersCount = profile.followerCount,
                     followingCount = profile.followingCount,
+                    myUserId = profile.id,
                 )
             }
+            runCatching { repository.myPosts(profile.id, FEED_CARD_COUNT) }
+                .onSuccess { posts -> _state.update { it.copy(feeds = posts) } }
         }
     }
 
@@ -119,6 +126,7 @@ class MyProfileViewModel(
                 // 서버에서 받은 사진은 비운다 — 다른 계정으로 바뀌었는데 이전 사람 사진이 남지 않게 (서버 조회가 다시 채움)
                 avatarUrl = null,
                 avatarError = null,
+                myUserId = null,
                 bio = "",
                 backgroundImageUrl = MockDataSource.myProfileBgImage,
                 posthumousFeedCount = MockDataSource.posthumousFeedCount,
@@ -131,3 +139,6 @@ class MyProfileViewModel(
         }
     }
 }
+
+/** 프로필 피드 카드에 보여줄 최근 글 수 (전체는 "전체보기" → 내 프로필 화면) */
+private const val FEED_CARD_COUNT = 10

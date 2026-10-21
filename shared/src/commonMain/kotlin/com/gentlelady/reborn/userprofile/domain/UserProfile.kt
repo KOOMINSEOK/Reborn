@@ -20,6 +20,19 @@ data class UserProfile(
     val isLocked: Boolean get() = isPrivate && !followedByMe && !isMe
 }
 
+enum class FollowTab { FOLLOWERS, FOLLOWING }
+
+/** 팔로워·팔로잉 목록 한 줄 */
+data class FollowUser(
+    val id: String,
+    val handle: String,
+    val displayName: String,
+    val avatarUrl: String?,
+    val followedByMe: Boolean,
+    /** 나 자신이면 팔로우 버튼을 숨긴다 */
+    val isMe: Boolean,
+)
+
 /** 서버가 팔로우를 거절함. [code] = private_account · blocked · user_not_found · rejected */
 class FollowRejectedException(val code: String) : Exception("follow rejected: $code")
 
@@ -29,6 +42,10 @@ class GetUserProfileUseCase(private val repository: UserProfileRepository) {
 
 class GetUserPostsUseCase(private val repository: UserProfileRepository) {
     suspend operator fun invoke(userId: String, offset: Int) = repository.posts(userId, offset)
+}
+
+class GetRelationsUseCase(private val repository: UserProfileRepository) {
+    suspend operator fun invoke(userId: String, tab: FollowTab, offset: Int) = repository.relations(userId, tab, offset)
 }
 
 class SetFollowUseCase(private val repository: UserProfileRepository) {

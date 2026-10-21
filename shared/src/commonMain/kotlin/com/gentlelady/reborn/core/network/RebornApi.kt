@@ -21,6 +21,7 @@ import com.gentlelady.reborn.core.network.dto.UpdateProfileDto
 import com.gentlelady.reborn.core.network.dto.PostDto
 import com.gentlelady.reborn.core.network.dto.PublicProfileDto
 import com.gentlelady.reborn.core.network.dto.UploadDto
+import com.gentlelady.reborn.core.network.dto.UserListDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
@@ -118,6 +119,13 @@ class RebornApi(
     /** 그 사람의 발행된 글, 최신순. */
     suspend fun userPosts(id: String, offset: Int = 0, limit: Int = 20): FeedDto =
         client.get("users/$id/posts") {
+            parameter("offset", offset)
+            parameter("limit", limit)
+        }.body()
+
+    /** [following] false = 그 사람을 팔로우하는 사람들, true = 그 사람이 팔로우하는 사람들. 최근 팔로우 순. */
+    suspend fun userRelations(id: String, following: Boolean, offset: Int = 0, limit: Int = 30): UserListDto =
+        client.get("users/$id/" + if (following) "following" else "followers") {
             parameter("offset", offset)
             parameter("limit", limit)
         }.body()
