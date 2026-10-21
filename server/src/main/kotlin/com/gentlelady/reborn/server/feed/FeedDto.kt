@@ -37,6 +37,10 @@ data class PostResponse(
 @Serializable
 data class FeedResponse(val items: List<PostResponse>, val nextOffset: Int? = null)
 
+/** 팔로우/언팔로우 응답 — 앱이 다시 조회하지 않고 버튼·숫자를 맞춘다. */
+@Serializable
+data class FollowResponse(val following: Boolean, val followerCount: Int)
+
 @Serializable
 data class BlockedUserResponse(
     val id: String,

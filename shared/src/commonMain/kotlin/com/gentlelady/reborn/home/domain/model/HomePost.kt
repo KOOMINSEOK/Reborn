@@ -4,6 +4,8 @@ import org.jetbrains.compose.resources.DrawableResource
 
 data class HomePost(
     val id: String,
+    /** 작성자 id (서버). 누르면 그 사람 프로필로. 목업 글은 null */
+    val authorId: String? = null,
     val authorName: String,
     // 이미지: 서버 데이터는 URL(String), mock 은 로컬 리소스(DrawableResource). RebornImage 가 알아서 고른다.
     val authorProfileUrl: DrawableResource? = null,

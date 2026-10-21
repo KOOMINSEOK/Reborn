@@ -32,7 +32,8 @@ import com.gentlelady.reborn.home.presentation.home.HomeState
 fun HomeScreen(
     state: HomeState,
     onIntent: (HomeIntent) -> Unit = {},
-    onAddClick: () -> Unit = {}
+    onAddClick: () -> Unit = {},
+    onAuthorClick: (String) -> Unit = {}
 ) {
     var commentPostId by remember { mutableStateOf<String?>(null) }
     CommentCountEffect { change ->
@@ -55,7 +56,8 @@ fun HomeScreen(
                 PostItem(
                     post = post,
                     onLikeClick = { onIntent(HomeIntent.ToggleLike(post.id)) },
-                    onCommentClick = { commentPostId = post.id }
+                    onCommentClick = { commentPostId = post.id },
+                    onAuthorClick = onAuthorClick
                 )
             }
         }

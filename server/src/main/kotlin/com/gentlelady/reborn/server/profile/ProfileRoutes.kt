@@ -52,10 +52,18 @@ fun Route.profileRoutes(repo: ProfileRepository) {
                     ?: call.respond(HttpStatusCode.NotFound, ErrorResponse("user_not_found"))
             }
             get("/followers") {
-                respondUserList(repo.followers(call.userId(), targetId(), page()))
+                when (repo.canSeeRelations(call.userId(), targetId())) {
+                    null -> call.respond(HttpStatusCode.NotFound, ErrorResponse("user_not_found"))
+                    false -> respondUserList(emptyList())
+                    true -> respondUserList(repo.followers(call.userId(), targetId(), page()))
+                }
             }
             get("/following") {
-                respondUserList(repo.following(call.userId(), targetId(), page()))
+                when (repo.canSeeRelations(call.userId(), targetId())) {
+                    null -> call.respond(HttpStatusCode.NotFound, ErrorResponse("user_not_found"))
+                    false -> respondUserList(emptyList())
+                    true -> respondUserList(repo.following(call.userId(), targetId(), page()))
+                }
             }
         }
     }

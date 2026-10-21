@@ -63,6 +63,15 @@ object SeedRunner {
             // 트리거가 만든 profiles 행에 bio 채우기 (핸들/이름은 트리거가 이미 설정)
             // 사용자가 앱에서 바꾼 값은 덮지 않는다 (비어 있을 때만 / 시드가 넣은 사진일 때만)
             u.bio?.let { Db.update("update profiles set bio = ? where id = ? and bio is null", it, u.id) }
+            // 가입 트리거가 만든 기본 핸들(user_<uuid>) 그대로일 때만, 그 핸들을 아무도 안 쓸 때만
+            Db.update(
+                """
+                update profiles set handle = ?
+                where id = ? and handle = 'user_' || replace(id::text, '-', '')
+                  and not exists (select 1 from profiles where handle = ?)
+                """.trimIndent(),
+                u.handle, u.id, u.handle,
+            )
             Db.update(
                 "update profiles set avatar_url = ? where id = ? and (avatar_url is null or avatar_url like '$IMG_PREFIX%')",
                 u.avatar?.let { IMG_PREFIX + it }, u.id,

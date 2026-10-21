@@ -29,12 +29,26 @@ fun Route.feedRoutes(repo: FeedRepository) {
 
 private fun Route.followEndpoints(repo: FeedRepository) {
     post("/users/{id}/follow") {
-        repo.followUser(call.userId(), UUID.fromString(call.parameters["id"]))
-        call.respond(HttpStatusCode.NoContent)
+        val target = UUID.fromString(call.parameters["id"])
+        if (target == call.userId()) {
+            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("cannot_follow_self"))
+        }
+        when (val error = repo.followUser(call.userId(), target)) {
+            null -> call.respond(repo.followState(call.userId(), target))
+            "user_not_found" -> call.respond(HttpStatusCode.NotFound, ErrorResponse(error))
+            else -> call.respond(HttpStatusCode.Forbidden, ErrorResponse(error))
+        }
+    }
+    get("/users/{id}/posts") {
+        val offset = call.request.queryParameters["offset"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, MAX_LIMIT) ?: DEFAULT_LIMIT
+        val items = repo.userPosts(call.userId(), UUID.fromString(call.parameters["id"]), offset, limit)
+        call.respond(FeedResponse(items = items, nextOffset = if (items.size == limit) offset + limit else null))
     }
     delete("/users/{id}/follow") {
-        repo.unfollowUser(call.userId(), UUID.fromString(call.parameters["id"]))
-        call.respond(HttpStatusCode.NoContent)
+        val target = UUID.fromString(call.parameters["id"])
+        repo.unfollowUser(call.userId(), target)
+        call.respond(repo.followState(call.userId(), target))
     }
     post("/users/{id}/block") {
         repo.blockUser(call.userId(), UUID.fromString(call.parameters["id"]))

@@ -6,9 +6,17 @@ import java.util.UUID
 internal object SeedData {
 
     /** 시드 내용을 바꾸면 올린다 → 다음 기동에 한 번 다시 돈다 (seed_runs). */
-    const val VERSION = "2026-10-21.1"
+    const val VERSION = "2026-10-21.2"
 
-    data class SeedUser(val id: UUID, val name: String, val email: String, val bio: String? = null, val avatar: String? = null)
+    data class SeedUser(
+        val id: UUID,
+        val name: String,
+        val email: String,
+        val bio: String? = null,
+        val avatar: String? = null,
+        /** 가입 트리거는 user_<uuid> 로 만든다 → 프로필에서 읽기 좋은 핸들로 */
+        val handle: String,
+    )
     data class SeedPost(
         val id: UUID,
         val authorName: String,
@@ -28,13 +36,13 @@ internal object SeedData {
 
     /** 프로필 사진은 사람 사진이 있는 두 명만 (나머지는 이름 첫 글자). 홍길동 = 추모 페이지 주인공. */
     val users = listOf(
-        SeedUser(uid("a1"), "홍길동", "seed-hong@reborn.local", "인생, 헤맨만큼 내 땅이다", "img_post_grid_5.png"),
-        SeedUser(uid("a2"), "김첨지", "seed-kimc@reborn.local", "오늘도 한 걸음"),
-        SeedUser(uid("a3"), "김영희", "seed-younghee@reborn.local", "기록하는 사람"),
-        SeedUser(uid("a4"), "박지연", "seed-jiyeon@reborn.local", "바다 좋아해요 🌊", "img_profile_dummy_1.png"),
-        SeedUser(uid("a5"), "이현우", "seed-hyunwoo@reborn.local", "사진 찍는 개발자"),
-        SeedUser(uid("a6"), "최민수", "seed-minsu@reborn.local"),
-        SeedUser(uid("a7"), "정수아", "seed-sua@reborn.local", "느리게, 천천히"),
+        SeedUser(uid("a1"), "홍길동", "seed-hong@reborn.local", "인생, 헤맨만큼 내 땅이다", "img_post_grid_5.png", "hong_gildong"),
+        SeedUser(uid("a2"), "김첨지", "seed-kimc@reborn.local", "오늘도 한 걸음", handle = "kim_cheomji"),
+        SeedUser(uid("a3"), "김영희", "seed-younghee@reborn.local", "기록하는 사람", handle = "younghee.kim"),
+        SeedUser(uid("a4"), "박지연", "seed-jiyeon@reborn.local", "바다 좋아해요 🌊", "img_profile_dummy_1.png", "jiyeon_sea"),
+        SeedUser(uid("a5"), "이현우", "seed-hyunwoo@reborn.local", "사진 찍는 개발자", handle = "hyunwoo.dev"),
+        SeedUser(uid("a6"), "최민수", "seed-minsu@reborn.local", handle = "minsu_choi"),
+        SeedUser(uid("a7"), "정수아", "seed-sua@reborn.local", "느리게, 천천히", handle = "sua_slow"),
     )
 
     val userIdByName = users.associate { it.name to it.id }

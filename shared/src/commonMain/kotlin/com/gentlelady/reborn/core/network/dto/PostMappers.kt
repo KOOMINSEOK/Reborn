@@ -12,6 +12,7 @@ internal fun String?.toAbsoluteServerUrl(): String? = when {
 
 fun PostDto.toHomePost(): HomePost = HomePost(
     id = id,
+    authorId = authorId,
     authorName = authorName,
     authorAvatarUrl = authorAvatarUrl.toAbsoluteServerUrl(),
     imageUrls = imageUrls.mapNotNull { it.toAbsoluteServerUrl() },

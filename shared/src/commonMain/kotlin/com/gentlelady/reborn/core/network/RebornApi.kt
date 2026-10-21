@@ -8,6 +8,7 @@ import com.gentlelady.reborn.core.network.dto.CreateHistoryDto
 import com.gentlelady.reborn.core.network.dto.CreatePostDto
 import com.gentlelady.reborn.core.network.dto.CreateUploadDto
 import com.gentlelady.reborn.core.network.dto.FeedDto
+import com.gentlelady.reborn.core.network.dto.FollowDto
 import com.gentlelady.reborn.core.network.dto.GuestbookEntryDto
 import com.gentlelady.reborn.core.network.dto.GuestbookListDto
 import com.gentlelady.reborn.core.network.dto.HistoryDto
@@ -18,6 +19,7 @@ import com.gentlelady.reborn.core.network.dto.MyGuestbookListDto
 import com.gentlelady.reborn.core.network.dto.MyProfileDto
 import com.gentlelady.reborn.core.network.dto.UpdateProfileDto
 import com.gentlelady.reborn.core.network.dto.PostDto
+import com.gentlelady.reborn.core.network.dto.PublicProfileDto
 import com.gentlelady.reborn.core.network.dto.UploadDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -110,6 +112,21 @@ class RebornApi(
 
     suspend fun createGuestbookEntry(memorialId: String, req: CreateGuestbookDto): GuestbookEntryDto =
         client.post("memorials/$memorialId/guestbook") { setBody(req) }.body()
+
+    suspend fun userProfile(id: String): PublicProfileDto = client.get("users/$id").body()
+
+    /** 그 사람의 발행된 글, 최신순. */
+    suspend fun userPosts(id: String, offset: Int = 0, limit: Int = 20): FeedDto =
+        client.get("users/$id/posts") {
+            parameter("offset", offset)
+            parameter("limit", limit)
+        }.body()
+
+    /** 팔로우(POST)/언팔로우(DELETE). 둘 다 멱등. 서버 기준 팔로우 여부·팔로워 수를 돌려준다. */
+    suspend fun setFollow(id: String, follow: Boolean): FollowDto {
+        val path = "users/$id/follow"
+        return (if (follow) client.post(path) else client.delete(path)).body()
+    }
 
     /** 좋아요 켜기(POST)/끄기(DELETE). 둘 다 멱등 — 같은 요청을 여러 번 보내도 결과는 같다. */
     suspend fun setLike(target: InteractionTarget, id: String, liked: Boolean): LikeDto {

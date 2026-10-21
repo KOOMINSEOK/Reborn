@@ -39,8 +39,10 @@ class ProfileRepository {
                    exists(select 1 from follows where follower_id = ? and followee_id = p.id) as followed_by_me,
                    exists(select 1 from blocks where blocker_id = ? and blocked_id = p.id) as blocked_by_me
             from profiles p where p.id = ?
+              -- 나를 차단한 사람은 없는 사람처럼 (내가 차단한 사람은 보인다 — 해제하려면 들어가야 하니까)
+              and not exists(select 1 from blocks where blocker_id = p.id and blocked_id = ?)
             """.trimIndent(),
-            viewerId, viewerId, targetId,
+            viewerId, viewerId, targetId, viewerId,
         ) {
             PublicProfileResponse(
                 id = it.getString("id"),
@@ -56,14 +58,29 @@ class ProfileRepository {
             )
         }
 
+    /**
+     * 그 사람의 팔로워·팔로잉 목록을 볼 수 있나. null = 없는 사람처럼(없음·나를 차단), false = 비공개라 못 봄.
+     */
+    fun canSeeRelations(viewerId: UUID, targetId: UUID): Boolean? =
+        Db.queryFirst(
+            """
+            select p.id = ? or p.is_private = false
+                   or exists(select 1 from follows where follower_id = ? and followee_id = p.id) as visible
+            from profiles p
+            where p.id = ? and not exists(select 1 from blocks where blocker_id = p.id and blocked_id = ?)
+            """.trimIndent(),
+            viewerId, viewerId, targetId, viewerId,
+        ) { it.getBoolean("visible") }
+
     fun followers(viewerId: UUID, targetId: UUID, page: Page): List<UserSummaryResponse> =
         Db.query(
             USER_SUMMARY_SELECT + """
             from follows f join profiles pr on pr.id = f.follower_id
             where f.followee_id = ?
+              and not exists(select 1 from blocks b where b.blocker_id = pr.id and b.blocked_id = ?)
             order by f.created_at desc limit ? offset ?
             """.trimIndent(),
-            viewerId, targetId, page.limit, page.offset,
+            viewerId, targetId, viewerId, page.limit, page.offset,
             map = ResultSet::toUserSummary,
         )
 
@@ -72,9 +89,10 @@ class ProfileRepository {
             USER_SUMMARY_SELECT + """
             from follows f join profiles pr on pr.id = f.followee_id
             where f.follower_id = ?
+              and not exists(select 1 from blocks b where b.blocker_id = pr.id and b.blocked_id = ?)
             order by f.created_at desc limit ? offset ?
             """.trimIndent(),
-            viewerId, targetId, page.limit, page.offset,
+            viewerId, targetId, viewerId, page.limit, page.offset,
             map = ResultSet::toUserSummary,
         )
 }
