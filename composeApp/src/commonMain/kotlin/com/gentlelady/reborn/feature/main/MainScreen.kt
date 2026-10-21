@@ -197,8 +197,6 @@ fun MainScreen(
                         is MyProfileIntent.ClickFollowing -> myProfileState.myUserId?.let {
                             navController.navigate(followsRoute(it, FollowTab.FOLLOWING, myProfileState.username))
                         }
-                        // 피드 "전체보기" → 내 글 전체 (다른 사람 프로필과 같은 화면, 팔로우 버튼만 없음)
-                        is MyProfileIntent.ClickViewAllFeeds -> myProfileState.myUserId?.let { navController.navigate("user/$it") }
                         // 💡 관리 그리드의 메뉴 클릭을 해당 관리 서브 화면 라우트로 연결
                         is MyProfileIntent.ClickManagementMenu -> {
                             when (intent.menuId) {

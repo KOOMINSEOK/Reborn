@@ -2,7 +2,6 @@ package com.gentlelady.reborn.feature.myprofile.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -61,16 +60,6 @@ internal fun MyProfileFeedCarousel(
             )
             if (feeds.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "전체보기",
-                        color = RebornSlateGray,
-                        fontSize = 13.sp,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .clickable(onClick = onViewAllClick)
-                            .padding(horizontal = 6.dp, vertical = 4.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
                     repeat(feeds.size) { index ->
                         val isSelected = pagerState.currentPage == index
                         Box(

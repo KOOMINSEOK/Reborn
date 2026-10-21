@@ -53,7 +53,7 @@ class UserProfileViewModelTest {
         val followReplies = mutableListOf<CompletableDeferred<Pair<Boolean, Int>>>()
         val profileReplies = mutableMapOf<String, CompletableDeferred<UserProfile>>()
         override suspend fun profile(userId: String) =
-            profileReplies[userId]?.await() ?: profiles.getValue(userId)
+            profileReplies[userId]?.await() ?: profiles[userId] ?: error("timeout")
         override suspend fun posts(userId: String, offset: Int): Pair<List<HomePost>, Int?> =
             listOf(HomePost(id = "p_$userId", authorId = userId, authorName = "x", caption = "", postedAt = "")) to null
         override suspend fun setFollow(userId: String, follow: Boolean) =
@@ -236,5 +236,16 @@ class UserProfileViewModelTest {
         // 첫 페이지만 — 옛 더 불러오기(z)가 새 목록 뒤에 붙지 않는다
         assertEquals(listOf("x", "y"), vm.state.value.current.users.map { it.id })
         assertFalse(vm.state.value.current.isLoadingMore)
+    }
+
+    @Test
+    fun serverDownShowsErrorInsteadOfCrashing() = runTest(dispatcher) {
+        val repo = FakeRepo(emptyMap()) // 프로필 조회 실패 (서버 꺼짐·시간 초과)
+        val vm = vm(repo)
+        vm.onIntent(UserProfileIntent.Load("u"))
+        runCurrent() // 실패가 바깥으로 번지면 여기서 테스트가 깨진다
+
+        assertTrue(vm.state.value.loadFailed)
+        assertFalse(vm.state.value.isLoading)
     }
 }

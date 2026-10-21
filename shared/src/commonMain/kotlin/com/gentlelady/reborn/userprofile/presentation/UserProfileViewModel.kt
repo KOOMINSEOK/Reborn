@@ -11,6 +11,7 @@ import com.gentlelady.reborn.userprofile.domain.GetUserProfileUseCase
 import com.gentlelady.reborn.userprofile.domain.SetFollowUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,10 +58,13 @@ class UserProfileViewModel(
         loadJob?.cancel()
         reduce(UserProfileResult.Loading(userId))
         loadJob = viewModelScope.launch {
+            // coroutineScope 로 감싸야 한쪽 실패가 여기서 잡힌다 — 맨 async 의 실패는 바깥 launch 까지 번져 앱이 죽는다
             val result = runCatching {
-                val profile = async { getProfile(userId) }
-                val posts = async { getPosts(userId, 0) }
-                Triple(profile.await(), posts.await().first, posts.await().second)
+                coroutineScope {
+                    val profile = async { getProfile(userId) }
+                    val posts = async { getPosts(userId, 0) }
+                    Triple(profile.await(), posts.await().first, posts.await().second)
+                }
             }
             if (gen != generation) return@launch
             result
