@@ -49,12 +49,21 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 internal fun PostHeader(
     post: HomePost,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAuthorClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 사진·이름을 누르면 작성자 프로필로 (서버 글만 — 목업 글은 작성자 id 가 없다)
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(8.dp))
+                .then(if (onAuthorClick != null) Modifier.clickable(onClick = onAuthorClick) else Modifier),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         Box(modifier = Modifier.size(36.dp)) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
@@ -108,6 +117,7 @@ internal fun PostHeader(
                 color = RebornSlateGray,
                 fontSize = 12.sp
             )
+        }
         }
 
         Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = RebornUnselectedGray)

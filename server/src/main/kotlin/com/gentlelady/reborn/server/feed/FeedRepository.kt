@@ -12,12 +12,40 @@ import java.util.UUID
  */
 class FeedRepository {
 
-    fun followUser(followerId: UUID, followeeId: UUID): Int {
+    /**
+     * 팔로우. 성공이면 null, 막히면 에러 코드.
+     * - 없는 사람 / 나를 차단한 사람 → user_not_found (차단 사실을 알리지 않는다)
+     * - 내가 차단한 사람 → blocked (차단 해제부터)
+     * - 비공개 계정 → private_account. ponytail: 팔로우 요청(승인) 기능이 생기기 전까진 막는다
+     *   (그냥 받아주면 비공개 글이 바로 보인다). 이미 팔로우 중이면 그대로 성공.
+     */
+    fun followUser(followerId: UUID, followeeId: UUID): String? {
         require(followerId != followeeId) { "cannot follow yourself" }
-        return Db.update(
-            "insert into follows (follower_id, followee_id) values (?, ?) on conflict do nothing",
-            followerId, followeeId,
-        )
+        val target = Db.queryFirst(
+            """
+            select p.is_private,
+                   exists(select 1 from blocks where blocker_id = p.id and blocked_id = ?) as blocks_me,
+                   exists(select 1 from blocks where blocker_id = ? and blocked_id = p.id) as blocked_by_me,
+                   exists(select 1 from follows where follower_id = ? and followee_id = p.id) as following
+            from profiles p where p.id = ?
+            """.trimIndent(),
+            followerId, followerId, followerId, followeeId,
+        ) { Triple(it.getBoolean("is_private"), it.getBoolean("blocks_me") to it.getBoolean("blocked_by_me"), it.getBoolean("following")) }
+            ?: return "user_not_found"
+        val (isPrivate, blocks, following) = target
+        return when {
+            blocks.first -> "user_not_found"
+            blocks.second -> "blocked"
+            following -> null
+            isPrivate -> "private_account"
+            else -> {
+                Db.update(
+                    "insert into follows (follower_id, followee_id) values (?, ?) on conflict do nothing",
+                    followerId, followeeId,
+                )
+                null
+            }
+        }
     }
 
     fun unfollowUser(followerId: UUID, followeeId: UUID): Int =
@@ -98,6 +126,19 @@ class FeedRepository {
         ) {
             it.toPost("following")
         }
+
+    /**
+     * 한 사람의 발행된 글, 최신순 (프로필 화면). 볼 수 없는 사람(비공개·차단)이면 빈 목록 —
+     * 예약 글은 본인에게도 안 보인다 (예약 글은 관리 화면에서).
+     */
+    fun userPosts(viewerId: UUID, authorId: UUID, offset: Int, limit: Int): List<PostResponse> =
+        Db.query(
+            POST_SELECT + " where p.author_id = ? and p.status = 'published'" + POST_VISIBLE + NOT_BLOCKED + """
+            order by p.created_at desc, p.id desc
+            offset ? limit ?
+            """.trimIndent(),
+            viewerId, authorId, viewerId, viewerId, viewerId, viewerId, offset, limit,
+        ) { it.toPost("profile") }
 
     /** 내 글 + 팔로우한 사람들의 최신 게시물. (내 글이 빠지면 방금 올린 글이 홈에 안 보인다) */
     fun followingFeed(viewerId: UUID, limit: Int): List<PostResponse> =

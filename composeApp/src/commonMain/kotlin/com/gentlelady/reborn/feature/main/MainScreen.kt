@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
+import com.gentlelady.reborn.feature.userprofile.UserProfileRoute
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -103,7 +104,8 @@ fun MainScreen(
                 "management/app_settings/terms/privacy_policy", "management/app_settings/terms/withdrawal",
                 // 작성 플로우 전 화면에서 바텀바를 그대로 노출한다 (디자인 시안 기준)
                 "feed_write/entry", "feed_write/living", "feed_write/posthumous",
-                "feed_write/schedule", "feed_write/target_select"
+                "feed_write/schedule", "feed_write/target_select",
+                "user/{userId}"
             )
             if (currentRoute in mainRoutes && !isMemorialWritingHistory) {
                 BottomNavigationBar(
@@ -131,7 +133,16 @@ fun MainScreen(
                 HomeScreen(
                     state = homeState,
                     onIntent = onHomeIntent,
-                    onAddClick = { navController.navigate("feed_write/entry") }
+                    onAddClick = { navController.navigate("feed_write/entry") },
+                    onAuthorClick = { navController.navigate("user/$it") }
+                )
+            }
+
+            // 다른 사람 프로필 (글 작성자를 눌러서)
+            composable("user/{userId}") { entry ->
+                UserProfileRoute(
+                    userId = entry.arguments?.getString("userId").orEmpty(),
+                    onBack = { navController.popBackStack() }
                 )
             }
 

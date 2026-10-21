@@ -19,13 +19,20 @@ fun PostItem(
     post: HomePost,
     modifier: Modifier = Modifier,
     onLikeClick: () -> Unit = {},
-    onCommentClick: () -> Unit = {}
+    onCommentClick: () -> Unit = {},
+    /** 작성자를 눌렀을 때 (작성자 id). null 이면 누를 수 없다 */
+    onAuthorClick: ((String) -> Unit)? = null
 ) {
     RebornCard(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         contentPadding = 0.dp
     ) {
-        PostHeader(post = post, modifier = Modifier.padding(top = 12.dp))
+        val authorId = post.authorId
+        PostHeader(
+            post = post,
+            modifier = Modifier.padding(top = 12.dp),
+            onAuthorClick = if (authorId != null && onAuthorClick != null) ({ onAuthorClick(authorId) }) else null
+        )
         if (post.isPosthumous) {
             PosthumousBanner()
         }

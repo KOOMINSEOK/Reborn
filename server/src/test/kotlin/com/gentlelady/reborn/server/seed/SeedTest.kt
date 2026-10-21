@@ -35,6 +35,8 @@ class SeedTest {
             SeedData.guestbook.map { it.id } + SeedData.postComments.map { it.id } + SeedData.historyComments.map { it.id } +
             SeedData.scheduledPosts.map { it.id } + SeedData.memorialId
         assertEquals(ids.size, ids.toSet().size, "시드 id 중복")
+        assertEquals(SeedData.users.size, SeedData.users.map { it.handle }.toSet().size, "시드 핸들 중복")
+        SeedData.users.forEach { assertTrue(!it.handle.startsWith("user_"), "기본 핸들 패턴과 겹침: ${it.handle}") }
 
         val names = SeedData.userIdByName.keys
         (SeedData.guestbook.map { it.authorName } + SeedData.postComments.map { it.authorName } +

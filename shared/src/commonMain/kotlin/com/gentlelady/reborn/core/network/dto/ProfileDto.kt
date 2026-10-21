@@ -15,6 +15,21 @@ data class MyProfileDto(
     val followingCount: Int = 0,
 )
 
+/** 서버 `GET /users/{id}` 응답 (다른 사람 프로필). */
+@Serializable
+data class PublicProfileDto(
+    val id: String,
+    val handle: String,
+    val displayName: String,
+    val bio: String? = null,
+    val avatarUrl: String? = null,
+    val isPrivate: Boolean = false,
+    val followerCount: Int = 0,
+    val followingCount: Int = 0,
+    val followedByMe: Boolean = false,
+    val blockedByMe: Boolean = false,
+)
+
 /** 서버 `PATCH /me/profile` 요청. null 인 필드는 안 바꾼다. */
 @Serializable
 data class UpdateProfileDto(

@@ -39,8 +39,10 @@ class ProfileRepository {
                    exists(select 1 from follows where follower_id = ? and followee_id = p.id) as followed_by_me,
                    exists(select 1 from blocks where blocker_id = ? and blocked_id = p.id) as blocked_by_me
             from profiles p where p.id = ?
+              -- 나를 차단한 사람은 없는 사람처럼 (내가 차단한 사람은 보인다 — 해제하려면 들어가야 하니까)
+              and not exists(select 1 from blocks where blocker_id = p.id and blocked_id = ?)
             """.trimIndent(),
-            viewerId, viewerId, targetId,
+            viewerId, viewerId, targetId, viewerId,
         ) {
             PublicProfileResponse(
                 id = it.getString("id"),
