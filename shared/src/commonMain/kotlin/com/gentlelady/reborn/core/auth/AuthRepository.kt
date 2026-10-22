@@ -30,7 +30,10 @@ class AuthRepository(
         api.setPassword(token, password)
     }
 
-    /** PKCE: 로그인 창을 연 쪽만 코드를 세션으로 바꿀 수 있게. ponytail: 메모리에만 — 그 사이 앱이 죽으면 다시 시도 */
+    /**
+     * PKCE: 로그인 창을 연 쪽만 코드를 세션으로 바꿀 수 있게.
+     * ponytail: 메모리에만 — 로그인 창을 연 사이 앱이 죽으면 돌아와도 "다시 시도해 주세요" 가 뜬다. 자주 겪으면 암호화 저장소에.
+     */
     private var pkceVerifier: String? = null
 
     /** 브라우저로 열 소셜 로그인 주소 (Supabase 가 직접 지원하는 곳 — 카카오·Google) */

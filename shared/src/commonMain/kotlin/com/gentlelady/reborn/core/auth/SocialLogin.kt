@@ -1,8 +1,9 @@
 package com.gentlelady.reborn.core.auth
 
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.mapNotNull
 
 /** 소셜 로그인 창을 띄우는 일 (플랫폼마다 — 안드로이드: 브라우저·네이버 SDK). 없는 플랫폼은 등록 안 함. */
 interface SocialLoginLauncher {
@@ -18,11 +19,14 @@ interface SocialLoginLauncher {
 
 /** 브라우저 로그인 뒤 앱으로 돌아온 주소 ([OAUTH_REDIRECT]?code=… 또는 ?error=…). 플랫폼이 받아 넣는다 */
 object OAuthRedirects {
-    private val _uris = MutableSharedFlow<String>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val uris: SharedFlow<String> = _uris
+    // 받는 쪽(가입 화면)이 아직 없을 때 도착해도 잃지 않게 — 앱이 꺼졌다 켜지며 돌아온 경우. 한 번 쓰면 비운다
+    private val pending = MutableStateFlow<String?>(null)
+
+    /** 아직 안 쓴 주소. 받아 가면 비워져서 다른 화면이 같은 주소를 또 쓰지 않는다 */
+    val uris: Flow<String> = pending.filterNotNull().mapNotNull { uri -> uri.takeIf { pending.compareAndSet(it, null) } }
 
     fun deliver(uri: String) {
-        _uris.tryEmit(uri)
+        pending.value = uri
     }
 }
 

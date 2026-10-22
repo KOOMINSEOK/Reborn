@@ -9,6 +9,9 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -25,7 +28,12 @@ import java.time.Duration
 @Serializable
 data class NaverLoginRequest(val accessToken: String)
 
-/** 네이버 사용자. id 는 우리 앱 전용 (네이버는 앱마다 다른 id 를 준다 — 다른 앱의 토큰으로는 우리 사용자가 될 수 없다) */
+/**
+ * 네이버 사용자. id 는 앱마다 다르다 (네이버: "애플리케이션간에는 이용자 식별자가 공유되지 않습니다").
+ * 그래서 다른 앱이 받은 토큰을 가져와도 그 사람의 Reborn 계정이 아니라 별개의 새 계정이 될 뿐이다.
+ * ponytail: 네이버 access token 은 어느 앱에 발급됐는지 확인할 API 가 없다 (/v1/nid/verify 도 client 를 안 알려줌).
+ * 꼭 묶어야 하면 네이버 OIDC(id_token 의 aud = 우리 client id)를 서버가 직접 받는 방식으로.
+ */
 internal data class NaverUser(val id: String, val name: String?, val avatarUrl: String?)
 
 /**
@@ -34,36 +42,63 @@ internal data class NaverUser(val id: String, val name: String?, val avatarUrl: 
  * 계정 이메일은 네이버 id 로 만든 가짜 주소(.invalid — 메일이 갈 수 없음). 네이버 이메일로 기존 계정에 붙이지 않는다
  * (네이버 이메일은 소유 확인이 안 된 연락처일 수 있어, 남의 이메일 계정에 들어가는 길이 된다).
  */
+/** 로그인 없이 부를 수 있어 동시에 처리하는 수를 묶는다 — 네이버가 느릴 때 몰려와도 다른 API 스레드를 다 잡아먹지 않게 */
+private val naverSlots = Semaphore(8)
+
 internal fun Route.naverRoutes(verify: (String) -> NaverUser? = ::fetchNaverUser) {
     post("/auth/naver") {
         val token = call.receive<NaverLoginRequest>().accessToken.trim()
-        if (token.isEmpty()) return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("missing_token"))
+        if (token.isEmpty() || token.length > 2048) {
+            return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("missing_token"))
+        }
         if (!SupabaseAdmin.configured) {
             return@post call.respond(HttpStatusCode.ServiceUnavailable, ErrorResponse("auth_not_configured"))
         }
-        val naver = verify(token) ?: return@post call.respond(HttpStatusCode.Unauthorized, ErrorResponse("invalid_naver_token"))
-        val email = naverEmail(naver.id)
-        val created = SupabaseAdmin.createUser(
-            buildJsonObject {
-                put("email", email)
-                put("email_confirm", true)
-                // provider 는 세션을 낼 때 GoTrue 가 "email" 로 덮어써서 따로 둔다
-                putJsonObject("app_metadata") {
-                    put("reborn_provider", "naver")
-                    putJsonArray("providers") { add(JsonPrimitive("naver")) }
-                }
-                putJsonObject("user_metadata") {
-                    naver.name?.let { put("name", it) }
-                    naver.avatarUrl?.let { put("avatar_url", it) }
-                }
-            },
-        )
-        // 이미 있던 주소면 정말 네이버로 만든 계정인지 확인 (누가 같은 주소로 먼저 만들어 둔 계정에 들어가지 않게)
-        if (!created && !isNaverAccount(email)) {
-            return@post call.respond(HttpStatusCode.Conflict, ErrorResponse("account_conflict"))
+        if (!naverSlots.tryAcquire()) return@post call.respond(HttpStatusCode.ServiceUnavailable, ErrorResponse("busy"))
+        val session = try {
+            // 네이버·Supabase 호출은 막히는(blocking) 호출 → IO 스레드에서
+            withContext(Dispatchers.IO) { naverSession(token, verify) }
+        } catch (e: Exception) {
+            // 네이버·Supabase 가 느리거나 죽음 — 500 대신 "잠시 후 다시"
+            return@post call.respond(HttpStatusCode.ServiceUnavailable, ErrorResponse("naver_unavailable"))
+        } finally {
+            naverSlots.release()
         }
-        call.respondText(SupabaseAdmin.sessionFor(email), ContentType.Application.Json)
+        when (session) {
+            NaverSession.InvalidToken -> call.respond(HttpStatusCode.Unauthorized, ErrorResponse("invalid_naver_token"))
+            NaverSession.Conflict -> call.respond(HttpStatusCode.Conflict, ErrorResponse("account_conflict"))
+            is NaverSession.Issued -> call.respondText(session.json, ContentType.Application.Json)
+        }
     }
+}
+
+private sealed interface NaverSession {
+    object InvalidToken : NaverSession
+    object Conflict : NaverSession
+    data class Issued(val json: String) : NaverSession
+}
+
+private fun naverSession(token: String, verify: (String) -> NaverUser?): NaverSession {
+    val naver = verify(token) ?: return NaverSession.InvalidToken
+    val email = naverEmail(naver.id)
+    val created = SupabaseAdmin.createUser(
+        buildJsonObject {
+            put("email", email)
+            put("email_confirm", true)
+            // provider 는 세션을 낼 때 GoTrue 가 "email" 로 덮어써서 따로 둔다
+            putJsonObject("app_metadata") {
+                put("reborn_provider", "naver")
+                putJsonArray("providers") { add(JsonPrimitive("naver")) }
+            }
+            putJsonObject("user_metadata") {
+                naver.name?.let { put("name", it) }
+                naver.avatarUrl?.let { put("avatar_url", it) }
+            }
+        },
+    )
+    // 이미 있던 주소면 정말 네이버로 만든 계정인지 확인 (누가 같은 주소로 먼저 만들어 둔 계정에 들어가지 않게)
+    if (!created && !isNaverAccount(email)) return NaverSession.Conflict
+    return NaverSession.Issued(SupabaseAdmin.sessionFor(email))
 }
 
 internal fun naverEmail(naverId: String) =
