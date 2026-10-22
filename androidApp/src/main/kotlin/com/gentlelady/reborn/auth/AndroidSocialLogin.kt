@@ -27,9 +27,11 @@ class AndroidSocialLogin : SocialLoginLauncher {
         CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(current(), Uri.parse(url))
     }
 
-    override suspend fun naverAccessToken(): String? = suspendCancellableCoroutine { cont ->
-        // SDK 가 기억한 토큰이 있으면 화면 없이 바로 그 계정이 된다 → 지우고 네이버 로그인 화면부터 (그만두기 뒤 다른 계정으로)
+    override suspend fun naverAccessToken(otherAccount: Boolean): String? = suspendCancellableCoroutine { cont ->
+        // SDK 가 기억한 토큰이 있으면 화면 없이 바로 그 계정이 된다 → 지우고 네이버를 거친다
         NaverIdLoginSDK.logout()
+        // 다른 계정: 브라우저에 남은 네이버 로그인을 쓰지 않고 아이디·비밀번호부터
+        NaverIdLoginSDK.isRequiredCustomTabsReAuth = otherAccount
         NaverIdLoginSDK.authenticate(current(), object : OAuthLoginCallback {
             override fun onSuccess() {
                 cont.resume(NaverIdLoginSDK.getAccessToken())

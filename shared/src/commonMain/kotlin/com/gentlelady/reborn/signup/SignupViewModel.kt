@@ -83,6 +83,8 @@ class SignupViewModel(
             is SignupIntent.VerifyIdentityCode -> verifyIdentityCode()
             is SignupIntent.UseExistingAccount -> useExistingAccount()
             is SignupIntent.DismissExistingAccount -> _state.update { it.copy(existingAccount = null) }
+            is SignupIntent.NaverLogin -> naverLogin(intent.otherAccount)
+            is SignupIntent.DismissNaverChooser -> _state.update { it.copy(showNaverChooser = false) }
             is SignupIntent.UpdateHandle -> updateHandle(intent.handle)
             is SignupIntent.UpdateAvatar -> _state.update { it.copy(avatar = intent.jpeg) }
             is SignupIntent.SubmitHandle -> submitHandle()
@@ -118,18 +120,25 @@ class SignupViewModel(
         }
         if (_state.value.isBusy) return
         when (provider) {
-            "naver" -> busy(onError = { "네이버 로그인에 실패했어요. 잠시 후 다시 시도해 주세요." }) {
-                val token = launcher.naverAccessToken()
-                if (token == null) {
-                    _state.update { it.copy(isBusy = false) } // 사용자가 닫음
-                } else {
-                    repository.naverLogin(token) // 세션이 생기면 resume() 이 isBusy 를 푼다
-                }
-            }
+            "naver" -> _state.update { it.copy(showNaverChooser = true) }
             else -> busy(onError = { "${providerLabel(provider)} 로그인 창을 열지 못했어요." }) {
                 launcher.openBrowser(repository.oauthUrl(provider))
                 // 브라우저에서 돌아올 때까지 기다리지 않는다 (그냥 닫고 돌아올 수도 있다)
                 _state.update { it.copy(isBusy = false) }
+            }
+        }
+    }
+
+    private fun naverLogin(otherAccount: Boolean) {
+        val launcher = social ?: return
+        if (_state.value.isBusy) return
+        _state.update { it.copy(showNaverChooser = false) }
+        busy(onError = { "네이버 로그인에 실패했어요. 잠시 후 다시 시도해 주세요." }) {
+            val token = launcher.naverAccessToken(otherAccount)
+            if (token == null) {
+                _state.update { it.copy(isBusy = false) } // 사용자가 닫음
+            } else {
+                repository.naverLogin(token) // 세션이 생기면 resume() 이 isBusy 를 푼다
             }
         }
     }

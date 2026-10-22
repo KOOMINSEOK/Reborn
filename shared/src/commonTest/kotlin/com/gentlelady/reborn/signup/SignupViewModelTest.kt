@@ -246,8 +246,9 @@ class SignupViewModelTest {
 
     private class FakeLauncher(var naverToken: String?) : com.gentlelady.reborn.core.auth.SocialLoginLauncher {
         val opened = mutableListOf<String>()
+        val naverAsks = mutableListOf<Boolean>()
         override fun openBrowser(url: String) { opened += url }
-        override suspend fun naverAccessToken() = naverToken
+        override suspend fun naverAccessToken(otherAccount: Boolean) = naverToken.also { naverAsks += otherAccount }
     }
 
     @Test
@@ -282,14 +283,19 @@ class SignupViewModelTest {
         val vm = SignupViewModel(repo, CurrentUserIdUseCase(store), launcher, kotlinx.coroutines.flow.emptyFlow())
         runCurrent()
         vm.onIntent(SignupIntent.Start(SignupMethod.SOCIAL, "naver"))
+        assertTrue(vm.state.value.showNaverChooser) // 이 기기 계정 / 다른 계정 고르기
+        vm.onIntent(SignupIntent.NaverLogin(otherAccount = false))
         runCurrent()
+        assertFalse(vm.state.value.showNaverChooser)
         assertEquals(SignupStep.START, vm.state.value.step) // 창을 닫음 → 그대로
         assertFalse(vm.state.value.isBusy)
 
         launcher.naverToken = "NT"
         repo.server = repo.server.copy(provider = "naver", onboarded = true)
         vm.onIntent(SignupIntent.Start(SignupMethod.SOCIAL, "naver"))
+        vm.onIntent(SignupIntent.NaverLogin(otherAccount = true))
         runCurrent()
+        assertEquals(listOf(false, true), launcher.naverAsks)
         assertTrue("naver:NT" in repo.calls)
         assertEquals(SignupGate.DONE, vm.state.value.gate) // 이미 가입한 사람 → 바로 앱
     }
