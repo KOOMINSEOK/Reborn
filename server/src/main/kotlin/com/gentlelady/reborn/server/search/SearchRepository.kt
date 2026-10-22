@@ -39,7 +39,11 @@ class SearchRepository {
             """
             select * from (
                 select 'user' as kind, pr.id, pr.display_name as name, pr.handle, pr.avatar_url as image_url,
-                       coalesce((select sum(p.like_count) from posts p where p.author_id = pr.id and p.status = 'published'), 0) as likes,
+                       -- 비공개 계정은 팔로우한 사람에게만 (글을 못 보는 사람이 좋아요 합으로 활동을 엿보지 않게) — 아니면 0
+                       case when pr.is_private and not exists(select 1 from follows f where f.follower_id = ? and f.followee_id = pr.id)
+                            then 0
+                            else coalesce((select sum(p.like_count) from posts p where p.author_id = pr.id and p.status = 'published'), 0)
+                       end as likes,
                        pr.view_count as views, 0::bigint as flowers
                 from profiles pr
                 where pr.onboarded_at is not null and pr.id <> ?
@@ -60,7 +64,7 @@ class SearchRepository {
             order by ${sort.column} desc, likes desc, name, id
             limit ?
             """.trimIndent(),
-            viewerId, "$like%", "%$like%", viewerId, viewerId,
+            viewerId, viewerId, "$like%", "%$like%", viewerId, viewerId,
             "%$like%", "$like%", viewerId, viewerId, viewerId, viewerId,
             limit,
             map = ResultSet::toResult,
