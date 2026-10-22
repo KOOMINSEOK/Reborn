@@ -1,8 +1,8 @@
 package com.gentlelady.reborn.auth
 
 import android.app.Activity
-import android.content.Intent
 import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import com.gentlelady.reborn.core.auth.SocialLoginLauncher
 import com.navercorp.nid.NaverIdLoginSDK
 import com.navercorp.nid.oauth.NidOAuthErrorCode
@@ -22,8 +22,9 @@ class AndroidSocialLogin : SocialLoginLauncher {
 
     private fun current() = activity.get() ?: error("no activity")
 
+    /** 앱 위에 겹쳐 뜨는 로그인 창 (Chrome 앱으로 넘어가지 않게) */
     override fun openBrowser(url: String) {
-        current().startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        CustomTabsIntent.Builder().setShowTitle(true).build().launchUrl(current(), Uri.parse(url))
     }
 
     override suspend fun naverAccessToken(): String? = suspendCancellableCoroutine { cont ->

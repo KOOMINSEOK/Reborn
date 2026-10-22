@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.androidx.compose)
     implementation(libs.naver.oauth)
+    implementation(libs.androidx.browser)
 
 
     debugImplementation(libs.compose.uiTooling)
