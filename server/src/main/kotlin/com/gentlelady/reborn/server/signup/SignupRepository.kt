@@ -18,7 +18,7 @@ class SignupRepository {
             """
             select p.terms_agreed_at is not null as terms, p.identity_verified_at is not null as identity,
                    p.identity_name, p.onboarded_at is not null as onboarded,
-                   coalesce(u.raw_app_meta_data ->> 'provider', 'email') as provider,
+                   coalesce(u.raw_app_meta_data ->> 'reborn_provider', u.raw_app_meta_data ->> 'provider', 'email') as provider,
                    -- 인증번호로 만든 계정도 내부 비밀번호 값이 있어 그걸로는 모른다 → 앱이 비밀번호를 정할 때 같은 요청에 남기는 표시
                    coalesce(u.raw_user_meta_data ->> 'password_set', '') = 'true' as has_password
             from profiles p join auth.users u on u.id = p.id
@@ -48,7 +48,7 @@ class SignupRepository {
     fun existingAccount(ci: String, exceptUserId: UUID): ExistingAccount? =
         Db.queryFirst(
             """
-            select coalesce(u.raw_app_meta_data ->> 'provider', 'email') as provider, p.handle, p.created_at
+            select coalesce(u.raw_app_meta_data ->> 'reborn_provider', u.raw_app_meta_data ->> 'provider', 'email') as provider, p.handle, p.created_at
             from profiles p join auth.users u on u.id = p.id
             where p.identity_ci = ? and p.id <> ? and p.onboarded_at is not null
             """.trimIndent(),

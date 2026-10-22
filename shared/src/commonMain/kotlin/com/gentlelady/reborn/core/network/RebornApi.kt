@@ -188,6 +188,13 @@ class RebornApi(
     }
 
     /** 가입을 그만둠 — 가입을 마치지 않은 이 계정을 지운다 */
+    /** 네이버 access token → 우리 계정 세션 (서버가 네이버에 확인). 틀린 토큰이면 401 */
+    suspend fun naverLogin(accessToken: String): com.gentlelady.reborn.core.auth.SessionDto =
+        client.post("auth/naver") {
+            contentType(ContentType.Application.Json)
+            setBody(NaverLoginDto(accessToken))
+        }.body()
+
     suspend fun abandonSignup() {
         client.delete("me/signup")
     }
@@ -218,3 +225,6 @@ enum class InteractionTarget(val parentPath: String, val commentPath: String) {
 
 private const val UPLOAD_TIMEOUT_MS = 60_000L
 const val GUESTBOOK_PAGE_SIZE = 30
+
+@kotlinx.serialization.Serializable
+data class NaverLoginDto(val accessToken: String)

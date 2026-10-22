@@ -12,12 +12,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.security.SecureRandom
-import java.time.Duration
 import java.util.UUID
 
 private val CARRIERS = setOf("SKT", "KT", "LGU+", "SKT 알뜰폰", "KT 알뜰폰", "LGU+ 알뜰폰")
@@ -147,23 +142,5 @@ internal fun identityInputError(req: IdentityStartRequest): String? {
         req.carrier !in CARRIERS -> "invalid_carrier"
         !Regex("^01\\d{8,9}$").matches(phone) -> "invalid_phone"
         else -> null
-    }
-}
-
-/** Supabase 관리자 API (서버 비밀키). 가입을 그만둔 빈 계정 지우기에만 쓴다. */
-private object SupabaseAdmin {
-    private val url = Env.get("SUPABASE_URL")?.trimEnd('/')
-    private val key = Env.get("SUPABASE_SECRET_KEY")?.takeIf { it.isNotBlank() }
-    private val http by lazy { HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build() }
-
-    fun deleteUser(id: UUID): Boolean {
-        if (url == null || key == null) return false
-        val req = HttpRequest.newBuilder(URI.create("$url/auth/v1/admin/users/$id"))
-            .header("apikey", key)
-            .header("Authorization", "Bearer $key")
-            .timeout(Duration.ofSeconds(10))
-            .DELETE()
-            .build()
-        return runCatching { http.send(req, HttpResponse.BodyHandlers.discarding()).statusCode() in 200..299 }.getOrDefault(false)
     }
 }

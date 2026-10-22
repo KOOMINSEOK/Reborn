@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
@@ -14,6 +16,12 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        // 소셜 로그인 키는 local.properties (git 에 안 올라감)
+        val keys = Properties().apply { rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use(::load) }
+        fun key(name: String) = "\"${keys.getProperty(name, "").trim()}\""
+        buildConfigField("String", "NAVER_CLIENT_ID", key("NAVER_CLIENT_ID"))
+        buildConfigField("String", "NAVER_CLIENT_SECRET", key("NAVER_CLIENT_SECRET"))
     }
 
     buildTypes {
@@ -24,6 +32,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -48,6 +57,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.koin.core)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.naver.oauth)
 
 
     debugImplementation(libs.compose.uiTooling)

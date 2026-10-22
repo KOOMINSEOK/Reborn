@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.core.auth.CurrentUserIdUseCase
 import com.gentlelady.reborn.core.auth.EmailRateLimitedException
 import com.gentlelady.reborn.core.auth.InvalidCodeException
+import com.gentlelady.reborn.core.auth.OAuthRedirects
+import com.gentlelady.reborn.core.auth.SocialLoginLauncher
 import com.gentlelady.reborn.core.auth.WeakPasswordException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -30,6 +32,9 @@ private const val HANDLE_CHECK_DEBOUNCE_MS = 400L
 class SignupViewModel(
     private val repository: SignupRepository,
     private val currentUserId: CurrentUserIdUseCase,
+    /** 소셜 로그인 창. 없는 플랫폼이면 null → "준비 중" */
+    private val social: SocialLoginLauncher? = null,
+    redirects: kotlinx.coroutines.flow.Flow<String> = OAuthRedirects.uris,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SignupState())
@@ -55,6 +60,7 @@ class SignupViewModel(
                 }
             }
         }
+        viewModelScope.launch { redirects.collect(::onOAuthRedirect) }
     }
 
     fun onIntent(intent: SignupIntent) {
@@ -93,12 +99,53 @@ class SignupViewModel(
 
     private fun start(method: SignupMethod, provider: String) {
         if (method == SignupMethod.SOCIAL) {
-            // ponytail: 카카오·네이버·Google 키를 받기 전까지 버튼만 — 소셜 로그인이 붙으면 세션이 생기고 resume() 이 약관부터 잇는다
-            val name = when (provider) { "kakao" -> "카카오"; "naver" -> "네이버"; else -> "Google" }
-            _state.update { it.copy(message = "${name} 로그인은 준비 중이에요. 지금은 이메일로 시작해 주세요.") }
+            socialLogin(provider)
             return
         }
         _state.update { SignupState(gate = SignupGate.SIGNUP, step = SignupStep.TERMS, method = method, provider = provider) }
+    }
+
+    /**
+     * 소셜 로그인 → 세션이 생기면 세션 변화를 보고 resume() 이 이어간다
+     * (새 사람이면 약관부터, 가입을 마친 사람이면 바로 앱 — 가입·로그인 같은 버튼).
+     */
+    private fun socialLogin(provider: String) {
+        val launcher = social
+        if (launcher == null || provider == "google") {
+            // ponytail: Google 은 OAuth 클라이언트 키를 받으면 카카오와 같은 길(브라우저)로 붙인다
+            _state.update { it.copy(message = "${providerLabel(provider)} 로그인은 준비 중이에요. 다른 방법으로 시작해 주세요.") }
+            return
+        }
+        if (_state.value.isBusy) return
+        when (provider) {
+            "naver" -> busy(onError = { "네이버 로그인에 실패했어요. 잠시 후 다시 시도해 주세요." }) {
+                val token = launcher.naverAccessToken()
+                if (token == null) {
+                    _state.update { it.copy(isBusy = false) } // 사용자가 닫음
+                } else {
+                    repository.naverLogin(token) // 세션이 생기면 resume() 이 isBusy 를 푼다
+                }
+            }
+            else -> busy(onError = { "${providerLabel(provider)} 로그인 창을 열지 못했어요." }) {
+                launcher.openBrowser(repository.oauthUrl(provider))
+                // 브라우저에서 돌아올 때까지 기다리지 않는다 (그냥 닫고 돌아올 수도 있다)
+                _state.update { it.copy(isBusy = false) }
+            }
+        }
+    }
+
+    private fun onOAuthRedirect(uri: String) {
+        val params = uri.substringAfter('?', "").substringBefore('#').split('&')
+            .mapNotNull { p -> p.split('=', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] } }.toMap()
+        val code = params["code"]
+        if (code == null) {
+            // error=access_denied 등 — 동의 화면에서 취소했거나 설정 문제
+            if (params["error"] != null) _state.update { it.copy(message = "로그인을 마치지 못했어요. 다시 시도해 주세요.") }
+            return
+        }
+        busy(onError = { "로그인을 마치지 못했어요. 다시 시도해 주세요." }) {
+            repository.completeOAuth(code) // 세션이 생기면 resume() 이 이어간다
+        }
     }
 
     /** 서버가 아는 가입 진행 상태로 다음 단계를 정한다. 앱을 켰을 때 묻다 실패하면(오프라인) 그냥 앱으로. */

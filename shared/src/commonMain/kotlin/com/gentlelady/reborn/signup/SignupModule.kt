@@ -5,5 +5,5 @@ import org.koin.dsl.module
 
 val signupModule = module {
     single<SignupRepository> { SignupRepositoryImpl(get(), get(), get()) }
-    factory { SignupViewModel(get(), CurrentUserIdUseCase(get())) }
+    factory { SignupViewModel(get(), CurrentUserIdUseCase(get()), getOrNull()) }
 }
