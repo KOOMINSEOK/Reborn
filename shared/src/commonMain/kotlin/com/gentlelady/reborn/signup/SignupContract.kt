@@ -85,6 +85,8 @@ data class SignupState(
     val fieldError: String? = null,
     /** "가입을 그만둘까요?" */
     val showAbandonConfirm: Boolean = false,
+    /** 네이버: 이 기기 계정으로 계속 / 다른 계정으로 로그인 고르는 시트 */
+    val showNaverChooser: Boolean = false,
 ) {
     val passwordRules: PasswordRules get() = PasswordRules.of(password)
     val passwordsMatch: Boolean get() = password.isNotEmpty() && password == passwordConfirm
@@ -132,6 +134,8 @@ sealed interface SignupIntent {
     /** "이미 가입된 계정" 시트의 "○○로 로그인" — 가입 중인 빈 계정을 지우고 기존 계정 로그인으로 */
     object UseExistingAccount : SignupIntent
     object DismissExistingAccount : SignupIntent
+    data class NaverLogin(val otherAccount: Boolean) : SignupIntent
+    object DismissNaverChooser : SignupIntent
     data class UpdateHandle(val handle: String) : SignupIntent
     data class UpdateAvatar(val jpeg: ByteArray?) : SignupIntent
     object SubmitHandle : SignupIntent

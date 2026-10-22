@@ -49,6 +49,10 @@ class SignupViewModelTest {
             if (code == "123456") IdentityVerify.Verified("이윤주") else IdentityVerify.Wrong
         override suspend fun checkHandle(handle: String) = HandleStatus.AVAILABLE.also { checked += handle }
         override suspend fun complete(handle: String, purpose: String, avatar: ByteArray?) = completeResult.also { calls += "complete:$handle:$purpose" }
+        var oauthCodes = mutableListOf<String>()
+        override suspend fun oauthUrl(provider: String) = "https://login/$provider"
+        override suspend fun completeOAuth(code: String) { oauthCodes += code; store.current = Session("AT", "RT", 0, userId = "social-user") }
+        override suspend fun naverLogin(accessToken: String) { calls += "naver:$accessToken"; store.current = Session("AT", "RT", 0, userId = "naver-user") }
         var abandonFails = false
         override suspend fun abandon() {
             calls += "abandon"
@@ -238,5 +242,61 @@ class SignupViewModelTest {
         assertTrue(store.current != null) // 서버가 못 지웠으면 로그아웃도 안 한다
         assertEquals(SignupStep.IDENTITY, vm.state.value.step)
         assertEquals("가입을 그만두지 못했어요. 잠시 후 다시 시도해 주세요.", vm.state.value.message)
+    }
+
+    private class FakeLauncher(var naverToken: String?) : com.gentlelady.reborn.core.auth.SocialLoginLauncher {
+        val opened = mutableListOf<String>()
+        val naverAsks = mutableListOf<Boolean>()
+        override fun openBrowser(url: String) { opened += url }
+        override suspend fun naverAccessToken(otherAccount: Boolean) = naverToken.also { naverAsks += otherAccount }
+    }
+
+    @Test
+    fun kakaoOpensBrowserThenRedirectSignsInAndResumesAtTerms() = runTest(dispatcher) {
+        val store = SessionStore()
+        val repo = FakeRepo(store).apply { server = server.copy(provider = "kakao", hasPassword = true) }
+        val launcher = FakeLauncher(null)
+        val redirects = kotlinx.coroutines.flow.MutableSharedFlow<String>()
+        val vm = SignupViewModel(repo, CurrentUserIdUseCase(store), launcher, redirects)
+        runCurrent()
+        vm.onIntent(SignupIntent.Start(SignupMethod.SOCIAL, "kakao"))
+        runCurrent()
+        assertEquals(listOf("https://login/kakao"), launcher.opened)
+        assertFalse(vm.state.value.isBusy)
+
+        redirects.emit("com.gentlelady.reborn://login-callback?error=access_denied")
+        runCurrent()
+        assertTrue(store.current == null)
+        redirects.emit("com.gentlelady.reborn://login-callback?code=abc")
+        runCurrent()
+        assertEquals(listOf("abc"), repo.oauthCodes)
+        assertEquals(SignupStep.TERMS, vm.state.value.step) // 새 사람 → 약관부터
+        assertEquals(SignupMethod.SOCIAL, vm.state.value.method)
+        assertFalse(vm.state.value.isBusy)
+    }
+
+    @Test
+    fun naverCancelStaysAndSignedUpUserGoesStraightIn() = runTest(dispatcher) {
+        val store = SessionStore()
+        val repo = FakeRepo(store)
+        val launcher = FakeLauncher(null)
+        val vm = SignupViewModel(repo, CurrentUserIdUseCase(store), launcher, kotlinx.coroutines.flow.emptyFlow())
+        runCurrent()
+        vm.onIntent(SignupIntent.Start(SignupMethod.SOCIAL, "naver"))
+        assertTrue(vm.state.value.showNaverChooser) // 이 기기 계정 / 다른 계정 고르기
+        vm.onIntent(SignupIntent.NaverLogin(otherAccount = false))
+        runCurrent()
+        assertFalse(vm.state.value.showNaverChooser)
+        assertEquals(SignupStep.START, vm.state.value.step) // 창을 닫음 → 그대로
+        assertFalse(vm.state.value.isBusy)
+
+        launcher.naverToken = "NT"
+        repo.server = repo.server.copy(provider = "naver", onboarded = true)
+        vm.onIntent(SignupIntent.Start(SignupMethod.SOCIAL, "naver"))
+        vm.onIntent(SignupIntent.NaverLogin(otherAccount = true))
+        runCurrent()
+        assertEquals(listOf(false, true), launcher.naverAsks)
+        assertTrue("naver:NT" in repo.calls)
+        assertEquals(SignupGate.DONE, vm.state.value.gate) // 이미 가입한 사람 → 바로 앱
     }
 }

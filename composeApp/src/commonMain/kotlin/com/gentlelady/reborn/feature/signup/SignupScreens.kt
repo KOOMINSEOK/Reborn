@@ -118,6 +118,7 @@ fun SignupFlow(state: SignupState, onIntent: (SignupIntent) -> Unit) {
     }
 
     state.existingAccount?.let { ExistingAccountSheet(it, state.isBusy, onIntent) }
+    if (state.showNaverChooser) NaverChooserSheet(onIntent)
 
     if (state.showAbandonConfirm) {
         AlertDialog(
@@ -526,6 +527,50 @@ internal fun formatPhone(digits: String): String = when {
 }
 
 // ---------------------------------------------------------------- 이미 가입된 계정
+
+/** 네이버엔 계정 선택 화면이 없어 앱이 묻는다 (카카오의 계정 선택처럼) */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NaverChooserSheet(onIntent: (SignupIntent) -> Unit) {
+    ModalBottomSheet(onDismissRequest = { onIntent(SignupIntent.DismissNaverChooser) }, containerColor = Color.White) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+            Text("네이버로 시작하기", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text("어떤 네이버 계정으로 로그인할까요?", fontSize = 14.sp, color = RebornSlateGray)
+            Spacer(Modifier.height(20.dp))
+            NaverChoice("이 기기의 네이버 계정으로 계속", "최근에 로그인한 네이버 계정을 사용해요") {
+                onIntent(SignupIntent.NaverLogin(otherAccount = false))
+            }
+            Spacer(Modifier.height(10.dp))
+            NaverChoice("다른 네이버 계정으로 로그인", "아이디와 비밀번호를 새로 입력해요") {
+                onIntent(SignupIntent.NaverLogin(otherAccount = true))
+            }
+        }
+    }
+}
+
+@Composable
+private fun NaverChoice(title: String, subtitle: String, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .border(1.dp, RebornGridBorderGray, RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.size(40.dp).background(RebornNaverGreen, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
+            Text("N", color = Color.White, fontWeight = FontWeight.ExtraBold)
+        }
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(2.dp))
+            Text(subtitle, fontSize = 13.sp, color = RebornSlateGray)
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

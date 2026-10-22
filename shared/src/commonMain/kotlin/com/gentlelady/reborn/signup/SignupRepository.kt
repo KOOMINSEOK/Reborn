@@ -49,6 +49,12 @@ interface SignupRepository {
     suspend fun checkHandle(handle: String): HandleStatus
     /** 가입 마무리. 아이디가 그 사이 잡혔으면 false */
     suspend fun complete(handle: String, purpose: String, avatar: ByteArray?): Boolean
+    /** 카카오 등 브라우저 로그인 주소 */
+    suspend fun oauthUrl(provider: String): String
+    /** 브라우저 로그인에서 돌아온 코드로 로그인 (새 사람이면 계정이 생긴다) */
+    suspend fun completeOAuth(code: String)
+    /** 네이버 토큰으로 로그인 (새 사람이면 계정이 생긴다) */
+    suspend fun naverLogin(accessToken: String)
     /** 가입을 그만두고 로그아웃 (서버가 가입 중인 계정을 지운다). 서버가 못 지우면 예외 — 로그아웃도 안 한다 */
     suspend fun abandon()
 }
@@ -122,6 +128,10 @@ class SignupRepositoryImpl(
     }
 
     /** 가입을 그만두고 이 기기에서 로그아웃 (서버가 가입 중인 계정을 지운다). 서버 실패해도 로그아웃은 한다. */
+    override suspend fun oauthUrl(provider: String) = auth.oauthUrl(provider)
+    override suspend fun completeOAuth(code: String) = auth.completeOAuth(code)
+    override suspend fun naverLogin(accessToken: String) = auth.signInWith(api.naverLogin(accessToken))
+
     /** 서버가 계정을 지운 뒤에만 로그아웃 — 실패하면 예외 (화면이 다시 시도를 띄운다. 계정·동의 기록이 몰래 남지 않게) */
     override suspend fun abandon() {
         api.abandonSignup()

@@ -10,11 +10,21 @@
         android:usesCleartextTraffic="true">
         <activity
             android:name="com.gentlelady.reborn.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- 카카오 등 브라우저 로그인 뒤 돌아오는 주소 (OAUTH_REDIRECT) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="com.gentlelady.reborn" android:host="login-callback" />
             </intent-filter>
         </activity>
     </application>

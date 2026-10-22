@@ -27,6 +27,9 @@ private data class OtpRequest(val email: String, @SerialName("create_user") val 
 private data class OtpVerify(val type: String, val email: String, val token: String)
 
 @Serializable
+private data class PkceGrant(@SerialName("auth_code") val authCode: String, @SerialName("code_verifier") val codeVerifier: String)
+
+@Serializable
 private data class PasswordUpdate(val password: String, val data: Map<String, Boolean>)
 
 /** Supabase GoTrue 직접 호출. 여기서 나온 토큰이 RebornApi 호출에 쓰인다. */
@@ -72,6 +75,14 @@ class SupabaseAuthApi(private val client: HttpClient) {
         }
         if (response.status.value == 422) throw WeakPasswordException()
         check(response.status.isSuccess()) { "set password failed: ${response.status}" }
+    }
+
+    /** 브라우저 로그인(카카오 등)에서 돌아온 코드 → 세션. 코드가 틀렸거나 만료면 [InvalidCodeException] */
+    suspend fun exchangeCode(code: String, verifier: String): SessionDto {
+        val response = request("pkce") { setBody(PkceGrant(code, verifier)) }
+        if (response.status.value in CLIENT_ERRORS) throw InvalidCodeException()
+        check(response.status.isSuccess()) { "code exchange failed: ${response.status}" }
+        return response.body()
     }
 
     /**
