@@ -1,5 +1,7 @@
 package com.gentlelady.reborn.server.plugins
 
+import com.gentlelady.reborn.server.chat.ChatRepository
+import com.gentlelady.reborn.server.chat.chatRoutes
 import com.gentlelady.reborn.server.feed.FeedRepository
 import com.gentlelady.reborn.server.feed.feedRoutes
 import com.gentlelady.reborn.server.interaction.InteractionRepo
@@ -57,6 +59,7 @@ fun Application.configureRouting() {
         memorialRoutes(memorial, historyInteractions)
         profileRoutes(profile)
         notificationRoutes(notifications)
+        chatRoutes(ChatRepository())
         signupRoutes(SignupRepository())
         naverRoutes()
         uploadRoutes()

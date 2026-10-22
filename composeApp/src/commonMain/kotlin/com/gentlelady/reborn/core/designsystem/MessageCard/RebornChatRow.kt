@@ -25,6 +25,7 @@ fun RebornChatRow(
     modifier: Modifier = Modifier,
     isUnread: Boolean = false,            // 메시지 탭용: 안읽음 상태 분기
     isMemorialMode: Boolean = false,      // 방명록 탭용: 고인 모드 분기
+    avatarUrl: String = "",
     onClick: () -> Unit
 ) {
     // 시안 규칙: 첫 2개 스레드(안읽음)는 연한 블루 배경(RebornLightBlueBg), 읽은 상태는 흰색 배경
@@ -45,7 +46,11 @@ fun RebornChatRow(
                 shape = CircleShape,
                 color = Color.LightGray // 임시 에셋 플레이스홀더
             ) {
-                // 원형 아바타 이미지 안착부
+                if (avatarUrl.isNotBlank()) {
+                    com.gentlelady.reborn.core.designsystem.components.RebornImage(
+                        url = avatarUrl, fallback = null, contentDescription = null, modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
 
             // 시안 규칙: 방명록(Memorial) 모드일 때 아바타 우하단 candle badge 등 indicator 분기 영역

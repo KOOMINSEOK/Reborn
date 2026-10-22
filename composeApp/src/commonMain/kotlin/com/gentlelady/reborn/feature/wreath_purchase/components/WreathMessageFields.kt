@@ -1,6 +1,7 @@
 // composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/wreath_purchase/components/WreathMessageFields.kt
 package com.gentlelady.reborn.feature.wreath_purchase.components
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -34,9 +35,10 @@ fun WreathMessageTextArea(
             .background(RebornBackgroundGray, RoundedCornerShape(12.dp))
             .border(1.dp, RebornTopBarDividerGray, RoundedCornerShape(12.dp))
     ) {
+        val (imeText, onImeText) = rememberImeSafeText(value, onValueChange, accept = { it.length <= maxLength })
         BasicTextField(
-            value = value,
-            onValueChange = { if (it.length <= maxLength) onValueChange(it) },
+            value = imeText,
+            onValueChange = onImeText,
             textStyle = TextStyle(fontSize = 14.sp, color = Color.Black, lineHeight = 20.sp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -73,9 +75,10 @@ fun WreathSenderNameField(
             .border(1.dp, RebornTopBarDividerGray, RoundedCornerShape(12.dp))
             .padding(12.dp)
     ) {
+        val (imeText, onImeText) = rememberImeSafeText(value, onValueChange)
         BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = imeText,
+            onValueChange = onImeText,
             textStyle = TextStyle(fontSize = 14.sp, color = Color.Black),
             modifier = Modifier.fillMaxWidth(),
             decorationBox = { innerField ->

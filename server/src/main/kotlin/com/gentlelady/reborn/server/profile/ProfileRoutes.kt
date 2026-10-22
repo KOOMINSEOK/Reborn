@@ -45,6 +45,13 @@ fun Route.profileRoutes(repo: ProfileRepository) {
                 ?: call.respond(HttpStatusCode.NotFound, ErrorResponse("profile_not_found"))
         }
 
+        /** 이름·아이디로 사람 찾기 (메시지 보낼 사람). 가입을 마친 사람만, 나·차단 관계는 빼고 */
+        get("/users/search") {
+            val q = call.request.queryParameters["q"].orEmpty().trim()
+            if (q.isEmpty() || q.length > 30) return@get respondUserList(emptyList())
+            respondUserList(repo.search(call.userId(), q, page()))
+        }
+
         route("/users/{id}") {
             get {
                 val target = UUID.fromString(call.parameters["id"])

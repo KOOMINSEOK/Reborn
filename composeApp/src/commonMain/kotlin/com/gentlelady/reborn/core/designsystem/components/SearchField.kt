@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.core.designsystem.components
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -76,9 +77,10 @@ fun SearchField(
             if (query.isEmpty()) {
                 Text(text = placeholder, fontSize = 14.sp, color = RebornSlateGray)
             }
+            val (imeText, onImeText) = rememberImeSafeText(query, onQueryChange)
             BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
+                value = imeText,
+                onValueChange = onImeText,
                 singleLine = true,
                 textStyle = TextStyle(fontSize = 14.sp, color = Color.Black),
                 cursorBrush = SolidColor(RebornCobaltBlue),

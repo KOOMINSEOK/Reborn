@@ -40,6 +40,9 @@ sealed interface MessageIntent {
     data class DeleteItem(val id: String, val tab: MessageTab) : MessageIntent
 
     object ClickWriteAction : MessageIntent
+
+    /** 메시지 화면에 들어올 때마다 대화방 목록을 다시 (다른 화면에서 보낸·받은 메시지 반영) */
+    data object Refresh : MessageIntent
 }
 
 // 3. 도메인 모델 데이터 클래스 (공용 RebornChatRow에 주입될 매핑 데이터)
@@ -87,5 +90,11 @@ data class ChatMessage(
     val id: String,
     val text: String,
     val isMine: Boolean,            // true면 우측 파란 말풍선, false면 좌측 회색 말풍선
-    val showAvatar: Boolean = false // 상대 말풍선 묶음의 마지막에만 아바타 노출
+    val showAvatar: Boolean = false, // 상대 말풍선 묶음의 마지막에만 아바타 노출
+    /** 서버 시각 (보내는 중이면 빈 값) — 날짜 구분선에 쓴다 */
+    val createdAt: String = "",
+    /** 보내는 중 (서버가 아직 받지 않음) */
+    val pending: Boolean = false,
+    /** 보내지 못함 — 눌러서 다시 보내기 */
+    val failed: Boolean = false,
 )

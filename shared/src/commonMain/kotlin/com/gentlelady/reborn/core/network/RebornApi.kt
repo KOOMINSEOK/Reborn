@@ -33,6 +33,12 @@ import com.gentlelady.reborn.core.network.dto.PostDto
 import com.gentlelady.reborn.core.network.dto.PublicProfileDto
 import com.gentlelady.reborn.core.network.dto.UploadDto
 import com.gentlelady.reborn.core.network.dto.UserListDto
+import com.gentlelady.reborn.core.network.dto.ConversationDto
+import com.gentlelady.reborn.core.network.dto.ConversationListDto
+import com.gentlelady.reborn.core.network.dto.MessageDto
+import com.gentlelady.reborn.core.network.dto.MessageListDto
+import com.gentlelady.reborn.core.network.dto.OpenConversationDto
+import com.gentlelady.reborn.core.network.dto.SendMessageDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
@@ -166,6 +172,38 @@ class RebornApi(
     suspend fun markNotificationsRead(upTo: String) {
         client.post("notifications/read") { parameter("upTo", upTo) }
     }
+
+    // ---------- 메시지 ----------
+    suspend fun conversations(): ConversationListDto = client.get("conversations").body()
+
+    /** 그 사람과의 대화방 (없으면 서버가 만든다). 차단 관계면 403 */
+    suspend fun openConversation(userId: String): ConversationDto =
+        client.post("conversations") { setBody(OpenConversationDto(userId)) }.body()
+
+    suspend fun conversation(id: String): ConversationDto = client.get("conversations/$id").body()
+
+    /** [before] 더 오래된 것(최신부터) / [after] 그 뒤에 온 것(오래된 순). 둘 다 없으면 최신부터 */
+    suspend fun messages(id: String, before: String? = null, after: String? = null): MessageListDto =
+        client.get("conversations/$id/messages") {
+            before?.let { parameter("before", it) }
+            after?.let { parameter("after", it) }
+        }.body()
+
+    suspend fun sendMessage(id: String, body: String, clientId: String): MessageDto =
+        client.post("conversations/$id/messages") { setBody(SendMessageDto(body, clientId)) }.body()
+
+    /** [upTo] = 받은 가장 최신 메시지의 createdAt — 그 뒤에 온 건 안 읽음으로 남는다 */
+    suspend fun markConversationRead(id: String, upTo: String) {
+        client.post("conversations/$id/read") { parameter("upTo", upTo) }
+    }
+
+    /** 내 목록에서만 지운다 */
+    suspend fun hideConversation(id: String) {
+        client.delete("conversations/$id")
+    }
+
+    /** 이름·아이디로 사람 찾기 */
+    suspend fun searchUsers(q: String): UserListDto = client.get("users/search") { parameter("q", q) }.body()
 
     // ---------- 회원가입 ----------
     suspend fun signupState(): SignupStateDto = client.get("me/signup").body()
