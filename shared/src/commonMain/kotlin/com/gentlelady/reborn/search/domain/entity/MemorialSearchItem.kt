@@ -11,6 +11,8 @@ data class MemorialSearchItem(
     val location: String,
     val flowerCount: String,             // 리스트 스냅샷 정보 (표시용, 예: "24.8k")
     val profileImageUrl: DrawableResource?,
+    /** 서버 사진 주소 (있으면 [profileImageUrl] 대신) */
+    val imageUrl: String? = null,
     val isVerified: Boolean = false,     // UI 스크린샷에 있던 블루 인증 마크 대응
     val isDeceased: Boolean = true,      // true면 이름 앞에 '故' 표시
     val hasProfile: Boolean = true,      // '프로필' 버튼 노출 여부

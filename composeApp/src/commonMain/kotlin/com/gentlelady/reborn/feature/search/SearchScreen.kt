@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.ui.unit.sp
+import com.gentlelady.reborn.core.theme.RebornSlateGray
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -20,7 +22,8 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun SearchScreen(
     state: SearchState,
-    onIntent: (SearchIntent) -> Unit
+    onIntent: (SearchIntent) -> Unit,
+    onAuthorClick: (String) -> Unit = {},
 ) {
     Scaffold(
         containerColor = RebornBackground,
@@ -44,6 +47,10 @@ fun SearchScreen(
                 .padding(padding)
         ) {
             if (state.isSearching) {
+                val note = state.error ?: if (!state.isLoading && state.results.isEmpty()) "찾는 사람이나 추모 페이지가 없어요." else null
+                if (note != null) item(key = "note") {
+                    Text(note, fontSize = 14.sp, color = RebornSlateGray, modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp))
+                }
                 // 이름 검색 결과: 사용자/메모리얼 카드 (currentTab 기준 정렬)
                 items(state.results, key = { it.id }) { item ->
                     MemorialProfileItem(
@@ -54,7 +61,7 @@ fun SearchScreen(
             } else {
                 // 검색 전 기본 화면: 무작위 게시글 피드
                 items(state.randomFeed, key = { it.id }) { post ->
-                    PostItem(post = post)
+                    PostItem(post = post, onAuthorClick = onAuthorClick)
                     HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)
                 }
             }

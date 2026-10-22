@@ -51,13 +51,12 @@ internal fun MemorialProfileItem(
                 shape = CircleShape,
                 color = RebornSurfaceVariant
             ) {
-                item.profileImageUrl?.let { url ->
-                    Image(
-                        painter = painterResource(url),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
-                    )
-                }
+                com.gentlelady.reborn.core.designsystem.components.RebornImage(
+                    url = item.imageUrl,
+                    fallback = item.profileImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
             Spacer(modifier = Modifier.width(14.dp))

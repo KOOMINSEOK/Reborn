@@ -167,6 +167,16 @@ class FeedRepository {
             viewerId, authorId, viewerId, viewerId, viewerId, viewerId, offset, limit,
         ) { it.toPost("profile") }
 
+    /** 남의 볼 수 있는 게시물 아무거나 (검색 첫 화면). ponytail: order by random() — 게시물이 아주 많아지면 표본 추출로 */
+    fun randomPosts(viewerId: UUID, limit: Int): List<PostResponse> =
+        Db.query(
+            POST_SELECT + " where p.status = 'published' and p.author_id <> ?" + POST_VISIBLE + NOT_BLOCKED + """
+            order by random()
+            limit ?
+            """.trimIndent(),
+            viewerId, viewerId, viewerId, viewerId, viewerId, viewerId, limit,
+        ) { it.toPost("search") }
+
     /** 내 글 + 팔로우한 사람들의 최신 게시물. (내 글이 빠지면 방금 올린 글이 홈에 안 보인다) */
     fun followingFeed(viewerId: UUID, limit: Int): List<PostResponse> =
         Db.query(

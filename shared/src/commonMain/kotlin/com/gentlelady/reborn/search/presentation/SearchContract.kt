@@ -40,4 +40,6 @@ sealed interface SearchIntent {
     data object ExecuteSearch : SearchIntent
     data class ChangeTab(val tab: SearchTab) : SearchIntent
     data class ClickResultItem(val itemId: String) : SearchIntent
+    /** 검색 탭에 들어올 때 (검색어가 없으면 첫 화면 게시물을 새로) */
+    data object Refresh : SearchIntent
 }

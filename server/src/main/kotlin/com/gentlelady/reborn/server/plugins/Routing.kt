@@ -13,6 +13,8 @@ import com.gentlelady.reborn.server.notification.NotificationRepository
 import com.gentlelady.reborn.server.notification.notificationRoutes
 import com.gentlelady.reborn.server.profile.ProfileRepository
 import com.gentlelady.reborn.server.profile.profileRoutes
+import com.gentlelady.reborn.server.search.SearchRepository
+import com.gentlelady.reborn.server.search.searchRoutes
 import com.gentlelady.reborn.server.signup.SignupRepository
 import com.gentlelady.reborn.server.signup.naverRoutes
 import com.gentlelady.reborn.server.signup.signupRoutes
@@ -30,6 +32,7 @@ fun Application.configureRouting() {
     val feed = FeedRepository()
     val memorial = MemorialRepository()
     val profile = ProfileRepository()
+    val search = SearchRepository()
     val notifications = NotificationRepository()
     val postInteractions = InteractionRepo("posts", "post_likes", "post_comments", "post_id")
     val historyInteractions = InteractionRepo("memorial_history", "history_likes", "history_comments", "history_id")
@@ -56,8 +59,9 @@ fun Application.configureRouting() {
         }
 
         feedRoutes(feed)
-        memorialRoutes(memorial, historyInteractions)
-        profileRoutes(profile)
+        memorialRoutes(memorial, historyInteractions, search)
+        profileRoutes(profile, search)
+        searchRoutes(search, feed)
         notificationRoutes(notifications)
         chatRoutes(ChatRepository())
         signupRoutes(SignupRepository())

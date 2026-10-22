@@ -196,6 +196,7 @@ fun MainScreen(
 
             // 2. 검색 화면 그래프
             searchNavGraph(
+                navController = navController,
                 state = searchState,
                 onIntent = onSearchIntent
             )
