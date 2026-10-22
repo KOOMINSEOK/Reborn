@@ -24,6 +24,7 @@ object SeedRunner {
             return
         }
         runCatching {
+            repairSeedAuthUsers()
             // 시드 전용 기록 표. 마이그레이션이 아니라 여기서 만든다 → SEED_DEV 를 켠 DB 에만 생긴다
             Db.update("create table if not exists seed_runs (version text primary key, ran_at timestamptz not null default now())")
             if (Db.queryFirst("select 1 from seed_runs where version = ?", SeedData.VERSION) { true } == true) {
@@ -47,15 +48,39 @@ object SeedRunner {
             }
     }
 
+    /**
+     * 예전 시드는 auth.users 의 토큰 칸을 NULL 로 넣었다 → Supabase(GoTrue)가 그 줄을 못 읽어
+     * 관리자 사용자 목록·그 계정 세션 만들기가 "Database error finding user" 로 실패했다. 빈 글자로 채운다 (여러 번 해도 같음)
+     */
+    private fun repairSeedAuthUsers() {
+        Db.update(
+            """
+            update auth.users set
+                confirmation_token = coalesce(confirmation_token, ''), recovery_token = coalesce(recovery_token, ''),
+                email_change_token_new = coalesce(email_change_token_new, ''), email_change = coalesce(email_change, ''),
+                email_change_token_current = coalesce(email_change_token_current, ''),
+                phone_change = coalesce(phone_change, ''), phone_change_token = coalesce(phone_change_token, ''),
+                reauthentication_token = coalesce(reauthentication_token, '')
+            where id::text = any(?) and (confirmation_token is null or recovery_token is null or email_change_token_new is null
+                or email_change is null or email_change_token_current is null or phone_change is null
+                or phone_change_token is null or reauthentication_token is null)
+            """.trimIndent(),
+            SeedData.users.map { it.id.toString() }.toTypedArray(),
+        )
+    }
+
     private fun seedUsers() {
         SeedData.users.forEach { u ->
             // auth.users 삽입 → V2 트리거가 public.profiles 자동 생성
             Db.update(
                 """
                 insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
-                    email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
+                    email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
+                    confirmation_token, recovery_token, email_change_token_new, email_change,
+                    email_change_token_current, phone_change, phone_change_token, reauthentication_token)
                 values ('00000000-0000-0000-0000-000000000000', ?, 'authenticated', 'authenticated', ?, '',
-                    now(), now(), now(), '{"provider":"email","providers":["email"]}'::jsonb, ?::jsonb)
+                    now(), now(), now(), '{"provider":"email","providers":["email"]}'::jsonb, ?::jsonb,
+                    '', '', '', '', '', '', '', '')
                 on conflict (id) do nothing
                 """.trimIndent(),
                 u.id, u.email, """{"name":"${u.name}"}""",
