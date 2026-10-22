@@ -152,7 +152,13 @@ class SignupViewModel(
     private fun resume(fromAppStart: Boolean) {
         resumeJob?.cancel()
         resumeJob = viewModelScope.launch {
-            val result = runCatching { repository.state() }
+            var result = runCatching { repository.state() }
+            // 막 로그인한 직후엔 계정이 생기는 중이라 한두 번 실패할 수 있다 (카카오 첫 로그인) → 잠깐 뒤 다시
+            repeat(if (fromAppStart) 0 else 2) {
+                if (result.isSuccess || result.exceptionOrNull() is CancellationException) return@repeat
+                delay(1_000)
+                result = runCatching { repository.state() }
+            }
             if (result.exceptionOrNull() is CancellationException) return@launch
             val server = result.getOrNull()
             if (server == null) {
