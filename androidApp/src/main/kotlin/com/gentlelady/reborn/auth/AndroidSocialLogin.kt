@@ -28,6 +28,8 @@ class AndroidSocialLogin : SocialLoginLauncher {
     }
 
     override suspend fun naverAccessToken(): String? = suspendCancellableCoroutine { cont ->
+        // SDK 가 기억한 토큰이 있으면 화면 없이 바로 그 계정이 된다 → 지우고 네이버 로그인 화면부터 (그만두기 뒤 다른 계정으로)
+        NaverIdLoginSDK.logout()
         NaverIdLoginSDK.authenticate(current(), object : OAuthLoginCallback {
             override fun onSuccess() {
                 cont.resume(NaverIdLoginSDK.getAccessToken())

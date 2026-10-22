@@ -42,7 +42,9 @@ class AuthRepository(
             .trimEnd('=').replace('+', '-').replace('/', '_')
         return "${com.gentlelady.reborn.core.network.ApiConfig.SUPABASE_URL}/auth/v1/authorize" +
             "?provider=$provider&redirect_to=${OAUTH_REDIRECT.encodeURLParameter()}" +
-            "&code_challenge=$challenge&code_challenge_method=s256"
+            "&code_challenge=$challenge&code_challenge_method=s256" +
+            // 시작 화면에서 고른 거니 매번 계정을 고르게 (전에 로그인한 계정으로 몰래 넘어가지 않게 — 그만두기 뒤 다른 계정으로)
+            "&prompt=select_account"
     }
 
     /** 로그인 창에서 돌아온 코드로 로그인. 연 적 없는 창의 코드면 [InvalidCodeException] */
