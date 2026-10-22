@@ -21,6 +21,8 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /** 새 메시지 확인 간격. ponytail: 대화창을 보는 동안만 물어본다 — 즉시 와야 하면 웹소켓·푸시로 */
 private const val POLL_MS = 3_000L
@@ -47,6 +49,8 @@ sealed interface ChatIntent {
     data class UpdateInput(val text: String) : ChatIntent
     object Send : ChatIntent
     object LoadOlder : ChatIntent
+    /** 보내지 못한 메시지를 같은 id 로 다시 (서버에 이미 저장됐어도 한 번만) */
+    data class Retry(val localId: String) : ChatIntent
     object MessageShown : ChatIntent
 }
 
@@ -61,18 +65,42 @@ class ChatViewModel(
 
     /** 받은 메시지 (id 로 겹침 없이). 화면 목록은 여기서 시각순으로 만든다 */
     private val lines = mutableMapOf<String, ChatLine>()
-    private val pending = mutableListOf<ChatMessage>()
+    /** 아직 서버 답을 못 받은 내 메시지 (보내는 중·실패). 키 = 서버에 보내는 client id */
+    private val pending = linkedMapOf<String, ChatMessage>()
+    /** 이 대화창을 연 사람. 계정이 바뀌면 이 화면은 더 쓰지 않는다 (이전 사람 메시지가 남거나 새 사람으로 보내지 않게) */
+    private var owner: String? = null
     /** 새 메시지 확인과 보내기 결과가 같은 목록을 동시에 고치지 않게 */
     private val mutex = Mutex()
     private var openJob: Job? = null
-    private var localSeq = 0
+
+    init {
+        viewModelScope.launch {
+            currentUserId.changes.collect { userId ->
+                val o = owner ?: return@collect
+                if (userId != o) closeForAccountChange()
+            }
+        }
+    }
+
+    private fun closeForAccountChange() {
+        openJob?.cancel()
+        sendJobs.forEach { it.cancel() }
+        sendJobs.clear()
+        lines.clear()
+        pending.clear()
+        _state.value = ChatState(isLoading = false, loadError = "다른 계정으로 바뀌었어요. 대화를 다시 열어 주세요.")
+    }
+
+    private val sendJobs = mutableListOf<Job>()
 
     fun onIntent(intent: ChatIntent) {
+        if (owner != null && currentUserId() != owner) return
         when (intent) {
             is ChatIntent.Open -> open { repository.room(intent.conversationId) }
             is ChatIntent.OpenWith -> open { repository.openWith(intent.userId) }
             is ChatIntent.UpdateInput -> _state.update { it.copy(input = intent.text.take(MAX_MESSAGE_LENGTH)) }
             is ChatIntent.Send -> send()
+            is ChatIntent.Retry -> retry(intent.localId)
             is ChatIntent.LoadOlder -> loadOlder()
             is ChatIntent.MessageShown -> _state.update { it.copy(message = null) }
         }
@@ -80,6 +108,10 @@ class ChatViewModel(
 
     private fun open(load: suspend () -> ChatPeer) {
         if (openJob != null) return // 같은 화면에서 다시 그려져도 한 번만
+        owner = currentUserId() ?: run {
+            _state.update { it.copy(isLoading = false, loadError = "로그인하면 메시지를 보낼 수 있어요.") }
+            return
+        }
         openJob = viewModelScope.launch {
             val peer = try {
                 load()
@@ -103,7 +135,7 @@ class ChatViewModel(
                 first.first.asReversed().forEach { lines[it.id] = it }
                 publish { it.copy(isLoading = false, olderCursor = first.second) }
             }
-            runCatching { repository.markRead(peer.conversationId) }
+            markRead(peer)
             poll(peer)
         }
     }
@@ -121,34 +153,51 @@ class ChatViewModel(
                 fresh.forEach { lines[it.id] = it }
                 publish()
             }
-            if (fresh.any { it.senderId != currentUserId() }) runCatching { repository.markRead(peer.conversationId) }
+            if (fresh.any { it.senderId != owner }) markRead(peer)
         }
     }
 
+    /** 받은 것까지만 읽음 (그 사이 서버에 온 건 안 읽음으로 남게) */
+    private suspend fun markRead(peer: ChatPeer) {
+        val newest = mutex.withLock { lines.values.maxByOrNull { Instant.parse(it.createdAt) }?.createdAt } ?: return
+        runCatching { repository.markRead(peer.conversationId, newest) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
     private fun send() {
-        val peer = _state.value.peer ?: return
         val text = _state.value.input.trim()
-        if (text.isEmpty()) return
-        val local = ChatMessage(id = "local-${localSeq++}", text = text, isMine = true, pending = true)
-        viewModelScope.launch {
+        if (text.isEmpty() || _state.value.peer == null) return
+        val clientId = Uuid.random().toString()
+        _state.update { it.copy(input = "") }
+        deliver(clientId, ChatMessage(id = clientId, text = text, isMine = true, pending = true))
+    }
+
+    private fun retry(localId: String) {
+        val failed = pending[localId]?.takeIf { it.failed } ?: return
+        deliver(localId, failed.copy(pending = true, failed = false))
+    }
+
+    /** 보내는 중으로 보여 주고 보낸다. 실패하면 그 자리에 "다시 보내기" — 같은 client id 라 서버엔 한 번만 */
+    private fun deliver(clientId: String, local: ChatMessage) {
+        val peer = _state.value.peer ?: return
+        sendJobs += viewModelScope.launch {
             mutex.withLock {
-                pending += local
-                publish { it.copy(input = "") }
+                pending[clientId] = local
+                publish()
             }
             val sent = try {
-                repository.send(peer.conversationId, text)
+                repository.send(peer.conversationId, local.text, clientId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 mutex.withLock {
-                    pending -= local
-                    // 입력 중이던 글은 지우지 않는다 — 비어 있을 때만 되돌린다
-                    publish { it.copy(input = it.input.ifEmpty { text }, message = "메시지를 보내지 못했어요. 다시 시도해 주세요.") }
+                    pending[clientId] = local.copy(pending = false, failed = true)
+                    publish { it.copy(message = "메시지를 보내지 못했어요. 눌러서 다시 보내 주세요.") }
                 }
                 return@launch
             }
             mutex.withLock {
-                pending -= local
+                pending -= clientId
                 lines[sent.id] = sent // 새 메시지 확인이 먼저 받아 왔어도 id 가 같아 한 번만
                 publish()
             }
@@ -176,11 +225,11 @@ class ChatViewModel(
 
     /** mutex 안에서만 */
     private fun publish(change: (ChatState) -> ChatState = { it }) {
-        val me = currentUserId()
+        val me = owner
         // 시각 글자는 소수점 자릿수가 달라 글자 순서로 비교하면 틀린다 → Instant 로
         val shown = lines.values.sortedWith(compareBy({ Instant.parse(it.createdAt) }, { it.id })).map {
             ChatMessage(id = it.id, text = it.text, isMine = it.senderId == me, createdAt = it.createdAt)
-        } + pending
+        } + pending.values
         _state.update { change(it).copy(messages = shown.withAvatars()) }
     }
 }

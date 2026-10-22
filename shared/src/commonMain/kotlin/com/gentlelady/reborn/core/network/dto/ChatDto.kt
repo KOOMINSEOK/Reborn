@@ -27,5 +27,6 @@ data class MessageListDto(val items: List<MessageDto>, val nextCursor: String? =
 @Serializable
 data class OpenConversationDto(val userId: String)
 
+/** [clientId] = 메시지마다 앱이 만든 id — 응답을 못 받아 다시 보내도 서버에 한 번만 */
 @Serializable
-data class SendMessageDto(val body: String)
+data class SendMessageDto(val body: String, val clientId: String)

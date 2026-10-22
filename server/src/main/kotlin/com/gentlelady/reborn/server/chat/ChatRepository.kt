@@ -31,8 +31,9 @@ data class MessageListResponse(val items: List<MessageResponse>, val nextCursor:
 @Serializable
 data class OpenConversationRequest(val userId: String)
 
+/** [clientId] = 앱이 메시지마다 만든 id. 다시 보내도 한 번만 저장된다 */
 @Serializable
-data class SendMessageRequest(val body: String)
+data class SendMessageRequest(val body: String, val clientId: String? = null)
 
 /**
  * 1:1 메시지 (V15). 서로 차단한 사이(어느 쪽이든)면 대화방이 안 보이고 보낼 수도 없다 — 풀면 다시 보인다.
@@ -105,50 +106,66 @@ class ChatRepository {
             map = ResultSet::toMessage,
         )
 
-    /** 보내기. 내 방이 아니거나 차단 관계면 null. 한 문장으로 메시지를 넣고 방의 최근 시각을 올린다. */
-    fun send(me: UUID, id: UUID, body: String): MessageResponse? =
+    /**
+     * 보내기. 내 방이 아니거나 차단 관계면 null. 한 문장으로 메시지를 넣고 방의 최근 시각을 올린다.
+     * - 방 줄을 잠그고 넣은 시각(clock_timestamp)을 찍는다 → 한 방의 메시지는 저장된 순서 = 시각 순서.
+     *   (now() 는 시작 시각이라, 먼저 시작해 늦게 저장된 메시지가 "새 메시지 확인"·안 읽음 계산에서 빠질 수 있었다)
+     * - 같은 [clientId] 로 다시 보내면 새로 넣지 않고 처음 것을 돌려준다 (응답만 못 받은 재시도).
+     */
+    fun send(me: UUID, id: UUID, body: String, clientId: UUID?): MessageResponse? =
         Db.queryFirst(
             """
             with c as (
                 select c.id from conversations c
                 where c.id = ? and ? in (c.user_a, c.user_b) and $NOT_BLOCKED
+                for update of c
             ), m as (
-                insert into messages (conversation_id, sender_id, body)
-                select c.id, ?, ? from c
+                insert into messages (conversation_id, sender_id, body, client_id, created_at)
+                select c.id, ?, ?, ?, clock_timestamp() from c
+                on conflict (sender_id, client_id) do nothing
                 returning id, conversation_id, sender_id, body, created_at
             ), u as (
-                update conversations set last_message_at = m.created_at,
-                    a_read_at = case when user_a = ? then m.created_at else a_read_at end,
-                    b_read_at = case when user_b = ? then m.created_at else b_read_at end
+                update conversations set last_message_at = greatest(last_message_at, m.created_at),
+                    a_read_at = case when user_a = ? then greatest(a_read_at, m.created_at) else a_read_at end,
+                    b_read_at = case when user_b = ? then greatest(b_read_at, m.created_at) else b_read_at end
                 from m where conversations.id = m.conversation_id
             )
             select id, sender_id, body, created_at from m
+            union all
+            select id, sender_id, body, created_at from messages
+            where conversation_id = ? and sender_id = ? and client_id = ? and not exists (select 1 from m)
             """.trimIndent(),
-            id, me, me, body, me, me,
+            id, me, me, body, clientId, me, me, id, me, clientId,
             map = ResultSet::toMessage,
         )
 
-    /** 지금(DB 시각)까지 읽음 */
-    fun markRead(me: UUID, id: UUID): Boolean =
+    /**
+     * [upTo] (앱이 받은 가장 최신 메시지 시각) 까지 읽음. 없으면 이 방의 마지막 메시지까지.
+     * 앞으로만 간다 — 늦게 온 옛 요청이 읽음을 되돌리지 않게.
+     */
+    fun markRead(me: UUID, id: UUID, upTo: OffsetDateTime?): Boolean =
         Db.update(
             """
             update conversations set
-                a_read_at = case when user_a = ? then now() else a_read_at end,
-                b_read_at = case when user_b = ? then now() else b_read_at end
+                a_read_at = case when user_a = ? then greatest(a_read_at, coalesce(?::timestamptz, last_message_at)) else a_read_at end,
+                b_read_at = case when user_b = ? then greatest(b_read_at, coalesce(?::timestamptz, last_message_at)) else b_read_at end
             where id = ? and ? in (user_a, user_b)
             """.trimIndent(),
-            me, me, id, me,
+            me, upTo, me, upTo, id, me,
         ) == 1
 
-    /** 내 목록에서 지운다 (상대에겐 그대로). 지금까지의 메시지는 나에게 안 보이고, 새 메시지가 오면 다시 나타난다. */
+    /**
+     * 내 목록에서 지운다 (상대에겐 그대로). 지금까지의 메시지는 나에게 안 보이고, 새 메시지가 오면 다시 나타난다.
+     * 기준은 방의 마지막 메시지 시각 (보내기와 같은 줄을 잠그므로 그 뒤에 저장된 메시지는 항상 더 늦다)
+     */
     fun hide(me: UUID, id: UUID): Boolean =
         Db.update(
             """
             update conversations set
-                a_hidden_before = case when user_a = ? then now() else a_hidden_before end,
-                b_hidden_before = case when user_b = ? then now() else b_hidden_before end,
-                a_read_at = case when user_a = ? then now() else a_read_at end,
-                b_read_at = case when user_b = ? then now() else b_read_at end
+                a_hidden_before = case when user_a = ? then last_message_at else a_hidden_before end,
+                b_hidden_before = case when user_b = ? then last_message_at else b_hidden_before end,
+                a_read_at = case when user_a = ? then greatest(a_read_at, last_message_at) else a_read_at end,
+                b_read_at = case when user_b = ? then greatest(b_read_at, last_message_at) else b_read_at end
             where id = ? and ? in (user_a, user_b)
             """.trimIndent(),
             me, me, me, me, id, me,

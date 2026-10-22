@@ -58,11 +58,13 @@ class ChatViewModelTest {
             val at = Instant.parse(after.substringBeforeLast('_'))
             return server.filter { Instant.parse(it.createdAt) > at }.sortedBy { Instant.parse(it.createdAt) }
         }
-        override suspend fun send(conversationId: String, text: String): ChatLine {
+        val byClientId = mutableMapOf<String, ChatLine>()
+        override suspend fun send(conversationId: String, text: String, clientId: String): ChatLine {
             if (sendFails) error("down")
-            return ChatLine("s${seq++}", "me", text, "2026-10-22T10:00:09Z").also { server += it }
+            return byClientId.getOrPut(clientId) { ChatLine("s${seq++}", "me", text, "2026-10-22T10:00:09Z").also { server += it } }
         }
-        override suspend fun markRead(conversationId: String) { reads++ }
+        var readUpTo: String? = null
+        override suspend fun markRead(conversationId: String, upTo: String) { reads++; readUpTo = upTo }
         override suspend fun search(query: String) = emptyList<SuggestedUser>()
         override suspend fun following(myId: String) = emptyList<SuggestedUser>()
     }
@@ -115,7 +117,7 @@ class ChatViewModelTest {
     }
 
     @Test
-    fun failedSendRestoresTextAndExplains() = runTest(dispatcher) {
+    fun failedSendStaysAsRetryableBubbleAndRetrySavesOnce() = runTest(dispatcher) {
         try {
             val (vm, repo) = setup()
             vm.onIntent(ChatIntent.Open("c1"))
@@ -124,9 +126,17 @@ class ChatViewModelTest {
             vm.onIntent(ChatIntent.UpdateInput("보내질까"))
             vm.onIntent(ChatIntent.Send)
             runCurrent()
-            assertTrue(vm.state.value.messages.isEmpty())
-            assertEquals("보내질까", vm.state.value.input)
-            assertEquals("메시지를 보내지 못했어요. 다시 시도해 주세요.", vm.state.value.message)
+            val failed = vm.state.value.messages.single()
+            assertTrue(failed.failed)
+            assertEquals("보내질까", failed.text)
+            repo.sendFails = false
+            vm.onIntent(ChatIntent.Retry(failed.id))
+            runCurrent()
+            vm.onIntent(ChatIntent.Retry(failed.id)) // 두 번 눌러도
+            runCurrent()
+            assertEquals(listOf("보내질까"), vm.state.value.messages.map { it.text })
+            assertFalse(vm.state.value.messages.single().failed)
+            assertEquals(1, repo.server.size)
         } finally {
             closeAll()
         }
@@ -144,6 +154,7 @@ class ChatViewModelTest {
             runCurrent()
             assertEquals(listOf("하나", "둘"), vm.state.value.messages.map { it.text })
             assertEquals(2, repo.reads)
+            assertEquals("2026-10-22T10:00:05Z", repo.readUpTo) // 받은 것까지만 읽음
         } finally {
             closeAll()
         }
@@ -158,5 +169,26 @@ class ChatViewModelTest {
         assertEquals("10월 3일", chatDayLabel("2026-10-03T03:00:00Z", now, seoul))
         assertEquals("2025년 12월 31일", chatDayLabel("2025-12-31T03:00:00Z", now, seoul))
         assertEquals("", chatDayLabel("", now, seoul))
+    }
+
+    @Test
+    fun accountChangeClearsTheOpenChat() = runTest(dispatcher) {
+        val store = SessionStore().apply { current = Session("AT", "RT", 0, userId = "me") }
+        val repo = FakeChat().apply { incoming("비밀", "2026-10-22T10:00:00Z") }
+        val vm = ChatViewModel(repo, CurrentUserIdUseCase(store)).also { made += it }
+        try {
+            vm.onIntent(ChatIntent.Open("c1"))
+            runCurrent()
+            assertEquals(1, vm.state.value.messages.size)
+            store.current = Session("AT2", "RT2", 0, userId = "someone-else")
+            runCurrent()
+            assertTrue(vm.state.value.messages.isEmpty())
+            vm.onIntent(ChatIntent.UpdateInput("새 계정으로 보내기"))
+            vm.onIntent(ChatIntent.Send)
+            runCurrent()
+            assertTrue(repo.byClientId.isEmpty()) // 이전 대화방에 새 계정으로 보내지 않는다
+        } finally {
+            closeAll()
+        }
     }
 }

@@ -12,6 +12,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import java.time.OffsetDateTime
 import java.util.UUID
 
 private const val DEFAULT_LIMIT = 30
@@ -64,18 +65,28 @@ fun Route.chatRoutes(repo: ChatRepository) {
 
         post("/conversations/{id}/messages") {
             val id = call.conversationId() ?: return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("conversation_not_found"))
-            val body = call.receive<SendMessageRequest>().body.trim()
+            val req = call.receive<SendMessageRequest>()
+            val body = req.body.trim()
             if (body.isEmpty() || body.length > MAX_MESSAGE_LENGTH) {
                 return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("bad_body"))
             }
-            repo.send(call.userId(), id, body)?.let { call.respond(HttpStatusCode.Created, it) }
+            val clientId = req.clientId?.let {
+                runCatching { UUID.fromString(it) }.getOrNull()
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("bad_client_id"))
+            }
+            repo.send(call.userId(), id, body, clientId)?.let { call.respond(HttpStatusCode.Created, it) }
                 // 내 방이 아니거나 차단 관계 — 어느 쪽인지 알려주지 않는다
                 ?: call.respond(HttpStatusCode.Forbidden, ErrorResponse("cannot_send"))
         }
 
+        /** ?upTo=앱이 받은 가장 최신 메시지의 createdAt — 그 뒤에 온 메시지는 안 읽음으로 남는다 */
         post("/conversations/{id}/read") {
             val id = call.conversationId() ?: return@post call.respond(HttpStatusCode.NotFound, ErrorResponse("conversation_not_found"))
-            if (repo.markRead(call.userId(), id)) call.respond(HttpStatusCode.NoContent)
+            val upTo = call.request.queryParameters["upTo"]?.let {
+                runCatching { OffsetDateTime.parse(it) }.getOrNull()
+                    ?: return@post call.respond(HttpStatusCode.BadRequest, ErrorResponse("bad_up_to"))
+            }
+            if (repo.markRead(call.userId(), id, upTo)) call.respond(HttpStatusCode.NoContent)
             else call.respond(HttpStatusCode.NotFound, ErrorResponse("conversation_not_found"))
         }
 

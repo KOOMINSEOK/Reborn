@@ -95,4 +95,6 @@ data class ChatMessage(
     val createdAt: String = "",
     /** 보내는 중 (서버가 아직 받지 않음) */
     val pending: Boolean = false,
+    /** 보내지 못함 — 눌러서 다시 보내기 */
+    val failed: Boolean = false,
 )

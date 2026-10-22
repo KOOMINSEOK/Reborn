@@ -189,11 +189,12 @@ class RebornApi(
             after?.let { parameter("after", it) }
         }.body()
 
-    suspend fun sendMessage(id: String, body: String): MessageDto =
-        client.post("conversations/$id/messages") { setBody(SendMessageDto(body)) }.body()
+    suspend fun sendMessage(id: String, body: String, clientId: String): MessageDto =
+        client.post("conversations/$id/messages") { setBody(SendMessageDto(body, clientId)) }.body()
 
-    suspend fun markConversationRead(id: String) {
-        client.post("conversations/$id/read")
+    /** [upTo] = 받은 가장 최신 메시지의 createdAt — 그 뒤에 온 건 안 읽음으로 남는다 */
+    suspend fun markConversationRead(id: String, upTo: String) {
+        client.post("conversations/$id/read") { parameter("upTo", upTo) }
     }
 
     /** 내 목록에서만 지운다 */

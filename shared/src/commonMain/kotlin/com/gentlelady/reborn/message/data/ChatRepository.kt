@@ -28,8 +28,10 @@ interface ChatRepository {
     suspend fun latest(conversationId: String, before: String? = null): Pair<List<ChatLine>, String?>
     /** [after] 다음에 온 메시지 (오래된 순) */
     suspend fun newer(conversationId: String, after: String): List<ChatLine>
-    suspend fun send(conversationId: String, text: String): ChatLine
-    suspend fun markRead(conversationId: String)
+    /** 같은 [clientId] 로 다시 보내면 서버가 처음 것을 돌려준다 (한 번만 저장) */
+    suspend fun send(conversationId: String, text: String, clientId: String): ChatLine
+    /** [upTo] (받은 가장 최신 메시지 시각) 까지 읽음 */
+    suspend fun markRead(conversationId: String, upTo: String)
     suspend fun search(query: String): List<SuggestedUser>
     /** 내가 팔로우하는 사람 (검색어가 없을 때 추천으로) */
     suspend fun following(myId: String): List<SuggestedUser>
@@ -47,8 +49,9 @@ class ChatRepositoryImpl(private val api: RebornApi) : ChatRepository {
     override suspend fun newer(conversationId: String, after: String) =
         api.messages(conversationId, after = after).items.map { it.toLine() }
 
-    override suspend fun send(conversationId: String, text: String) = api.sendMessage(conversationId, text).toLine()
-    override suspend fun markRead(conversationId: String) = api.markConversationRead(conversationId)
+    override suspend fun send(conversationId: String, text: String, clientId: String) =
+        api.sendMessage(conversationId, text, clientId).toLine()
+    override suspend fun markRead(conversationId: String, upTo: String) = api.markConversationRead(conversationId, upTo)
     override suspend fun search(query: String) = api.searchUsers(query).items.map { it.toSuggested() }
     override suspend fun following(myId: String) = api.userRelations(myId, following = true).items.map { it.toSuggested() }
 }

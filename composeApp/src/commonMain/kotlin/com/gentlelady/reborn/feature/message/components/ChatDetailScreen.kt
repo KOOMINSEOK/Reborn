@@ -125,7 +125,7 @@ private fun MessageList(state: ChatState, onIntent: (ChatIntent) -> Unit, peerAv
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         newestFirst.forEachIndexed { i, msg ->
-            item(key = msg.id) { MessageBubble(msg, peerAvatar) }
+            item(key = msg.id) { MessageBubble(msg, peerAvatar, onRetry = { onIntent(ChatIntent.Retry(msg.id)) }) }
             // 날짜가 바뀌는 곳(이 메시지가 그날의 첫 메시지)에 구분선
             val day = chatDayLabel(msg.createdAt)
             val olderDay = newestFirst.getOrNull(i + 1)?.let { chatDayLabel(it.createdAt) }
@@ -190,13 +190,19 @@ private fun DayDivider(label: String) {
 }
 
 @Composable
-private fun MessageBubble(msg: ChatMessage, peerAvatar: String?) {
+private fun MessageBubble(msg: ChatMessage, peerAvatar: String?, onRetry: () -> Unit) {
     val arrangement = if (msg.isMine) Arrangement.End else Arrangement.Start
     Row(
-        Modifier.fillMaxWidth().alpha(if (msg.pending) 0.5f else 1f),
+        Modifier
+            .fillMaxWidth()
+            .alpha(if (msg.pending || msg.failed) 0.5f else 1f)
+            .then(if (msg.failed) Modifier.clickable(onClick = onRetry) else Modifier),
         horizontalArrangement = arrangement,
         verticalAlignment = Alignment.Bottom
     ) {
+        if (msg.failed) {
+            Text("전송 실패 · 다시 보내기", fontSize = 11.sp, color = Color.Red, modifier = Modifier.padding(end = 6.dp))
+        }
         if (!msg.isMine) {
             if (msg.showAvatar) Avatar(peerAvatar, 28) else Spacer(Modifier.width(28.dp))
             Spacer(Modifier.width(6.dp))
