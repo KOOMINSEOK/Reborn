@@ -42,4 +42,8 @@ sealed interface SearchIntent {
     data class ClickResultItem(val itemId: String) : SearchIntent
     /** 검색 탭에 들어올 때 (검색어가 없으면 첫 화면 게시물을 새로) */
     data object Refresh : SearchIntent
+    /** 첫 화면 게시물 좋아요 */
+    data class ToggleLike(val postId: String) : SearchIntent
+    /** 댓글 창에서 댓글 수가 바뀜 */
+    data class CommentCountChanged(val postId: String, val delta: Int) : SearchIntent
 }

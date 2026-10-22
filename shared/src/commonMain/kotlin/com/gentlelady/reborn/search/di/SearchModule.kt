@@ -8,5 +8,5 @@ import org.koin.dsl.module
 
 val searchModule = module {
     single<SearchRepository> { SearchRepositoryImpl(get()) }
-    factory { SearchViewModel(get(), CurrentUserIdUseCase(get())) }
+    factory { SearchViewModel(get(), CurrentUserIdUseCase(get()), get()) }
 }

@@ -4,6 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.gentlelady.reborn.core.designsystem.comments.CommentCountEffect
+import com.gentlelady.reborn.core.designsystem.comments.CommentSheet
+import com.gentlelady.reborn.core.network.InteractionTarget
 import androidx.compose.ui.unit.sp
 import com.gentlelady.reborn.core.theme.RebornSlateGray
 import androidx.compose.runtime.Composable
@@ -25,6 +32,10 @@ fun SearchScreen(
     onIntent: (SearchIntent) -> Unit,
     onAuthorClick: (String) -> Unit = {},
 ) {
+    var commentPostId by remember { mutableStateOf<String?>(null) }
+    CommentCountEffect { change ->
+        if (change.target == InteractionTarget.POST) onIntent(SearchIntent.CommentCountChanged(change.parentId, change.delta))
+    }
     Scaffold(
         containerColor = RebornBackground,
         contentWindowInsets = WindowInsets(0.dp),
@@ -61,11 +72,29 @@ fun SearchScreen(
             } else {
                 // 검색 전 기본 화면: 무작위 게시글 피드
                 items(state.randomFeed, key = { it.id }) { post ->
-                    PostItem(post = post, onAuthorClick = onAuthorClick)
+                    PostItem(
+                        post = post,
+                        onLikeClick = { onIntent(SearchIntent.ToggleLike(post.id)) },
+                        // 목업 글(작성자 id 없음)은 댓글 창을 열지 않는다
+                        onCommentClick = { if (post.authorId != null) commentPostId = post.id },
+                        onAuthorClick = onAuthorClick
+                    )
                     HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)
                 }
             }
         }
+    }
+
+    commentPostId?.let { postId ->
+        CommentSheet(
+            target = InteractionTarget.POST,
+            parentId = postId,
+            onDismiss = { commentPostId = null },
+            onAuthorClick = {
+                commentPostId = null
+                onAuthorClick(it)
+            }
+        )
     }
 }
 

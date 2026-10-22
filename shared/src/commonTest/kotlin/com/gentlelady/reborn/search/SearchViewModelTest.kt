@@ -44,10 +44,17 @@ class SearchViewModelTest {
         override suspend fun randomPosts() = listOf(HomePost(id = "r1", authorName = "a", caption = "c", postedAt = ""))
     }
 
+    private object NoLikes : com.gentlelady.reborn.interaction.data.InteractionRepository {
+        override suspend fun setLike(target: com.gentlelady.reborn.core.network.InteractionTarget, id: String, liked: Boolean) = error("unused")
+        override suspend fun comments(target: com.gentlelady.reborn.core.network.InteractionTarget, id: String, offset: Int) = error("unused")
+        override suspend fun addComment(target: com.gentlelady.reborn.core.network.InteractionTarget, id: String, body: String) = error("unused")
+        override suspend fun deleteComment(target: com.gentlelady.reborn.core.network.InteractionTarget, commentId: String) = error("unused")
+    }
+
     private fun setup(): Pair<SearchViewModel, FakeSearch> {
         val store = SessionStore().apply { current = Session("AT", "RT", 0, userId = "me") }
         val repo = FakeSearch()
-        return SearchViewModel(repo, CurrentUserIdUseCase(store)) to repo
+        return SearchViewModel(repo, CurrentUserIdUseCase(store), com.gentlelady.reborn.interaction.presentation.LikeSync(com.gentlelady.reborn.interaction.domain.SetLikeUseCase(NoLikes))) to repo
     }
 
     @Test

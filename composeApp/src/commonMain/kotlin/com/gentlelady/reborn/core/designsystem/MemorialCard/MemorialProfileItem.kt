@@ -79,6 +79,8 @@ internal fun MemorialProfileItem(
                         )
                     }
                 }
+                // 조화는 추모 페이지(고인)만 받는다 — 사람 카드엔 없다
+                if (item.hasMemorial) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -94,6 +96,7 @@ internal fun MemorialProfileItem(
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )
+                }
                 }
             }
 

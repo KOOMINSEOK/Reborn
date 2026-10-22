@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gentlelady.reborn.core.auth.CurrentUserIdUseCase
 import com.gentlelady.reborn.data.MockDataSource
+import com.gentlelady.reborn.core.network.InteractionTarget
+import com.gentlelady.reborn.interaction.presentation.LikeSync
 import com.gentlelady.reborn.search.data.SearchRepository
 import com.gentlelady.reborn.search.domain.entity.MemorialSearchItem
 import kotlinx.coroutines.Job
@@ -20,6 +22,7 @@ private const val SEARCH_DEBOUNCE_MS = 300L
 class SearchViewModel(
     private val repository: SearchRepository,
     private val currentUserId: CurrentUserIdUseCase,
+    private val likeSync: LikeSync,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SearchState())
@@ -50,6 +53,10 @@ class SearchViewModel(
             }
             is SearchIntent.ExecuteSearch -> search(_state.value.query, _state.value.currentTab, debounce = false)
             is SearchIntent.Refresh -> if (!_state.value.isSearching) loadRandomFeed()
+            is SearchIntent.ToggleLike -> toggleLike(intent.postId)
+            is SearchIntent.CommentCountChanged -> updatePost(intent.postId) {
+                it.copy(comments = (it.comments + intent.delta).coerceAtLeast(0))
+            }
             is SearchIntent.ClickResultItem -> Unit // 네비게이션은 composeApp 그래프에서 처리
         }
     }
@@ -76,6 +83,18 @@ class SearchViewModel(
             }
         }
     }
+
+    /** 바로 바꿔 보여 주고 서버에 보낸다 (실패하면 서버가 확인한 값으로 되돌린다) */
+    private fun toggleLike(postId: String) {
+        if (currentUserId() == null) return // 둘러보기 — 목업 글
+        val post = _state.value.randomFeed.firstOrNull { it.id == postId } ?: return
+        likeSync.toggle(viewModelScope, InteractionTarget.POST, postId, post.liked, post.likes) { liked, likes ->
+            updatePost(postId) { it.copy(liked = liked, likes = likes) }
+        }
+    }
+
+    private fun updatePost(postId: String, change: (com.gentlelady.reborn.home.domain.model.HomePost) -> com.gentlelady.reborn.home.domain.model.HomePost) =
+        _state.update { s -> s.copy(randomFeed = s.randomFeed.map { if (it.id == postId) change(it) else it }) }
 
     private fun loadRandomFeed() {
         feedJob?.cancel()
