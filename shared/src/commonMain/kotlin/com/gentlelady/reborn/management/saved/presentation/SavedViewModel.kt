@@ -70,8 +70,8 @@ class SavedViewModel(
         loadJob = viewModelScope.launch {
             val result = runCatching {
                 coroutineScope {
-                    val posts = async { api.savedPosts().items }
-                    val history = async { api.savedHistory().items }
+                    val posts = async { api.allPages { o -> api.savedPosts(o).let { it.items to it.nextOffset } } }
+                    val history = async { api.allPages { o -> api.savedHistory(o).let { it.items to it.nextOffset } } }
                     val books = async { myGuestbooks.getMyGuestbooks() }
                     Triple(posts.await(), history.await(), books.await())
                 }

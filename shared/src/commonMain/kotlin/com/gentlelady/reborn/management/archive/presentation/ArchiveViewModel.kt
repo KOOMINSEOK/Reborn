@@ -51,7 +51,7 @@ class ArchiveViewModel(
             return
         }
         loadJob = viewModelScope.launch {
-            val posts = runCatching { api.archivedPosts().items }.getOrNull()
+            val posts = runCatching { api.allPages { o -> api.archivedPosts(o).let { it.items to it.nextOffset } } }.getOrNull()
             _state.update {
                 if (posts == null) it.copy(isLoading = false, message = "보관함을 불러오지 못했어요.")
                 else it.copy(

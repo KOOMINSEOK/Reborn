@@ -102,6 +102,7 @@ private const val VISIBLE = """
            or (b.blocker_id = n.actor_id and b.blocked_id = ?)
     )
     and (n.memorial_id is null or exists (select 1 from memorials m where m.id = n.memorial_id""" + MEMORIAL_VISIBLE + """))
+    and not exists (select 1 from posts ap where ap.id = n.post_id and ap.archived_at is not null)
 """
 
 private fun visibleParams(recipientId: UUID): Array<Any?> = Array(6) { recipientId }

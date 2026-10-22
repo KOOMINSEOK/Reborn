@@ -278,13 +278,16 @@ private const val POST_SELECT = """
 /** 보관한 글은 목록(피드·프로필·검색)에서 뺀다 — 본인에게도. 보관함에서만 */
 private const val NOT_ARCHIVED = " and p.archived_at is null "
 
-/** 본인 글이거나, 발행됐고 보관 안 했고 (공개 계정 또는 내가 팔로우 중). `?` 2개 = viewerId, viewerId. */
+/**
+ * 보관 안 했고, 본인 글이거나 발행됐고 (공개 계정 또는 내가 팔로우 중). `?` 2개 = viewerId, viewerId.
+ * 보관한 글은 본인에게도 없는 글처럼 (상세·댓글·좋아요·저장 목록) — 보관함([archivedPosts])에서만 본다.
+ */
 private const val POST_VISIBLE = """
+    and p.archived_at is null
     and (
         p.author_id = ?
         or (
             p.status = 'published'
-            and p.archived_at is null
             and (
                 pr.is_private = false
                 or exists(select 1 from follows f where f.follower_id = ? and f.followee_id = p.author_id)

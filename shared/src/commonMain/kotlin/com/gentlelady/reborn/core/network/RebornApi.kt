@@ -193,6 +193,22 @@ class RebornApi(
 
     suspend fun archivedPosts(offset: Int = 0): FeedDto = client.get("me/archive") { parameter("offset", offset) }.body()
 
+    /**
+     * 페이지를 끝까지 이어 받는다 (관리 화면 — 저장·보관 목록은 한 화면에 다 보여 준다).
+     * ponytail: 최대 [MAX_ALL_PAGES] 페이지(약 3천 개). 그보다 많이 쌓이면 화면에 무한 스크롤로.
+     */
+    suspend fun <T> allPages(page: suspend (offset: Int) -> Pair<List<T>, Int?>): List<T> {
+        val all = mutableListOf<T>()
+        var offset: Int? = 0
+        var pages = 0
+        while (offset != null && pages++ < MAX_ALL_PAGES) {
+            val (items, next) = page(offset)
+            all += items
+            offset = next
+        }
+        return all
+    }
+
     // ---------- 메시지 ----------
     suspend fun conversations(): ConversationListDto = client.get("conversations").body()
 
@@ -293,6 +309,7 @@ enum class InteractionTarget(val parentPath: String, val commentPath: String) {
 
 private const val UPLOAD_TIMEOUT_MS = 60_000L
 const val GUESTBOOK_PAGE_SIZE = 30
+private const val MAX_ALL_PAGES = 100
 
 @kotlinx.serialization.Serializable
 data class NaverLoginDto(val accessToken: String)

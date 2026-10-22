@@ -126,7 +126,7 @@ private const val MY_SELECT = """
     select p.id, p.handle, p.display_name, p.bio, p.avatar_url, p.is_private,
            (select count(*) from follows where followee_id = p.id) as follower_count,
            (select count(*) from follows where follower_id = p.id) as following_count,
-           (select count(*) from posts where author_id = p.id and is_posthumous) as posthumous_post_count
+           (select count(*) from posts where author_id = p.id and is_posthumous and archived_at is null) as posthumous_post_count
     from profiles p
 """
 
