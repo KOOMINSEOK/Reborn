@@ -2,6 +2,14 @@ package com.gentlelady.reborn.core.network
 
 import com.gentlelady.reborn.core.network.dto.BlockedListDto
 import com.gentlelady.reborn.core.network.dto.CommentDto
+import com.gentlelady.reborn.core.network.dto.CompleteSignupDto
+import com.gentlelady.reborn.core.network.dto.HandleCheckDto
+import com.gentlelady.reborn.core.network.dto.IdentityStartDto
+import com.gentlelady.reborn.core.network.dto.IdentityStartResultDto
+import com.gentlelady.reborn.core.network.dto.IdentityVerifiedDto
+import com.gentlelady.reborn.core.network.dto.IdentityVerifyDto
+import com.gentlelady.reborn.core.network.dto.SignupStateDto
+import com.gentlelady.reborn.core.network.dto.TermsDto
 import com.gentlelady.reborn.core.network.dto.CommentListDto
 import com.gentlelady.reborn.core.network.dto.CreateCommentDto
 import com.gentlelady.reborn.core.network.dto.CreateGuestbookDto
@@ -157,6 +165,31 @@ class RebornApi(
     /** [upTo] = 받은 가장 최신 알림의 createdAt — 그 뒤에 온 알림은 안 읽음으로 남는다. */
     suspend fun markNotificationsRead(upTo: String) {
         client.post("notifications/read") { parameter("upTo", upTo) }
+    }
+
+    // ---------- 회원가입 ----------
+    suspend fun signupState(): SignupStateDto = client.get("me/signup").body()
+
+    suspend fun agreeTerms(req: TermsDto) {
+        client.post("me/signup/terms") { setBody(req) }
+    }
+
+    suspend fun requestIdentity(req: IdentityStartDto): IdentityStartResultDto =
+        client.post("me/identity/request") { setBody(req) }.body()
+
+    suspend fun verifyIdentity(req: IdentityVerifyDto): IdentityVerifiedDto =
+        client.post("me/identity/verify") { setBody(req) }.body()
+
+    suspend fun checkHandle(handle: String): HandleCheckDto =
+        client.get("handles/check") { parameter("handle", handle) }.body()
+
+    suspend fun completeSignup(req: CompleteSignupDto) {
+        client.post("me/signup/complete") { setBody(req) }
+    }
+
+    /** 가입을 그만둠 — 가입을 마치지 않은 이 계정을 지운다 */
+    suspend fun abandonSignup() {
+        client.delete("me/signup")
     }
 
     /** 좋아요 켜기(POST)/끄기(DELETE). 둘 다 멱등 — 같은 요청을 여러 번 보내도 결과는 같다. */

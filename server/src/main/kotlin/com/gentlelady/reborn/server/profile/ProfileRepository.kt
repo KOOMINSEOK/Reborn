@@ -102,7 +102,8 @@ data class Page(val offset: Int, val limit: Int)
 private const val MY_SELECT = """
     select p.id, p.handle, p.display_name, p.bio, p.avatar_url, p.is_private,
            (select count(*) from follows where followee_id = p.id) as follower_count,
-           (select count(*) from follows where follower_id = p.id) as following_count
+           (select count(*) from follows where follower_id = p.id) as following_count,
+           (select count(*) from posts where author_id = p.id and is_posthumous) as posthumous_post_count
     from profiles p
 """
 
@@ -121,6 +122,7 @@ private fun ResultSet.toMyProfile() = MyProfileResponse(
     isPrivate = getBoolean("is_private"),
     followerCount = getInt("follower_count"),
     followingCount = getInt("following_count"),
+    posthumousPostCount = getInt("posthumous_post_count"),
 )
 
 private fun ResultSet.toUserSummary() = UserSummaryResponse(

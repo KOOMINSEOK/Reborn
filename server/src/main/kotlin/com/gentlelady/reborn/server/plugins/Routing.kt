@@ -11,6 +11,8 @@ import com.gentlelady.reborn.server.notification.NotificationRepository
 import com.gentlelady.reborn.server.notification.notificationRoutes
 import com.gentlelady.reborn.server.profile.ProfileRepository
 import com.gentlelady.reborn.server.profile.profileRoutes
+import com.gentlelady.reborn.server.signup.SignupRepository
+import com.gentlelady.reborn.server.signup.signupRoutes
 import com.gentlelady.reborn.server.upload.uploadRoutes
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -54,6 +56,7 @@ fun Application.configureRouting() {
         memorialRoutes(memorial, historyInteractions)
         profileRoutes(profile)
         notificationRoutes(notifications)
+        signupRoutes(SignupRepository())
         uploadRoutes()
     }
 }

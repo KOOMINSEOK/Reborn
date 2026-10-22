@@ -22,6 +22,8 @@ data class MyProfileResponse(
     val isPrivate: Boolean,
     val followerCount: Int,
     val followingCount: Int,
+    /** 내 사후 게시물 수 (예약 포함) — 프로필의 자물쇠 "게시물" */
+    val posthumousPostCount: Int = 0,
 )
 
 @Serializable

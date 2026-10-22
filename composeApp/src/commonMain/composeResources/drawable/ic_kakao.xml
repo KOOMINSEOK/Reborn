@@ -1,0 +1,6 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- 카카오 로그인 버튼 심볼 (말풍선, 검정) -->
+    <path android:fillColor="#000000"
+        android:pathData="M12,3C6.48,3 2,6.58 2,11c0,2.83 1.87,5.32 4.69,6.74l-0.99,3.56c-0.09,0.33 0.28,0.6 0.57,0.41l4.27,-2.82c0.48,0.05 0.97,0.08 1.46,0.08 5.52,0 10,-3.58 10,-8S17.52,3 12,3z" />
+</vector>
