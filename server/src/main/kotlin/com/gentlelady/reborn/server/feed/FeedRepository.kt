@@ -267,7 +267,7 @@ private const val POST_SELECT = """
     select p.id, p.author_id, pr.display_name as author_name, pr.handle as author_handle,
            pr.avatar_url as author_avatar_url,
            p.caption, p.image_urls, p.is_posthumous, p.status,
-           p.like_count, p.comment_count, p.created_at, p.archived_at is not null as archived,
+           p.like_count, p.comment_count, p.created_at, p.archived_at is not null as archived, p.author_id = v.viewer as mine,
            exists(select 1 from post_likes pl where pl.post_id = p.id and pl.user_id = v.viewer) as liked,
            exists(select 1 from saves sv where sv.user_id = v.viewer and sv.kind = 'post' and sv.target_id = p.id) as saved
     from (select ?::uuid as viewer) v
@@ -316,6 +316,7 @@ private fun ResultSet.toPost(source: String) = PostResponse(
     commentCount = getInt("comment_count"),
     saved = getBoolean("saved"),
     archived = getBoolean("archived"),
+    mine = getBoolean("mine"),
     liked = getBoolean("liked"),
     createdAt = getObject("created_at", OffsetDateTime::class.java).toString(),
     source = source,

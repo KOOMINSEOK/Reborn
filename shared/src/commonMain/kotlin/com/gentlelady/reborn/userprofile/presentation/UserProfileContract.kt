@@ -30,6 +30,8 @@ sealed interface UserProfileIntent {
     object LoadMore : UserProfileIntent
     object ToggleFollow : UserProfileIntent
     data class ToggleLike(val postId: String) : UserProfileIntent
+    data class ToggleSave(val postId: String) : UserProfileIntent
+    data class ArchivePost(val postId: String) : UserProfileIntent
     data class CommentCountChanged(val postId: String, val delta: Int) : UserProfileIntent
     object MessageShown : UserProfileIntent
     data class SetBlocked(val block: Boolean) : UserProfileIntent
@@ -44,6 +46,8 @@ sealed interface UserProfileResult {
     object LoadMoreFailed : UserProfileResult
     data class FollowChanged(val following: Boolean, val followerCount: Int) : UserProfileResult
     data class LikeChanged(val postId: String, val liked: Boolean, val likes: Int) : UserProfileResult
+    data class SaveChanged(val postId: String, val saved: Boolean) : UserProfileResult
+    data class PostRemoved(val postId: String) : UserProfileResult
     data class CommentCountChanged(val postId: String, val delta: Int) : UserProfileResult
     data class Message(val text: String?) : UserProfileResult
     object ChangingBlock : UserProfileResult
@@ -80,6 +84,8 @@ object UserProfileReducer {
             profile = state.profile?.copy(followedByMe = result.following, followerCount = result.followerCount),
         )
         is UserProfileResult.LikeChanged -> state.updatePost(result.postId) { it.copy(liked = result.liked, likes = result.likes) }
+        is UserProfileResult.SaveChanged -> state.updatePost(result.postId) { it.copy(saved = result.saved) }
+        is UserProfileResult.PostRemoved -> state.copy(posts = state.posts.filterNot { it.id == result.postId })
         is UserProfileResult.CommentCountChanged ->
             state.updatePost(result.postId) { it.copy(comments = (it.comments + result.delta).coerceAtLeast(0)) }
         is UserProfileResult.Message -> state.copy(message = result.text)

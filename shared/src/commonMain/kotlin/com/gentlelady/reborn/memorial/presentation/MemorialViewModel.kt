@@ -20,6 +20,7 @@ class MemorialViewModel(
     private val createHistoryUseCase: CreateHistoryUseCase,
     private val createGuestbookEntryUseCase: CreateGuestbookEntryUseCase,
     private val likeSync: LikeSync,
+    private val saveSync: com.gentlelady.reborn.interaction.presentation.SaveSync,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MemorialMockData.memorialState)
@@ -27,7 +28,7 @@ class MemorialViewModel(
 
     fun onIntent(intent: MemorialIntent) {
         when (intent) {
-            is MemorialIntent.LoadMemorial -> load(intent.memorialId, intent.focusGuestBookId)
+            is MemorialIntent.LoadMemorial -> load(intent.memorialId, intent.focusGuestBookId, intent.focusHistoryId)
 
             is MemorialIntent.ClickBack -> {
                 _state.update { current ->
@@ -44,6 +45,12 @@ class MemorialViewModel(
             is MemorialIntent.SelectTab -> _state.update { it.copy(selectedTab = intent.tab) }
 
             is MemorialIntent.ToggleHistoryLike -> toggleHistoryLike(intent.historyId)
+            is MemorialIntent.ToggleHistorySave -> {
+                val item = _state.value.historyItems.firstOrNull { it.id == intent.historyId }
+                if (item != null) saveSync.toggle(viewModelScope, InteractionTarget.HISTORY, item.id, item.saved) { saved ->
+                    updateHistory(item.id) { it.copy(saved = saved) }
+                }
+            }
 
             is MemorialIntent.HistoryCommentCountChanged -> updateHistory(intent.historyId) {
                 it.copy(comments = (it.comments + intent.delta).coerceAtLeast(0))
@@ -209,7 +216,7 @@ class MemorialViewModel(
         }
     }
 
-    private fun load(id: String, focusGuestBookId: String?) {
+    private fun load(id: String, focusGuestBookId: String?, focusHistoryId: String? = null) {
         viewModelScope.launch {
             // id 를 먼저 바꿔 둔다 → 로딩 중 게시가 이전 추모관으로 가지 않게
             _state.update { it.copy(memorialId = id, isLoading = true) }
@@ -230,7 +237,9 @@ class MemorialViewModel(
                     // 특정 방명록으로 들어왔으면 방명록 탭을 연다
                     selectedTab = if (loaded.guestBookFocusId != null) MemorialTab.GUESTBOOK else it.selectedTab,
                     onlineWreathItems = loaded.onlineWreathItems,
-                    selectedHistoryIndex = it.selectedHistoryIndex?.takeIf { i -> i < loaded.historyItems.size },
+                    // 저장한 추억 글에서 들어왔으면 그 글을 연다 (첫 페이지에 없으면 추모 페이지만)
+                    selectedHistoryIndex = focusHistoryId?.let { f -> loaded.historyItems.indexOfFirst { h -> h.id == f }.takeIf { i -> i >= 0 } }
+                        ?: it.selectedHistoryIndex?.takeIf { i -> i < loaded.historyItems.size },
                     isLoading = false,
                 )
             }

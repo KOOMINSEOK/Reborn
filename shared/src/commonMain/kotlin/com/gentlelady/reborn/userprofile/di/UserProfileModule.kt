@@ -21,6 +21,6 @@ val userProfileModule = module {
     factory { GetRelationsUseCase(get()) }
     factory { SetBlockUseCase(get()) }
     factory { GetBlockedUsersUseCase(get()) }
-    factory { UserProfileViewModel(get(), get(), get(), get(), get()) }
+    factory { UserProfileViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { FollowListViewModel(get(), get(), CurrentUserIdUseCase(get())) }
 }

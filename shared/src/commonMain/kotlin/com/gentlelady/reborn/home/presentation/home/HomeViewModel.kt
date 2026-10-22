@@ -17,6 +17,8 @@ class HomeViewModel(
     private val getHomeFeedUseCase: GetHomeFeedUseCase,
     private val likeSync: LikeSync,
     private val getUnreadNotificationCount: GetUnreadNotificationCountUseCase,
+    private val saveSync: com.gentlelady.reborn.interaction.presentation.SaveSync? = null,
+    private val api: com.gentlelady.reborn.core.network.RebornApi? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -31,6 +33,8 @@ class HomeViewModel(
             is HomeIntent.LoadFeed -> loadFeed()
             is HomeIntent.ClickMemorialIcon -> { /* 네비게이션은 UI 레이어에서 처리됨 */ }
             is HomeIntent.ToggleLike -> toggleLike(intent.postId)
+            is HomeIntent.ToggleSave -> toggleSave(intent.postId)
+            is HomeIntent.ArchivePost -> archive(intent.postId)
             is HomeIntent.CommentCountChanged -> reduce(HomeResult.CommentCountChanged(intent.postId, intent.delta))
             is HomeIntent.HideAuthor -> reduce(HomeResult.AuthorHidden(intent.authorId))
             is HomeIntent.RefreshUnreadNotifications -> refreshUnread()
@@ -41,6 +45,22 @@ class HomeViewModel(
         val post = _state.value.posts.firstOrNull { it.id == postId } ?: return
         likeSync.toggle(viewModelScope, InteractionTarget.POST, postId, post.liked, post.likes) { liked, likes ->
             reduce(HomeResult.LikeChanged(postId, liked, likes))
+        }
+    }
+
+    private fun toggleSave(postId: String) {
+        val post = _state.value.posts.firstOrNull { it.id == postId } ?: return
+        saveSync?.toggle(viewModelScope, InteractionTarget.POST, postId, post.saved) { saved ->
+            reduce(HomeResult.SaveChanged(postId, saved))
+        }
+    }
+
+    /** 바로 빼고 서버에 보낸다. 실패하면 피드를 다시 받아 되돌린다 */
+    private fun archive(postId: String) {
+        val api = api ?: return
+        reduce(HomeResult.PostRemoved(postId))
+        viewModelScope.launch {
+            if (runCatching { api.setArchived(postId, true) }.isFailure) loadFeed()
         }
     }
 

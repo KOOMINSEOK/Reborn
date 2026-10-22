@@ -162,6 +162,7 @@ fun NavGraphBuilder.managementNavGraph(
     }
 
     composable("management/archive") {
+        androidx.compose.runtime.LaunchedEffect(Unit) { onArchiveIntent(ArchiveIntent.LoadArchive) }
         ArchiveScreen(
             state = archiveState,
             onIntent = { intent ->
@@ -174,11 +175,20 @@ fun NavGraphBuilder.managementNavGraph(
     }
 
     composable("management/saved") {
+        androidx.compose.runtime.LaunchedEffect(Unit) { onSavedIntent(SavedIntent.LoadSaved) }
         SavedScreen(
             state = savedState,
             onIntent = { intent ->
                 when (intent) {
                     is SavedIntent.ClickBack -> navController.popBackStack()
+                    // ponytail: 게시물 상세 화면이 정해지면 그리로 — 지금은 글쓴이 프로필
+                    is SavedIntent.ClickPost -> savedState.posts.firstOrNull { it.id == intent.postId }?.ownerId
+                        ?.let { navController.navigate("user/$it") }
+                    is SavedIntent.ClickHistoryItem -> savedState.history.firstOrNull { it.id == intent.historyId }?.ownerId
+                        ?.let { navController.navigate("memorial/other/$it?focusHistory=${intent.historyId}") }
+                    is SavedIntent.ClickGuestBookEntry -> savedState.guestBookEntries.firstOrNull { it.id == intent.entryId }
+                        ?.takeIf { it.memorialId.isNotBlank() }
+                        ?.let { navController.navigate("memorial/other/${it.memorialId}?focusGuestbook=${it.id}") }
                     else -> onSavedIntent(intent)
                 }
             }

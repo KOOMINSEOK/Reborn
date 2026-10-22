@@ -11,5 +11,5 @@ val memorialModule = module {
     single<MemorialRepository> { MemorialRepositoryImpl(get(), get(), get()) }
     factory { CreateHistoryUseCase(get()) }
     factory { CreateGuestbookEntryUseCase(get()) }
-    factory { MemorialViewModel(get(), get(), get(), get()) }
+    factory { MemorialViewModel(get(), get(), get(), get(), get()) }
 }

@@ -33,6 +33,8 @@ data class PostResponse(
     val saved: Boolean = false,
     /** 보관했나 (본인 글만 true 일 수 있다) */
     val archived: Boolean = false,
+    /** 내 글인가 (··· 메뉴에 보관하기) */
+    val mine: Boolean = false,
     val createdAt: String,
     /** "following" | "recommended" — 피드에 들어온 이유. */
     val source: String = "following",

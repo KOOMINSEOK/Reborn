@@ -21,6 +21,8 @@ fun PostDto.toHomePost(): HomePost = HomePost(
     isLocked = isPosthumous,
     likes = likeCount,
     liked = liked,
+    saved = saved,
+    mine = mine,
     comments = commentCount,
     postedAt = createdAt.take(10), // "2026-08-27T..." -> "2026-08-27"
 )

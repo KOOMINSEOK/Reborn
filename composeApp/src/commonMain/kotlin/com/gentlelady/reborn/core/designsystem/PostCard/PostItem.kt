@@ -21,7 +21,10 @@ fun PostItem(
     onLikeClick: () -> Unit = {},
     onCommentClick: () -> Unit = {},
     /** 작성자를 눌렀을 때 (작성자 id). null 이면 누를 수 없다 */
-    onAuthorClick: ((String) -> Unit)? = null
+    onAuthorClick: ((String) -> Unit)? = null,
+    onSaveClick: () -> Unit = {},
+    /** 내 글을 보관함으로. null 이면 ··· 메뉴 없음 (남의 글·목업) */
+    onArchiveClick: (() -> Unit)? = null
 ) {
     RebornCard(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -31,13 +34,14 @@ fun PostItem(
         PostHeader(
             post = post,
             modifier = Modifier.padding(top = 12.dp),
-            onAuthorClick = if (authorId != null && onAuthorClick != null) ({ onAuthorClick(authorId) }) else null
+            onAuthorClick = if (authorId != null && onAuthorClick != null) ({ onAuthorClick(authorId) }) else null,
+            onArchiveClick = onArchiveClick?.takeIf { post.mine }
         )
         if (post.isPosthumous) {
             PosthumousBanner()
         }
         PostImageArea(post = post)
-        PostActionRow(post = post, onLikeClick = onLikeClick, onCommentClick = onCommentClick)
+        PostActionRow(post = post, onLikeClick = onLikeClick, onCommentClick = onCommentClick, onSaveClick = onSaveClick)
         PostCaption(post = post, modifier = Modifier.padding(bottom = 12.dp))
     }
 }

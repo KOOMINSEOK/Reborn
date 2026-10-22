@@ -50,7 +50,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 internal fun PostHeader(
     post: HomePost,
     modifier: Modifier = Modifier,
-    onAuthorClick: (() -> Unit)? = null
+    onAuthorClick: (() -> Unit)? = null,
+    /** 내 글이면 ··· 메뉴에 '보관하기' */
+    onArchiveClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -120,7 +122,32 @@ internal fun PostHeader(
         }
         }
 
-        Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = RebornUnselectedGray)
+        if (onArchiveClick != null) {
+            var open by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            Box {
+                Icon(
+                    Icons.Default.MoreHoriz,
+                    contentDescription = "더보기",
+                    tint = RebornUnselectedGray,
+                    modifier = Modifier.clip(CircleShape).clickable { open = true }.padding(4.dp)
+                )
+                androidx.compose.material3.DropdownMenu(
+                    expanded = open,
+                    onDismissRequest = { open = false },
+                    containerColor = RebornWhite
+                ) {
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text("보관하기") },
+                        onClick = {
+                            open = false
+                            onArchiveClick()
+                        }
+                    )
+                }
+            }
+        } else {
+            Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = RebornUnselectedGray)
+        }
     }
 }
 
@@ -190,7 +217,8 @@ internal fun PostActionRow(
     post: HomePost,
     modifier: Modifier = Modifier,
     onLikeClick: () -> Unit = {},
-    onCommentClick: () -> Unit = {}
+    onCommentClick: () -> Unit = {},
+    onSaveClick: () -> Unit = {}
 ) {
     Row(
         modifier = modifier.padding(16.dp),
@@ -220,9 +248,13 @@ internal fun PostActionRow(
         Spacer(modifier = Modifier.weight(1f))
         Icon(
             painter = painterResource(Res.drawable.ic_bookmark),
-            contentDescription = "Bookmark",
-            tint = RebornActionIconDark,
-            modifier = Modifier.size(24.dp)
+            contentDescription = if (post.saved) "저장 취소" else "저장",
+            // 저장한 글은 파란 책갈피
+            tint = if (post.saved) RebornCobaltBlue else RebornActionIconDark,
+            modifier = Modifier
+                .size(24.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                .clickable(onClick = onSaveClick)
         )
     }
 }

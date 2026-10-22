@@ -27,15 +27,20 @@ fun NavGraphBuilder.memorialNavGraph(
     }
     // focusGuestbook = 내 방명록에서 눌러 들어올 때, 방명록 탭을 그 글 위치로 연다
     composable(
-        route = "memorial/other/{memorialId}?focusGuestbook={focusGuestbook}",
+        route = "memorial/other/{memorialId}?focusGuestbook={focusGuestbook}&focusHistory={focusHistory}",
         arguments = listOf(
             navArgument("memorialId") { type = NavType.StringType },
             navArgument("focusGuestbook") { type = NavType.StringType; nullable = true; defaultValue = null },
+            navArgument("focusHistory") { type = NavType.StringType; nullable = true; defaultValue = null },
         ),
     ) { backStackEntry ->
         val id = backStackEntry.arguments?.getString("memorialId") ?: DEMO_MEMORIAL_ID
         val focus = backStackEntry.arguments?.getString("focusGuestbook")
-        MemorialRoute(navController, memorialId = id, focusGuestBookId = focus, onWritingHistoryChange = onWritingHistoryChange)
+        val focusHistory = backStackEntry.arguments?.getString("focusHistory")
+        MemorialRoute(
+            navController, memorialId = id, focusGuestBookId = focus, focusHistoryId = focusHistory,
+            onWritingHistoryChange = onWritingHistoryChange,
+        )
     }
 }
 
@@ -45,12 +50,13 @@ private fun MemorialRoute(
     memorialId: String,
     onWritingHistoryChange: (Boolean) -> Unit,
     focusGuestBookId: String? = null,
+    focusHistoryId: String? = null,
 ) {
     val viewModel: MemorialViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(memorialId, focusGuestBookId) {
-        viewModel.onIntent(MemorialIntent.LoadMemorial(memorialId, focusGuestBookId))
+    LaunchedEffect(memorialId, focusGuestBookId, focusHistoryId) {
+        viewModel.onIntent(MemorialIntent.LoadMemorial(memorialId, focusGuestBookId, focusHistoryId))
     }
     LaunchedEffect(state.isWritingHistory) {
         onWritingHistoryChange(state.isWritingHistory)

@@ -10,10 +10,12 @@ data class SavedState(
     val posts: List<SavedGridItem> = emptyList(),
     val history: List<SavedGridItem> = emptyList(),
     val guestBookEntries: List<SavedGuestBookItem> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val error: String? = null,
 )
 
 sealed interface SavedIntent {
+    /** 저장됨 화면에 들어올 때마다 (다른 화면에서 저장·취소했을 수 있다) */
     object LoadSaved : SavedIntent
     object ClickBack : SavedIntent
     data class ClickTab(val tab: SavedTab) : SavedIntent

@@ -68,7 +68,9 @@ fun HomeScreen(
                     post = post,
                     onLikeClick = { onIntent(HomeIntent.ToggleLike(post.id)) },
                     onCommentClick = { commentPostId = post.id },
-                    onAuthorClick = onAuthorClick
+                    onAuthorClick = onAuthorClick,
+                    onSaveClick = { onIntent(HomeIntent.ToggleSave(post.id)) },
+                    onArchiveClick = { onIntent(HomeIntent.ArchivePost(post.id)) }
                 )
             }
         }

@@ -19,6 +19,10 @@ data class HomePost(
     val likes: Int = 0,
     /** 내가 좋아요를 눌렀는지 */
     val liked: Boolean = false,
+    /** 내가 저장했나 */
+    val saved: Boolean = false,
+    /** 내 글인가 (··· 메뉴에 보관하기) */
+    val mine: Boolean = false,
     val comments: Int = 0,
     val postedAt: String,
 )

@@ -230,7 +230,9 @@ private fun ProfileContent(
                 PostItem(
                     post = post,
                     onLikeClick = { onIntent(UserProfileIntent.ToggleLike(post.id)) },
-                    onCommentClick = { onCommentClick(post.id) }
+                    onCommentClick = { onCommentClick(post.id) },
+                    onSaveClick = { onIntent(UserProfileIntent.ToggleSave(post.id)) },
+                    onArchiveClick = { onIntent(UserProfileIntent.ArchivePost(post.id)) }
                 )
             }
         }

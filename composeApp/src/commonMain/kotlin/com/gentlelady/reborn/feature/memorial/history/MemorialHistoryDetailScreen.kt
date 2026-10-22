@@ -160,7 +160,13 @@ fun MemorialHistoryDetailScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     CountAction(iconRes = Res.drawable.ic_share, label = "공유", contentDescription = "공유")
                     Spacer(modifier = Modifier.weight(1f))
-                    CountAction(iconRes = Res.drawable.ic_bookmark, label = "저장", contentDescription = "저장")
+                    CountAction(
+                        iconRes = Res.drawable.ic_bookmark,
+                        label = if (item.saved) "저장됨" else "저장",
+                        contentDescription = if (item.saved) "저장 취소" else "저장",
+                        tint = if (item.saved) com.gentlelady.reborn.core.theme.RebornCobaltBlue else RebornSlateGray,
+                        onClick = { onIntent(MemorialIntent.ToggleHistorySave(item.id)) }
+                    )
                 }
             }
         }

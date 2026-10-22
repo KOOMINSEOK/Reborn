@@ -29,6 +29,7 @@ data class HistoryDto(
     val likeCount: Int,
     val commentCount: Int,
     val liked: Boolean = false,
+    val saved: Boolean = false,
     val createdAt: String,
 )
 
@@ -87,6 +88,7 @@ fun HistoryDto.toHistoryItem(): MemorialHistoryItem = MemorialHistoryItem(
     imageUrls = imageUrls.mapNotNull { it.toAbsoluteServerUrl() },
     likes = likeCount,
     liked = liked,
+    saved = saved,
     comments = commentCount,
 )
 

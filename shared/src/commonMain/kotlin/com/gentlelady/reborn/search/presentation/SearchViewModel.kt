@@ -23,6 +23,7 @@ class SearchViewModel(
     private val repository: SearchRepository,
     private val currentUserId: CurrentUserIdUseCase,
     private val likeSync: LikeSync,
+    private val saveSync: com.gentlelady.reborn.interaction.presentation.SaveSync? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SearchState())
@@ -54,6 +55,14 @@ class SearchViewModel(
             is SearchIntent.ExecuteSearch -> search(_state.value.query, _state.value.currentTab, debounce = false)
             is SearchIntent.Refresh -> if (!_state.value.isSearching) loadRandomFeed()
             is SearchIntent.ToggleLike -> toggleLike(intent.postId)
+            is SearchIntent.ToggleSave -> {
+                val post = _state.value.randomFeed.firstOrNull { it.id == intent.postId }
+                if (post != null && currentUserId() != null) {
+                    saveSync?.toggle(viewModelScope, InteractionTarget.POST, post.id, post.saved) { saved ->
+                        updatePost(post.id) { it.copy(saved = saved) }
+                    }
+                }
+            }
             is SearchIntent.CommentCountChanged -> updatePost(intent.postId) {
                 it.copy(comments = (it.comments + intent.delta).coerceAtLeast(0))
             }

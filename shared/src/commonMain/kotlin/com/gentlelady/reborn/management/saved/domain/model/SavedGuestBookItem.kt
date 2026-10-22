@@ -10,5 +10,7 @@ data class SavedGuestBookItem(
     val memorialName: String, // 예: "故 김영희 님의 메모리얼"
     val message: String,
     val dateLabel: String, // 예: "2026.07.27 18:27"
-    val authorAvatar: DrawableResource?
+    val authorAvatar: DrawableResource?,
+    /** 이 방명록이 달린 추모 페이지 (목업이면 빈 값 — 눌러도 이동 안 함) */
+    val memorialId: String = "",
 )

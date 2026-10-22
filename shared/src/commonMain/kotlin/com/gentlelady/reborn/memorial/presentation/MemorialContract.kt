@@ -32,6 +32,7 @@ data class MemorialHistoryItem(
     val authorProfileRes: DrawableResource? = null,
     val likes: Int = 0,
     val liked: Boolean = false,
+    val saved: Boolean = false,
     val comments: Int = 0
 )
 
@@ -88,7 +89,12 @@ data class MemorialState(
 
 sealed interface MemorialIntent {
     /** [focusGuestBookId] 가 있으면 방명록 탭을 그 글 위치로 연다 */
-    data class LoadMemorial(val memorialId: String, val focusGuestBookId: String? = null) : MemorialIntent
+    data class LoadMemorial(
+        val memorialId: String,
+        val focusGuestBookId: String? = null,
+        /** 저장한 추억 글에서 들어오면 그 글을 바로 연다 */
+        val focusHistoryId: String? = null,
+    ) : MemorialIntent
     object ClickBack : MemorialIntent
     object ClickShare : MemorialIntent
     object ClickMusic : MemorialIntent
@@ -105,6 +111,7 @@ sealed interface MemorialIntent {
     data class AddOnlineWreathItem(val item: MemorialWreathItem) : MemorialIntent
     data class ClickHistoryImage(val index: Int) : MemorialIntent
     data class ToggleHistoryLike(val historyId: String) : MemorialIntent
+    data class ToggleHistorySave(val historyId: String) : MemorialIntent
     /** 댓글 시트를 닫을 때 — 그동안 남기고 지운 만큼 댓글 수를 고친다 */
     data class HistoryCommentCountChanged(val historyId: String, val delta: Int) : MemorialIntent
 

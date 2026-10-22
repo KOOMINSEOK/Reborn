@@ -9,6 +9,8 @@ object HomeReducer {
             is HomeResult.FeedLoaded -> state.copy(isLoading = false, posts = result.posts)
             is HomeResult.Error -> state.copy(isLoading = false, error = result.message)
             is HomeResult.LikeChanged -> state.updatePost(result.postId) { it.copy(liked = result.liked, likes = result.likes) }
+            is HomeResult.SaveChanged -> state.updatePost(result.postId) { it.copy(saved = result.saved) }
+            is HomeResult.PostRemoved -> state.copy(posts = state.posts.filterNot { it.id == result.postId })
             is HomeResult.UnreadNotifications -> state.copy(unreadNotifications = result.count)
             is HomeResult.AuthorHidden -> state.copy(posts = state.posts.filterNot { it.authorId == result.authorId })
             is HomeResult.CommentCountChanged ->

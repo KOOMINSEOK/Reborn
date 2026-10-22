@@ -82,8 +82,12 @@ private fun SavedGridContent(
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (items.isEmpty()) {
+        EmptyNote("저장한 글이 없어요.\n글 아래 책갈피를 누르면 여기에 모여요.")
+        return
+    }
     ImageGridAlbum(
-        images = items.map { GridImageSource.Resource(it.thumbnail) },
+        images = items.map { gridSource(it.imageUrl, it.thumbnail) },
         onImageClick = { index -> onItemClick(items[index].id) },
         modifier = modifier.fillMaxSize()
     )
@@ -109,11 +113,29 @@ private fun SavedGuestBookContent(
             )
         }
 
+        if (entries.isEmpty()) item { EmptyNote("아직 남긴 방명록이 없어요.") }
         items(entries, key = { it.id }) { entry ->
             SavedGuestBookRow(item = entry, onClick = { onEntryClick(entry.id) })
             HorizontalDivider(thickness = 1.dp, color = RebornGridBorderGray)
         }
     }
+}
+
+/** 사진 없는 글은 빈 칸 대신 회색 칸 (주소가 비어 있으면 흰 칸이라 안 보인다) */
+internal fun gridSource(imageUrl: String?, thumbnail: org.jetbrains.compose.resources.DrawableResource?): GridImageSource =
+    imageUrl?.let { GridImageSource.Url(it) }
+        ?: GridImageSource.Resource(thumbnail ?: Res.drawable.img_memorial_bg_dummy)
+
+@Composable
+internal fun EmptyNote(text: String) {
+    Text(
+        text = text,
+        color = RebornSlateGray,
+        fontSize = 14.sp,
+        lineHeight = 21.sp,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp, horizontal = 24.dp)
+    )
 }
 
 @Preview

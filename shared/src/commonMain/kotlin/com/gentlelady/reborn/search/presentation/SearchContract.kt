@@ -44,6 +44,7 @@ sealed interface SearchIntent {
     data object Refresh : SearchIntent
     /** 첫 화면 게시물 좋아요 */
     data class ToggleLike(val postId: String) : SearchIntent
+    data class ToggleSave(val postId: String) : SearchIntent
     /** 댓글 창에서 댓글 수가 바뀜 */
     data class CommentCountChanged(val postId: String, val delta: Int) : SearchIntent
 }

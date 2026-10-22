@@ -29,6 +29,8 @@ class UserProfileViewModel(
     setFollow: SetFollowUseCase,
     private val likeSync: LikeSync,
     private val setBlock: SetBlockUseCase,
+    private val saveSync: com.gentlelady.reborn.interaction.presentation.SaveSync? = null,
+    private val api: com.gentlelady.reborn.core.network.RebornApi? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserProfileState())
@@ -50,6 +52,8 @@ class UserProfileViewModel(
             is UserProfileIntent.LoadMore -> loadMore()
             is UserProfileIntent.ToggleFollow -> toggleFollow()
             is UserProfileIntent.ToggleLike -> toggleLike(intent.postId)
+            is UserProfileIntent.ToggleSave -> toggleSave(intent.postId)
+            is UserProfileIntent.ArchivePost -> archive(intent.postId)
             is UserProfileIntent.CommentCountChanged -> reduce(UserProfileResult.CommentCountChanged(intent.postId, intent.delta))
             is UserProfileIntent.MessageShown -> reduce(UserProfileResult.Message(null))
             is UserProfileIntent.SetBlocked -> changeBlock(intent.block)
@@ -134,6 +138,25 @@ class UserProfileViewModel(
         val post = _state.value.posts.firstOrNull { it.id == postId } ?: return
         likeSync.toggle(viewModelScope, InteractionTarget.POST, postId, post.liked, post.likes) { liked, likes ->
             reduce(UserProfileResult.LikeChanged(postId, liked, likes))
+        }
+    }
+
+    private fun toggleSave(postId: String) {
+        val post = _state.value.posts.firstOrNull { it.id == postId } ?: return
+        saveSync?.toggle(viewModelScope, InteractionTarget.POST, postId, post.saved) { saved ->
+            reduce(UserProfileResult.SaveChanged(postId, saved))
+        }
+    }
+
+    /** 내 글 보관 — 바로 빼고, 실패하면 알린다 */
+    private fun archive(postId: String) {
+        val api = api ?: return
+        reduce(UserProfileResult.PostRemoved(postId))
+        viewModelScope.launch {
+            if (runCatching { api.setArchived(postId, true) }.isFailure) {
+                reduce(UserProfileResult.Message("보관하지 못했어요. 잠시 후 다시 시도해 주세요."))
+                _state.value.profile?.id?.let { onIntent(UserProfileIntent.Load(it)) }
+            }
         }
     }
 

@@ -8,5 +8,8 @@ import org.jetbrains.compose.resources.DrawableResource
  */
 data class ArchivedPostItem(
     val id: String,
-    val thumbnail: DrawableResource
+    val thumbnail: DrawableResource? = null,
+    /** 서버 사진 (첫 장). 사진 없는 글이면 null */
+    val imageUrl: String? = null,
+    val caption: String = "",
 )

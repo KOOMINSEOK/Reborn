@@ -4,5 +4,5 @@ import com.gentlelady.reborn.management.archive.presentation.ArchiveViewModel
 import org.koin.dsl.module
 
 val archiveModule = module {
-    factory { ArchiveViewModel() }
+    factory { ArchiveViewModel(get(), com.gentlelady.reborn.core.auth.CurrentUserIdUseCase(get())) }
 }

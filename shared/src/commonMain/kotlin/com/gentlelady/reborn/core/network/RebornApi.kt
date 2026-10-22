@@ -173,6 +173,26 @@ class RebornApi(
         client.post("notifications/read") { parameter("upTo", upTo) }
     }
 
+    // ---------- 저장·보관 ----------
+    /** 저장(PUT)/취소(DELETE). 둘 다 여러 번 해도 같다. 못 보는 글이면 404 */
+    suspend fun setSaved(target: InteractionTarget, id: String, saved: Boolean) {
+        val path = "${target.parentPath}/$id/save"
+        if (saved) client.put(path) else client.delete(path)
+    }
+
+    suspend fun savedPosts(offset: Int = 0): FeedDto = client.get("me/saved/posts") { parameter("offset", offset) }.body()
+
+    suspend fun savedHistory(offset: Int = 0): com.gentlelady.reborn.core.network.dto.HistoryListDto =
+        client.get("me/saved/history") { parameter("offset", offset) }.body()
+
+    /** 내 글 보관(POST)/되돌리기(DELETE) */
+    suspend fun setArchived(postId: String, archived: Boolean) {
+        val path = "posts/$postId/archive"
+        if (archived) client.post(path) else client.delete(path)
+    }
+
+    suspend fun archivedPosts(offset: Int = 0): FeedDto = client.get("me/archive") { parameter("offset", offset) }.body()
+
     // ---------- 메시지 ----------
     suspend fun conversations(): ConversationListDto = client.get("conversations").body()
 

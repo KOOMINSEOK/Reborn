@@ -77,7 +77,8 @@ fun SearchScreen(
                         onLikeClick = { onIntent(SearchIntent.ToggleLike(post.id)) },
                         // 목업 글(작성자 id 없음)은 댓글 창을 열지 않는다
                         onCommentClick = { if (post.authorId != null) commentPostId = post.id },
-                        onAuthorClick = onAuthorClick
+                        onAuthorClick = onAuthorClick,
+                        onSaveClick = { onIntent(SearchIntent.ToggleSave(post.id)) }
                     )
                     HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)
                 }

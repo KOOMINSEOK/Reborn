@@ -17,6 +17,9 @@ data class PostDto(
     val likeCount: Int,
     val commentCount: Int,
     val liked: Boolean = false,
+    val saved: Boolean = false,
+    val archived: Boolean = false,
+    val mine: Boolean = false,
     val createdAt: String,
     val source: String = "following",
 )

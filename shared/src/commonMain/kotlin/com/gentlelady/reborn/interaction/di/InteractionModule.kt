@@ -17,5 +17,6 @@ val interactionModule = module {
     factory { AddCommentUseCase(get()) }
     factory { DeleteCommentUseCase(get()) }
     factory { LikeSync(get()) } // ViewModel 마다 하나
+    factory { com.gentlelady.reborn.interaction.presentation.SaveSync(get()) }
     factory { CommentsViewModel(get(), get(), get()) }
 }
