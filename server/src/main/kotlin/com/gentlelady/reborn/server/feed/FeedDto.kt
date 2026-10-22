@@ -29,6 +29,10 @@ data class PostResponse(
     val likeCount: Int,
     val commentCount: Int,
     val liked: Boolean = false,
+    /** 내가 저장했나 */
+    val saved: Boolean = false,
+    /** 보관했나 (본인 글만 true 일 수 있다) */
+    val archived: Boolean = false,
     val createdAt: String,
     /** "following" | "recommended" — 피드에 들어온 이유. */
     val source: String = "following",

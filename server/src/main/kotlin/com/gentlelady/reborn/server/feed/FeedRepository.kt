@@ -160,7 +160,7 @@ class FeedRepository {
      */
     fun userPosts(viewerId: UUID, authorId: UUID, offset: Int, limit: Int): List<PostResponse> =
         Db.query(
-            POST_SELECT + " where p.author_id = ? and p.status = 'published'" + POST_VISIBLE + NOT_BLOCKED + """
+            POST_SELECT + " where p.author_id = ? and p.status = 'published'" + POST_VISIBLE + NOT_BLOCKED + NOT_ARCHIVED + """
             order by p.created_at desc, p.id desc
             offset ? limit ?
             """.trimIndent(),
@@ -173,7 +173,7 @@ class FeedRepository {
      */
     fun randomPosts(viewerId: UUID, limit: Int): List<PostResponse> =
         Db.query(
-            "select * from (" + POST_SELECT + " where p.status = 'published' and p.author_id <> ?" + POST_VISIBLE + NOT_BLOCKED + """
+            "select * from (" + POST_SELECT + " where p.status = 'published' and p.author_id <> ?" + POST_VISIBLE + NOT_BLOCKED + NOT_ARCHIVED + """
             order by p.created_at desc
             limit $RANDOM_POOL
             ) recent
@@ -183,13 +183,55 @@ class FeedRepository {
             viewerId, viewerId, viewerId, viewerId, viewerId, viewerId, limit,
         ) { it.toPost("search") }
 
+    /** 내가 저장한 게시물 (저장한 순, 지금 볼 수 있는 것만) */
+    fun savedPosts(viewerId: UUID, offset: Int, limit: Int): List<PostResponse> =
+        Db.query(
+            POST_SELECT + """
+            join saves s on s.user_id = v.viewer and s.kind = 'post' and s.target_id = p.id
+            where true
+            """.trimIndent() + POST_VISIBLE + NOT_BLOCKED + """
+            order by s.created_at desc
+            offset ? limit ?
+            """.trimIndent(),
+            viewerId, viewerId, viewerId, viewerId, viewerId, offset, limit,
+        ) { it.toPost("saved") }
+
+    /** 내 보관함 (보관한 순) */
+    fun archivedPosts(viewerId: UUID, offset: Int, limit: Int): List<PostResponse> =
+        Db.query(
+            POST_SELECT + """
+            where p.author_id = v.viewer and p.archived_at is not null
+            order by p.archived_at desc
+            offset ? limit ?
+            """.trimIndent(),
+            viewerId, offset, limit,
+        ) { it.toPost("archive") }
+
+    /** 내 글 보관/되돌리기. 내 글이 아니면 false */
+    fun setArchived(authorId: UUID, postId: UUID, archived: Boolean): Boolean =
+        Db.update(
+            "update posts set archived_at = case when ? then coalesce(archived_at, now()) end where id = ? and author_id = ?",
+            archived, postId, authorId,
+        ) == 1
+
+    /** 저장/취소. 저장은 지금 볼 수 있는 글만 (못 보면 false) — 둘 다 여러 번 해도 같다 */
+    fun setSaved(viewerId: UUID, postId: UUID, saved: Boolean): Boolean {
+        if (!saved) {
+            Db.update("delete from saves where user_id = ? and kind = 'post' and target_id = ?", viewerId, postId)
+            return true
+        }
+        if (getPost(viewerId, postId) == null) return false
+        Db.update("insert into saves (user_id, kind, target_id) values (?, 'post', ?) on conflict do nothing", viewerId, postId)
+        return true
+    }
+
     /** 내 글 + 팔로우한 사람들의 최신 게시물. (내 글이 빠지면 방금 올린 글이 홈에 안 보인다) */
     fun followingFeed(viewerId: UUID, limit: Int): List<PostResponse> =
         Db.query(
             POST_SELECT + """
             where p.status = 'published'
               and (p.author_id = ? or p.author_id in (select followee_id from follows where follower_id = ?))
-            """.trimIndent() + NOT_BLOCKED + """
+            """.trimIndent() + NOT_BLOCKED + NOT_ARCHIVED + """
             order by p.created_at desc
             limit ?
             """.trimIndent(),
@@ -207,7 +249,7 @@ class FeedRepository {
               and pr.is_private = false
               and p.author_id <> ?
               and p.author_id not in (select followee_id from follows where follower_id = ?)
-            """.trimIndent() + NOT_BLOCKED + """
+            """.trimIndent() + NOT_BLOCKED + NOT_ARCHIVED + """
             order by (
                 ln(1 + p.like_count + p.comment_count * 2)
                 - extract(epoch from now() - p.created_at) / 45000.0
@@ -225,18 +267,24 @@ private const val POST_SELECT = """
     select p.id, p.author_id, pr.display_name as author_name, pr.handle as author_handle,
            pr.avatar_url as author_avatar_url,
            p.caption, p.image_urls, p.is_posthumous, p.status,
-           p.like_count, p.comment_count, p.created_at,
-           exists(select 1 from post_likes pl where pl.post_id = p.id and pl.user_id = ?) as liked
-    from posts p
+           p.like_count, p.comment_count, p.created_at, p.archived_at is not null as archived,
+           exists(select 1 from post_likes pl where pl.post_id = p.id and pl.user_id = v.viewer) as liked,
+           exists(select 1 from saves sv where sv.user_id = v.viewer and sv.kind = 'post' and sv.target_id = p.id) as saved
+    from (select ?::uuid as viewer) v
+    cross join posts p
     join profiles pr on pr.id = p.author_id
 """
 
-/** 본인 글이거나, 발행됐고 (공개 계정 또는 내가 팔로우 중). `?` 2개 = viewerId, viewerId. */
+/** 보관한 글은 목록(피드·프로필·검색)에서 뺀다 — 본인에게도. 보관함에서만 */
+private const val NOT_ARCHIVED = " and p.archived_at is null "
+
+/** 본인 글이거나, 발행됐고 보관 안 했고 (공개 계정 또는 내가 팔로우 중). `?` 2개 = viewerId, viewerId. */
 private const val POST_VISIBLE = """
     and (
         p.author_id = ?
         or (
             p.status = 'published'
+            and p.archived_at is null
             and (
                 pr.is_private = false
                 or exists(select 1 from follows f where f.follower_id = ? and f.followee_id = p.author_id)
@@ -266,6 +314,8 @@ private fun ResultSet.toPost(source: String) = PostResponse(
     status = getString("status"),
     likeCount = getInt("like_count"),
     commentCount = getInt("comment_count"),
+    saved = getBoolean("saved"),
+    archived = getBoolean("archived"),
     liked = getBoolean("liked"),
     createdAt = getObject("created_at", OffsetDateTime::class.java).toString(),
     source = source,

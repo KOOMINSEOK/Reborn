@@ -56,6 +56,32 @@ class MemorialRepository {
     }
 
     /** 히스토리 한 건. 소속 추모 페이지를 볼 수 없으면 null. */
+    /** 내가 저장한 추억 글 (저장한 순, 지금 볼 수 있는 추모 페이지 것만) */
+    fun savedHistory(viewerId: UUID, offset: Int, limit: Int): List<HistoryResponse> =
+        Db.query(
+            HISTORY_SELECT + """
+            join memorials m on m.id = h.memorial_id
+            join saves s on s.user_id = v.viewer and s.kind = 'history' and s.target_id = h.id
+            where true
+            """.trimIndent() + MEMORIAL_VISIBLE + """
+            order by s.created_at desc
+            offset ? limit ?
+            """.trimIndent(),
+            viewerId, viewerId, viewerId, viewerId, viewerId, offset, limit,
+            map = ResultSet::toHistory,
+        )
+
+    /** 저장/취소. 저장은 지금 볼 수 있는 글만 (못 보면 false) */
+    fun setHistorySaved(viewerId: UUID, historyId: UUID, saved: Boolean): Boolean {
+        if (!saved) {
+            Db.update("delete from saves where user_id = ? and kind = 'history' and target_id = ?", viewerId, historyId)
+            return true
+        }
+        if (getHistory(viewerId, historyId) == null) return false
+        Db.update("insert into saves (user_id, kind, target_id) values (?, 'history', ?) on conflict do nothing", viewerId, historyId)
+        return true
+    }
+
     fun getHistory(viewerId: UUID, id: UUID): HistoryResponse? =
         Db.queryFirst(
             HISTORY_SELECT + " join memorials m on m.id = h.memorial_id where h.id = ?" + MEMORIAL_VISIBLE,
@@ -186,8 +212,10 @@ internal const val MEMORIAL_VISIBLE = """
 private const val HISTORY_SELECT = """
     select h.id, h.memorial_id, h.author_id, pr.display_name as author_name, pr.avatar_url as author_avatar_url,
            h.caption, h.image_urls, h.like_count, h.comment_count, h.created_at,
-           exists(select 1 from history_likes hl where hl.history_id = h.id and hl.user_id = ?) as liked
-    from memorial_history h
+           exists(select 1 from history_likes hl where hl.history_id = h.id and hl.user_id = v.viewer) as liked,
+           exists(select 1 from saves sv where sv.user_id = v.viewer and sv.kind = 'history' and sv.target_id = h.id) as saved
+    from (select ?::uuid as viewer) v
+    cross join memorial_history h
     join profiles pr on pr.id = h.author_id
 """
 
@@ -223,6 +251,7 @@ private fun ResultSet.toHistory() = HistoryResponse(
     likeCount = getInt("like_count"),
     commentCount = getInt("comment_count"),
     liked = getBoolean("liked"),
+    saved = getBoolean("saved"),
     createdAt = getObject("created_at", OffsetDateTime::class.java).toString(),
 )
 

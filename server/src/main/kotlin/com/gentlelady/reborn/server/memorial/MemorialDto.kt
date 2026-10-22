@@ -41,6 +41,8 @@ data class HistoryResponse(
     val likeCount: Int,
     val commentCount: Int,
     val liked: Boolean = false,
+    /** 내가 저장했나 */
+    val saved: Boolean = false,
     val createdAt: String,
 )
 

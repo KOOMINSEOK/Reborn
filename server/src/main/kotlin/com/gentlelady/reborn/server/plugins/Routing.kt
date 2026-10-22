@@ -4,6 +4,7 @@ import com.gentlelady.reborn.server.chat.ChatRepository
 import com.gentlelady.reborn.server.chat.chatRoutes
 import com.gentlelady.reborn.server.feed.FeedRepository
 import com.gentlelady.reborn.server.feed.feedRoutes
+import com.gentlelady.reborn.server.feed.savedRoutes
 import com.gentlelady.reborn.server.interaction.InteractionRepo
 import com.gentlelady.reborn.server.interaction.interactionRoutes
 import com.gentlelady.reborn.server.internal.internalRoutes
@@ -62,6 +63,7 @@ fun Application.configureRouting() {
         memorialRoutes(memorial, historyInteractions, search)
         profileRoutes(profile, search)
         searchRoutes(search, feed)
+        savedRoutes(feed, memorial)
         notificationRoutes(notifications)
         chatRoutes(ChatRepository())
         signupRoutes(SignupRepository())
