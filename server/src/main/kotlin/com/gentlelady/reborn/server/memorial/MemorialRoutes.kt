@@ -20,9 +20,13 @@ import java.util.UUID
 private const val DEFAULT_LIMIT = 20
 private const val MAX_LIMIT = 50
 
-fun Route.memorialRoutes(repo: MemorialRepository, historyInteractions: InteractionRepo) {
+fun Route.memorialRoutes(
+    repo: MemorialRepository,
+    historyInteractions: InteractionRepo,
+    views: com.gentlelady.reborn.server.search.SearchRepository,
+) {
     authenticate(SUPABASE_AUTH) {
-        memorialEndpoints(repo)
+        memorialEndpoints(repo, views)
         historyEndpoints(repo)
         guestbookEndpoints(repo)
         myGuestbookEndpoint(repo)
@@ -32,7 +36,7 @@ fun Route.memorialRoutes(repo: MemorialRepository, historyInteractions: Interact
     }
 }
 
-private fun Route.memorialEndpoints(repo: MemorialRepository) {
+private fun Route.memorialEndpoints(repo: MemorialRepository, views: com.gentlelady.reborn.server.search.SearchRepository) {
     post("/memorials") {
         val req = call.receive<CreateMemorialRequest>()
         imageListError(call.userId(), listOfNotNull(req.profileImageUrl))?.let {
@@ -43,6 +47,10 @@ private fun Route.memorialEndpoints(repo: MemorialRepository) {
     get("/memorials/{id}") {
         val memorial = repo.get(call.userId(), UUID.fromString(call.parameters["id"]))
             ?: return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("memorial_not_found"))
+        // 개설자가 아닌 사람이 열었으면 조회수 (세다 실패해도 페이지는 보여 준다)
+        if (memorial.creatorId != call.userId().toString()) {
+            runCatching { views.countView(call.userId(), "memorial", UUID.fromString(memorial.id)) }
+        }
         call.respond(memorial)
     }
     post("/memorials/{id}/follow") {

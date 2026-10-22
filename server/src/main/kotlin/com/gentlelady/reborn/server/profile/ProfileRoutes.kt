@@ -18,7 +18,7 @@ import java.util.UUID
 private const val DEFAULT_LIMIT = 30
 private const val MAX_LIMIT = 100
 
-fun Route.profileRoutes(repo: ProfileRepository) {
+fun Route.profileRoutes(repo: ProfileRepository, views: com.gentlelady.reborn.server.search.SearchRepository) {
     authenticate(SUPABASE_AUTH) {
         get("/me/profile") {
             repo.getMy(call.userId())?.let { call.respond(it) }
@@ -55,8 +55,11 @@ fun Route.profileRoutes(repo: ProfileRepository) {
         route("/users/{id}") {
             get {
                 val target = UUID.fromString(call.parameters["id"])
-                repo.getPublic(call.userId(), target)?.let { call.respond(it) }
-                    ?: call.respond(HttpStatusCode.NotFound, ErrorResponse("user_not_found"))
+                val profile = repo.getPublic(call.userId(), target)
+                    ?: return@get call.respond(HttpStatusCode.NotFound, ErrorResponse("user_not_found"))
+                // 남이 열었으면 조회수 (세다 실패해도 프로필은 보여 준다)
+                if (target != call.userId()) runCatching { views.countView(call.userId(), "profile", target) }
+                call.respond(profile)
             }
             get("/followers") {
                 when (repo.canSeeRelations(call.userId(), targetId())) {

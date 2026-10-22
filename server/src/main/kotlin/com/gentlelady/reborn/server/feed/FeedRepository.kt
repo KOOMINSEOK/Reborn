@@ -167,6 +167,22 @@ class FeedRepository {
             viewerId, authorId, viewerId, viewerId, viewerId, viewerId, offset, limit,
         ) { it.toPost("profile") }
 
+    /**
+     * 남의 볼 수 있는 게시물 아무거나 (검색 첫 화면). 최근 [RANDOM_POOL]개 안에서만 고른다 —
+     * 전체에서 random() 으로 고르면 게시물이 늘수록 매번 다 훑는다. (최근순 색인으로 앞부분만 본다)
+     */
+    fun randomPosts(viewerId: UUID, limit: Int): List<PostResponse> =
+        Db.query(
+            "select * from (" + POST_SELECT + " where p.status = 'published' and p.author_id <> ?" + POST_VISIBLE + NOT_BLOCKED + """
+            order by p.created_at desc
+            limit $RANDOM_POOL
+            ) recent
+            order by random()
+            limit ?
+            """.trimIndent(),
+            viewerId, viewerId, viewerId, viewerId, viewerId, viewerId, limit,
+        ) { it.toPost("search") }
+
     /** 내 글 + 팔로우한 사람들의 최신 게시물. (내 글이 빠지면 방금 올린 글이 홈에 안 보인다) */
     fun followingFeed(viewerId: UUID, limit: Int): List<PostResponse> =
         Db.query(
@@ -201,6 +217,8 @@ class FeedRepository {
             viewerId, viewerId, viewerId, viewerId, viewerId, limit,
         ) { it.toPost("recommended") }
 }
+
+private const val RANDOM_POOL = 200
 
 /** 첫 `?` = viewerId (liked 서브쿼리). where 절 파라미터는 그 뒤에 온다. */
 private const val POST_SELECT = """

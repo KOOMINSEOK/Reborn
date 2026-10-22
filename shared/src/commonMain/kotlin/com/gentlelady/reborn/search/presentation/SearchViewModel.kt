@@ -1,46 +1,100 @@
 package com.gentlelady.reborn.search.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.gentlelady.reborn.core.auth.CurrentUserIdUseCase
 import com.gentlelady.reborn.data.MockDataSource
+import com.gentlelady.reborn.search.data.SearchRepository
 import com.gentlelady.reborn.search.domain.entity.MemorialSearchItem
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class SearchViewModel : ViewModel() {
+private const val SEARCH_DEBOUNCE_MS = 300L
 
-    private val _state = MutableStateFlow(
-        SearchState(randomFeed = MockDataSource.searchDefaultFeed())
-    )
+/** 검색 탭. 앱 전체에서 하나 — 계정이 바뀌면 다시 받는다. 둘러보기(로그인 안 함)면 목업. */
+class SearchViewModel(
+    private val repository: SearchRepository,
+    private val currentUserId: CurrentUserIdUseCase,
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(SearchState())
     val state: StateFlow<SearchState> = _state.asStateFlow()
+    private var searchJob: Job? = null
+    private var feedJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            currentUserId.changes.collect {
+                _state.update { s -> s.copy(results = emptyList(), randomFeed = emptyList()) }
+                loadRandomFeed()
+                if (_state.value.isSearching) search(_state.value.query, _state.value.currentTab, debounce = false)
+            }
+        }
+    }
 
     fun dispatch(intent: SearchIntent) {
         when (intent) {
-            is SearchIntent.UpdateQuery -> _state.update {
-                it.copy(query = intent.query, results = search(intent.query, it.currentTab))
+            is SearchIntent.UpdateQuery -> {
+                _state.update { it.copy(query = intent.query) }
+                search(intent.query, _state.value.currentTab, debounce = true)
             }
-            is SearchIntent.ChangeTab -> _state.update {
-                it.copy(currentTab = intent.tab, results = sort(it.results, intent.tab))
+            // 정렬은 서버가 한다 (많은 사람 중 위쪽만 받으니까)
+            is SearchIntent.ChangeTab -> {
+                _state.update { it.copy(currentTab = intent.tab) }
+                search(_state.value.query, intent.tab, debounce = false)
             }
-            is SearchIntent.ExecuteSearch -> _state.update {
-                it.copy(results = search(it.query, it.currentTab))
-            }
+            is SearchIntent.ExecuteSearch -> search(_state.value.query, _state.value.currentTab, debounce = false)
+            is SearchIntent.Refresh -> if (!_state.value.isSearching) loadRandomFeed()
             is SearchIntent.ClickResultItem -> Unit // 네비게이션은 composeApp 그래프에서 처리
         }
     }
 
-    private fun search(query: String, tab: SearchTab): List<MemorialSearchItem> {
+    /** 입력이 멈추면 찾는다. 늦게 온 옛 결과가 덮지 않게 이전 요청은 취소 */
+    private fun search(query: String, tab: SearchTab, debounce: Boolean) {
+        searchJob?.cancel()
         val q = query.trim()
-        if (q.isBlank()) return emptyList()
-        val matched = MockDataSource.memorialSearchItems.filter { it.name.contains(q, ignoreCase = true) }
-        return sort(matched, tab)
+        if (q.isEmpty()) {
+            _state.update { it.copy(results = emptyList(), isLoading = false, error = null) }
+            return
+        }
+        if (currentUserId() == null) {
+            _state.update { it.copy(results = mockSearch(q, tab), error = null) }
+            return
+        }
+        searchJob = viewModelScope.launch {
+            if (debounce) delay(SEARCH_DEBOUNCE_MS)
+            _state.update { it.copy(isLoading = true, error = null) }
+            val results = runCatching { repository.search(q, tab) }.getOrNull()
+            _state.update {
+                if (results == null) it.copy(isLoading = false, error = "검색하지 못했어요. 잠시 후 다시 시도해 주세요.")
+                else it.copy(isLoading = false, results = results)
+            }
+        }
     }
 
-    private fun sort(items: List<MemorialSearchItem>, tab: SearchTab): List<MemorialSearchItem> =
-        when (tab) {
-            SearchTab.LIKES -> items.sortedByDescending { it.likeValue }
-            SearchTab.VIEWS -> items.sortedByDescending { it.viewValue }
-            SearchTab.FLOWERS -> items.sortedByDescending { it.flowerValue }
+    private fun loadRandomFeed() {
+        feedJob?.cancel()
+        if (currentUserId() == null) {
+            _state.update { it.copy(randomFeed = MockDataSource.searchDefaultFeed()) }
+            return
+        }
+        feedJob = viewModelScope.launch {
+            val posts = runCatching { repository.randomPosts() }.getOrNull() ?: return@launch
+            _state.update { it.copy(randomFeed = posts) }
+        }
+    }
+
+    private fun mockSearch(q: String, tab: SearchTab): List<MemorialSearchItem> =
+        MockDataSource.memorialSearchItems.filter { it.name.contains(q, ignoreCase = true) }.let { items ->
+            when (tab) {
+                SearchTab.LIKES -> items.sortedByDescending { it.likeValue }
+                SearchTab.VIEWS -> items.sortedByDescending { it.viewValue }
+                SearchTab.FLOWERS -> items.sortedByDescending { it.flowerValue }
+            }
         }
 }

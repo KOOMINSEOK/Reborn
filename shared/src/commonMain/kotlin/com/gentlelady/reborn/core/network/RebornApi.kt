@@ -202,6 +202,16 @@ class RebornApi(
         client.delete("conversations/$id")
     }
 
+    /** 사람·추모 페이지 통합 검색. [sort] = likes · views · flowers */
+    suspend fun search(q: String, sort: String): com.gentlelady.reborn.core.network.dto.SearchListDto =
+        client.get("search") {
+            parameter("q", q)
+            parameter("sort", sort)
+        }.body()
+
+    /** 검색어가 없을 때 보여 줄 아무 게시물 몇 개 */
+    suspend fun randomPosts(): FeedDto = client.get("search/random").body()
+
     /** 이름·아이디로 사람 찾기 */
     suspend fun searchUsers(q: String): UserListDto = client.get("users/search") { parameter("q", q) }.body()
 
