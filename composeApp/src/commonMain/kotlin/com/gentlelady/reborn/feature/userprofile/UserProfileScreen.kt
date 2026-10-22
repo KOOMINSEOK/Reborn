@@ -57,6 +57,8 @@ fun UserProfileRoute(
     /** 차단/해제가 서버에 반영됐을 때 (그 사람 id, 차단했나) — 홈 피드 등을 맞추게 */
     onBlockChanged: (String, Boolean) -> Unit = { _, _ -> },
     onUserClick: (String) -> Unit = {},
+    /** 그 사람과 대화 (그 사람 id) */
+    onMessage: (String) -> Unit = {},
     viewModel: UserProfileViewModel = koinViewModel(),
 ) {
     LaunchedEffect(userId) { viewModel.onIntent(UserProfileIntent.Load(userId)) }
@@ -76,7 +78,8 @@ fun UserProfileRoute(
         onIntent = viewModel::onIntent,
         onBack = onBack,
         onOpenFollows = onOpenFollows,
-        onUserClick = onUserClick
+        onUserClick = onUserClick,
+        onMessage = onMessage
     )
 }
 
@@ -88,6 +91,7 @@ fun UserProfileScreen(
     onBack: () -> Unit,
     onOpenFollows: (String, FollowTab, String) -> Unit = { _, _, _ -> },
     onUserClick: (String) -> Unit = {},
+    onMessage: (String) -> Unit = {},
 ) {
     var commentPostId by remember { mutableStateOf<String?>(null) }
     var blockConfirm by remember { mutableStateOf(false) }
@@ -151,7 +155,8 @@ fun UserProfileScreen(
                     profile = profile,
                     onIntent = onIntent,
                     onCommentClick = { commentPostId = it },
-                    onOpenFollows = { tab -> onOpenFollows(profile.id, tab, profile.handle) }
+                    onOpenFollows = { tab -> onOpenFollows(profile.id, tab, profile.handle) },
+                    onMessage = { onMessage(profile.id) }
                 )
             }
         }
@@ -193,6 +198,7 @@ private fun ProfileContent(
     onIntent: (UserProfileIntent) -> Unit,
     onCommentClick: (String) -> Unit,
     onOpenFollows: (FollowTab) -> Unit,
+    onMessage: () -> Unit,
 ) {
     val listState = rememberLazyListState()
     // 끝에서 3개 안쪽까지 내려오면 다음 페이지
@@ -211,6 +217,7 @@ private fun ProfileContent(
                 onFollowClick = { onIntent(UserProfileIntent.ToggleFollow) },
                 onUnblockClick = { onIntent(UserProfileIntent.SetBlocked(false)) },
                 unblockEnabled = !state.isChangingBlock,
+                onMessageClick = onMessage,
                 // 나를 차단했거나 비공개면 서버가 목록을 안 준다 → 잠긴 프로필은 숫자만
                 onOpenFollows = if (profile.isLocked) null else onOpenFollows
             )
@@ -246,6 +253,7 @@ private fun ProfileHeader(
     onFollowClick: () -> Unit,
     onUnblockClick: () -> Unit,
     unblockEnabled: Boolean,
+    onMessageClick: () -> Unit,
     onOpenFollows: ((FollowTab) -> Unit)?,
 ) {
     Column(Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 24.dp, vertical = 16.dp)) {
@@ -295,32 +303,56 @@ private fun ProfileHeader(
 
         if (!profile.isMe) {
             Spacer(Modifier.height(16.dp))
-            val buttonModifier = Modifier.fillMaxWidth().height(40.dp)
             if (profile.blockedByMe) {
-                // 차단 중엔 팔로우할 수 없다 → 버튼 자리에 해제
-                OutlinedButton(
-                    onClick = onUnblockClick,
-                    enabled = unblockEnabled,
-                    modifier = buttonModifier,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, RebornGridBorderGray)
-                ) { Text("차단 해제", color = Color.Black, fontWeight = FontWeight.Bold) }
-            } else if (profile.followedByMe) {
-                OutlinedButton(
-                    onClick = onFollowClick,
-                    modifier = buttonModifier,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, RebornGridBorderGray)
-                ) { Text("팔로잉", color = Color.Black, fontWeight = FontWeight.Bold) }
+                FollowOrUnblockButton(profile, onFollowClick, onUnblockClick, unblockEnabled, Modifier.fillMaxWidth())
             } else {
-                Button(
-                    onClick = onFollowClick,
-                    modifier = buttonModifier,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = RebornCobaltBlue)
-                ) { Text("팔로우", fontWeight = FontWeight.Bold) }
+                // 팔로우 · 메시지 나란히
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FollowOrUnblockButton(profile, onFollowClick, onUnblockClick, unblockEnabled, Modifier.weight(1f))
+                    OutlinedButton(
+                        onClick = onMessageClick,
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, RebornGridBorderGray)
+                    ) { Text("메시지", color = Color.Black, fontWeight = FontWeight.Bold) }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun FollowOrUnblockButton(
+    profile: UserProfile,
+    onFollowClick: () -> Unit,
+    onUnblockClick: () -> Unit,
+    unblockEnabled: Boolean,
+    modifier: Modifier,
+) {
+    val buttonModifier = modifier.height(40.dp)
+    if (profile.blockedByMe) {
+        // 차단 중엔 팔로우할 수 없다 → 버튼 자리에 해제
+        OutlinedButton(
+            onClick = onUnblockClick,
+            enabled = unblockEnabled,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(10.dp),
+            border = BorderStroke(1.dp, RebornGridBorderGray)
+        ) { Text("차단 해제", color = Color.Black, fontWeight = FontWeight.Bold) }
+    } else if (profile.followedByMe) {
+        OutlinedButton(
+            onClick = onFollowClick,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(10.dp),
+            border = BorderStroke(1.dp, RebornGridBorderGray)
+        ) { Text("팔로잉", color = Color.Black, fontWeight = FontWeight.Bold) }
+    } else {
+        Button(
+            onClick = onFollowClick,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(10.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = RebornCobaltBlue)
+        ) { Text("팔로우", fontWeight = FontWeight.Bold) }
     }
 }
 

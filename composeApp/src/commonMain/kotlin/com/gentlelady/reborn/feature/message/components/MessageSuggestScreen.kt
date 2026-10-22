@@ -1,5 +1,11 @@
 package com.gentlelady.reborn.feature.message.components
 
+import androidx.compose.ui.draw.clip
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gentlelady.reborn.core.designsystem.components.RebornImage
+import com.gentlelady.reborn.message.presentation.UserSearchViewModel
+import org.koin.compose.viewmodel.koinViewModel
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,19 +36,47 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
  * 상단 뒤로가기 + 검색필드, 아래 '추천 더보기' 목록 (X로 개별 제거).
  */
 @Composable
+internal fun MessageSuggestRoute(
+    onBack: () -> Unit,
+    onUserClick: (SuggestedUser) -> Unit,
+    viewModel: UserSearchViewModel = koinViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    MessageSuggestScreen(
+        query = state.query,
+        users = state.users,
+        onQueryChange = viewModel::onQueryChange,
+        onBack = onBack,
+        onUserClick = onUserClick
+    )
+}
+
+/** 검색어가 없으면 추천(내가 팔로우하는 사람), 있으면 이름·아이디 검색 결과 */
+@Composable
 internal fun MessageSuggestScreen(
-    suggested: List<SuggestedUser>,
+    query: String,
+    users: List<SuggestedUser>,
+    onQueryChange: (String) -> Unit,
     onBack: () -> Unit,
     onUserClick: (SuggestedUser) -> Unit
 ) {
-    var query by remember { mutableStateOf("") }
-    val list = remember { mutableStateListOf<SuggestedUser>().apply { addAll(suggested) } }
+    // X 로 지운 추천은 이 화면에서만 숨긴다
+    var dismissed by remember { mutableStateOf(setOf<String>()) }
+    val list = users.filterNot { it.id in dismissed }
 
     Scaffold(containerColor = Color.White) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            SearchHeader(query = query, onQueryChange = { query = it }, onBack = onBack, placeholder = "검색")
+            SearchHeader(query = query, onQueryChange = onQueryChange, onBack = onBack, placeholder = "검색")
             Spacer(Modifier.height(8.dp))
-            Text(
+            if (query.isNotBlank() && list.isEmpty()) {
+                Text(
+                    "찾는 사람이 없어요.",
+                    fontSize = 14.sp,
+                    color = RebornSlateGray,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+            if (query.isBlank()) Text(
                 text = "추천 더보기",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
@@ -58,13 +92,17 @@ internal fun MessageSuggestScreen(
                             .padding(horizontal = 16.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(Modifier.size(44.dp).background(RebornDividerGray, CircleShape))
+                        if (user.avatarUrl.isNotBlank()) {
+                            RebornImage(url = user.avatarUrl, fallback = null, contentDescription = null, modifier = Modifier.size(44.dp).clip(CircleShape))
+                        } else {
+                            Box(Modifier.size(44.dp).background(RebornDividerGray, CircleShape))
+                        }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(user.name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                             Text(user.handle, fontSize = 12.sp, color = RebornSlateGray)
                         }
-                        IconButton(onClick = { list.remove(user) }) {
+                        if (query.isBlank()) IconButton(onClick = { dismissed = dismissed + user.id }) {
                             Icon(Icons.Default.Close, contentDescription = "삭제", tint = RebornSlateGray)
                         }
                     }
@@ -106,11 +144,12 @@ internal fun SearchHeader(
 private fun MessageSuggestScreenPreview() {
     MaterialTheme {
         MessageSuggestScreen(
-            suggested = listOf(
+            query = "",
+            users = listOf(
                 SuggestedUser("1", "이준수", "lee_junnnn"),
                 SuggestedUser("2", "하준표", "dlkfjd8skdjf2")
             ),
-            onBack = {}, onUserClick = {}
+            onQueryChange = {}, onBack = {}, onUserClick = {}
         )
     }
 }

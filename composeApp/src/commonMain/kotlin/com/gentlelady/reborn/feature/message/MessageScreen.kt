@@ -57,6 +57,7 @@ fun MessageScreen(
                             timestamp = room.timestamp,
                             isUnread = room.isUnread,
                             isMemorialMode = false,
+                            avatarUrl = room.avatarUrl,
                             onClick = { onIntent(MessageIntent.ClickChatRoom(room.id)) }
                         )
                         HorizontalDivider(color = RebornDividerGray, thickness = 1.dp)

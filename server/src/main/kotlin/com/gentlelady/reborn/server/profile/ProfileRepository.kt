@@ -84,6 +84,26 @@ class ProfileRepository {
             map = ResultSet::toUserSummary,
         )
 
+    /** 아이디가 이걸로 시작하거나 이름에 이게 들어간 사람. 아이디가 딱 맞으면 맨 위 */
+    fun search(viewerId: UUID, q: String, page: Page): List<UserSummaryResponse> {
+        val like = likeEscape(q)
+        return Db.query(
+            USER_SUMMARY_SELECT + """
+            from profiles pr
+            where pr.onboarded_at is not null and pr.id <> ?
+              and (pr.handle ilike ? or pr.display_name ilike ?)
+              and not exists(
+                  select 1 from blocks b
+                  where (b.blocker_id = pr.id and b.blocked_id = ?) or (b.blocker_id = ? and b.blocked_id = pr.id)
+              )
+            order by (lower(pr.handle) = lower(?)) desc, pr.handle
+            limit ? offset ?
+            """.trimIndent(),
+            viewerId, viewerId, "$like%", "%$like%", viewerId, viewerId, q, page.limit, page.offset,
+            map = ResultSet::toUserSummary,
+        )
+    }
+
     fun following(viewerId: UUID, targetId: UUID, page: Page): List<UserSummaryResponse> =
         Db.query(
             USER_SUMMARY_SELECT + """
@@ -98,6 +118,9 @@ class ProfileRepository {
 }
 
 data class Page(val offset: Int, val limit: Int)
+
+/** ilike 에서 % _ \ 를 글자 그대로 */
+private fun likeEscape(q: String) = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 private const val MY_SELECT = """
     select p.id, p.handle, p.display_name, p.bio, p.avatar_url, p.is_private,

@@ -171,7 +171,8 @@ fun MainScreen(
                         if (blocked) onHomeIntent(HomeIntent.HideAuthor(userId)) // 다시 받기 전에도 바로 안 보이게
                         onHomeIntent(HomeIntent.LoadFeed)
                     },
-                    onUserClick = { navController.navigate("user/$it") }
+                    onUserClick = { navController.navigate("user/$it") },
+                    onMessage = { navController.navigate("message/dm/$it") }
                 )
             }
 

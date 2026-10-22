@@ -1,9 +1,13 @@
 package com.gentlelady.reborn.feature.message
 
+import androidx.compose.runtime.LaunchedEffect
+import com.gentlelady.reborn.feature.message.components.ChatRoute
+import com.gentlelady.reborn.feature.message.components.MessageSuggestRoute
+import com.gentlelady.reborn.message.presentation.ChatIntent
+
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.gentlelady.reborn.data.MockDataSource
 import com.gentlelady.reborn.feature.message.components.ChatDetailScreen
 import com.gentlelady.reborn.feature.message.components.GuestBookSearchScreen
 import com.gentlelady.reborn.feature.message.components.MessageSuggestScreen
@@ -23,6 +27,8 @@ fun NavGraphBuilder.messageNavGraph(
     onIntent: (MessageIntent) -> Unit
 ) {
     composable("message") {
+        // 들어올 때마다 대화방 목록을 새로 (대화창에서 보낸·받은 메시지 반영)
+        LaunchedEffect(Unit) { onIntent(MessageIntent.Refresh) }
         MessageScreen(
             state = state,
             onIntent = { intent ->
@@ -40,13 +46,11 @@ fun NavGraphBuilder.messageNavGraph(
         )
     }
 
+    // 메시지 보낼 사람 찾기 → 누르면 그 사람과의 대화창
     composable("message/search") {
-        MessageSuggestScreen(
-            suggested = MockDataSource.messageSuggestedUsers,
+        MessageSuggestRoute(
             onBack = { navController.popBackStack() },
-            onUserClick = {
-                // TODO(stub): 해당 사용자 프로필 화면으로 이동
-            }
+            onUserClick = { user -> navController.navigate("message/dm/${user.id}") { popUpTo("message/search") { inclusive = true } } }
         )
     }
 
@@ -58,13 +62,21 @@ fun NavGraphBuilder.messageNavGraph(
         )
     }
 
+    // 목록에서 연 대화방
     composable("message/chat/{roomId}") { backStackEntry ->
-        val roomId = backStackEntry.arguments?.getString("roomId").orEmpty()
-        val room = MockDataSource.messageChatRooms.firstOrNull { it.id == roomId }
-        ChatDetailScreen(
-            title = room?.name ?: "대화",
-            initialMessages = MockDataSource.chatConversationOf(roomId),
-            onBack = { navController.popBackStack() }
+        ChatRoute(
+            open = ChatIntent.Open(backStackEntry.arguments?.getString("roomId").orEmpty()),
+            onBack = { navController.popBackStack() },
+            onPeerClick = { navController.navigate("user/$it") }
+        )
+    }
+
+    // 그 사람과 대화 시작 (프로필의 메시지 버튼·사람 찾기) — 대화방이 없으면 서버가 만든다
+    composable("message/dm/{userId}") { backStackEntry ->
+        ChatRoute(
+            open = ChatIntent.OpenWith(backStackEntry.arguments?.getString("userId").orEmpty()),
+            onBack = { navController.popBackStack() },
+            onPeerClick = { navController.navigate("user/$it") }
         )
     }
 }
