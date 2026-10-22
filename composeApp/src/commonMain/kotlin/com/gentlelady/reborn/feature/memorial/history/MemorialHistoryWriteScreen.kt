@@ -1,6 +1,7 @@
 // composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/history/MemorialHistoryWriteScreen.kt
 package com.gentlelady.reborn.feature.memorial.history
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -224,9 +225,10 @@ fun MemorialHistoryWriteScreen(
                         lineHeight = 20.sp
                     )
                 }
+                val (imeText, onImeText) = rememberImeSafeText(formState.caption, { onIntent(MemorialIntent.UpdateHistoryWriteCaption(it)) })
                 BasicTextField(
-                    value = formState.caption,
-                    onValueChange = { onIntent(MemorialIntent.UpdateHistoryWriteCaption(it)) },
+                    value = imeText,
+                    onValueChange = onImeText,
                     textStyle = TextStyle(fontSize = 14.sp, color = Color.Black, lineHeight = 20.sp),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                     modifier = Modifier.fillMaxSize()

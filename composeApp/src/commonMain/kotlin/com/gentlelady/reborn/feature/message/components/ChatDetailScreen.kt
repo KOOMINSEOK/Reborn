@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.message.components
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -245,9 +246,10 @@ private fun ChatInputBar(value: String, enabled: Boolean, onValueChange: (String
             ) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                     if (value.isEmpty()) Text("메시지 보내기...", fontSize = 14.sp, color = RebornSlateGray)
+                    val (imeText, onImeText) = rememberImeSafeText(value, onValueChange)
                     BasicTextField(
-                        value = value,
-                        onValueChange = onValueChange,
+                        value = imeText,
+                        onValueChange = onImeText,
                         enabled = enabled,
                         maxLines = 5,
                         textStyle = TextStyle(fontSize = 14.sp, color = Color.Black),

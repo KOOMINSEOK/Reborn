@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.core.designsystem.comments
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -175,9 +176,10 @@ private fun CommentInput(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).navigationBarsPadding(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val (imeText, onImeText) = rememberImeSafeText(text, onTextChange)
         OutlinedTextField(
-            value = text,
-            onValueChange = onTextChange,
+            value = imeText,
+            onValueChange = onImeText,
             modifier = Modifier.weight(1f),
             placeholder = { Text("댓글 달기...", fontSize = 14.sp) },
             maxLines = 4,

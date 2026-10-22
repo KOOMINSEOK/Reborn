@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.signup
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,11 +23,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -124,18 +123,10 @@ internal fun SignupTextField(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     var focused by remember { mutableStateOf(false) }
-    // 글자는 칸이 직접 들고 있는다 — 화면 상태를 한 박자 늦게 돌려받으면 한글 조합이 깨진다.
-    // 밖에서 값이 바뀌면(하이픈 넣기 등) 그 값으로 맞추고 커서는 끝으로
-    var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
-    LaunchedEffect(value) {
-        if (value != field.text) field = TextFieldValue(value, TextRange(value.length))
-    }
+    val (field, onField) = rememberImeSafeText(value, onValueChange)
     BasicTextField(
         value = field,
-        onValueChange = {
-            field = it
-            if (it.text != value) onValueChange(it.text)
-        },
+        onValueChange = onField,
         enabled = enabled,
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),

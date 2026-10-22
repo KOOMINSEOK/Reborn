@@ -1,5 +1,6 @@
 package com.gentlelady.reborn.feature.feedwrite
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -127,9 +128,10 @@ fun PostWriteScreen(
                         lineHeight = 24.sp
                     )
                 }
+                val (imeText, onImeText) = rememberImeSafeText(caption, { onIntent(FeedWriteIntent.ChangeCaption(it)) })
                 BasicTextField(
-                    value = caption,
-                    onValueChange = { onIntent(FeedWriteIntent.ChangeCaption(it)) },
+                    value = imeText,
+                    onValueChange = onImeText,
                     textStyle = TextStyle(fontSize = 16.sp, color = Color.Black, lineHeight = 24.sp),
                     modifier = Modifier.fillMaxSize()
                 )

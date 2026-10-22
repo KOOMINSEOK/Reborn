@@ -1,6 +1,7 @@
 ﻿// composeApp/src/commonMain/kotlin/com/gentlelady/reborn/feature/memorial/guestbook/MemorialGuestBookList.kt
 package com.gentlelady.reborn.feature.memorial.guestbook
 
+import com.gentlelady.reborn.core.designsystem.components.rememberImeSafeText
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -320,9 +321,10 @@ private fun GuestBookInputBottomBar(
                         color = RebornSlateGray
                     )
                 }
+                val (imeText, onImeText) = rememberImeSafeText(inputText, onInputTextChange, accept = { it.length <= 100 })
                 BasicTextField(
-                    value = inputText,
-                    onValueChange = { if (it.length <= 100) onInputTextChange(it) },
+                    value = imeText,
+                    onValueChange = onImeText,
                     textStyle = TextStyle(
                         fontSize = 12.sp,
                         color = Color.Black
